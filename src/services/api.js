@@ -121,31 +121,34 @@ export const authService = {
             .from('family_invitations')
             .select('*')
             .eq('token', token)
-            .eq('status', 'pending')
-            .single();
+            .single(); // On enlève le check 'pending' strict pour être plus souple
 
         if (inviteError || !invite) throw new Error("Lien invalide ou expiré.");
 
-        // B. Récupérer l'utilisateur actuel (celui qui clique)
+        // B. Récupérer l'utilisateur actuel
         const user = (await supabase.auth.getUser()).data.user;
-        if (!user) throw new Error("Vous devez être connecté pour rejoindre.");
+        if (!user) throw new Error("Vous devez être connecté.");
 
-        if (user.id === invite.inviter_id) throw new Error("Vous ne pouvez pas vous inviter vous-même.");
+        if (user.id === invite.inviter_id) throw new Error("Auto-invitation impossible.");
 
-        // C. Créer le lien familial
+        // C. Créer le lien familial (CORRECTION 409 ICI)
         const { error: linkError } = await supabase
             .from('family_links')
             .insert([{ 
-                owner_id: invite.inviter_id, // Le chef (celui qui a créé l'invit)
-                member_id: user.id           // Le membre (celui qui clique)
-            }]);
+                owner_id: invite.inviter_id, 
+                member_id: user.id           
+            }]); // On retire le .select() pour simplifier
 
-        if (linkError && linkError.code !== '23505') { // Ignorer erreur doublon
+        // Si erreur, on regarde si c'est un doublon (code 23505)
+        if (linkError) {
+            // Si c'est "Unique Violation" (déjà membre), on considère que c'est un succès
+            if (linkError.code === '23505') {
+                console.log("Info : L'utilisateur est déjà membre de cette famille.");
+                return true; 
+            }
+            // Sinon c'est une vraie erreur
             throw linkError;
         }
-
-        // D. Marquer l'invitation comme utilisée (Optionnel, si usage unique)
-        // await supabase.from('family_invitations').update({ status: 'accepted' }).eq('id', invite.id);
 
         return true;
     },

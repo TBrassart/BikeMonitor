@@ -4,13 +4,13 @@ import { authService } from '../../services/api';
 import './AuthScreen.css';
 import Logo from '../Layout/Logo';
 
-const AuthScreen = ({ onLogin }) => {
+// CORRECTION ICI : Ajout de 'inviteToken' dans les props
+const AuthScreen = ({ onLogin, isInviteFlow = false, inviteToken }) => {
     const [isLoginMode, setIsLoginMode] = useState(true);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [fullName, setFullName] = useState('');
     
-    // On utilise isPending partout (pas de setIsLoading !)
     const [isPending, setIsPending] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
 
@@ -24,36 +24,34 @@ const AuthScreen = ({ onLogin }) => {
                 await onLogin(email, password);
             } else {
                 // --- INSCRIPTION ---
-                // Validation préventive
                 if (password.length < 6) {
                     throw new Error("Le mot de passe doit faire au moins 6 caractères.");
                 }
 
+                // On construit l'URL de redirection SI on a un token
                 const redirectUrl = inviteToken 
                     ? `${window.location.origin}/join/${inviteToken}`
                     : undefined;
 
-                // On passe l'URL à la fonction signUp mise à jour
+                // On passe l'URL à la fonction signUp (qui a été mise à jour dans api.js)
                 const { error } = await authService.signUp(email, password, fullName, redirectUrl);
                 
                 if (error) throw error;
                 
                 alert("Compte créé ! Cliquez sur le lien reçu par email pour valider et rejoindre la famille.");
                 
-                // Tentative de connexion auto
                 try {
                     await onLogin(email, password);
                 } catch (loginErr) {
                     setIsLoginMode(true);
-                    setErrorMsg("Compte créé. Veuillez vérifier vos emails puis vous connecter.");
+                    setErrorMsg("Compte créé. Vérifiez vos emails.");
                 }
             }
         } catch (error) {
             console.error("Erreur Auth:", error);
-            // Affiche le vrai message de Supabase (ex: "Password should be at least 6 characters")
             setErrorMsg(error.message || "Une erreur est survenue.");
         } finally {
-            setIsPending(false); // Correct (c'était ici que ça plantait avant)
+            setIsPending(false);
         }
     };
 
@@ -67,19 +65,19 @@ const AuthScreen = ({ onLogin }) => {
             <p className="subtitle">Assistant intelligent pour la famille cycliste.</p>
             
             <div className="login-form">
-                <h2>{isLoginMode ? 'Connexion' : 'Créer un compte'}</h2>
+                <h2>{isLoginMode ? 'Connexion' : (isInviteFlow ? 'Créer mon profil' : 'Créer un compte')}</h2>
                 
-                {/* Affichage de l'erreur en rouge */}
                 {errorMsg && <div className="error-banner">{errorMsg}</div>}
 
                 <form onSubmit={handleSubmit}>
                     {!isLoginMode && (
                         <div className="input-group">
+                            {/* AJOUTE LE WRAPPER CSS ICI SI CE N'EST PAS DÉJÀ FAIT DANS TON FICHIER */}
                             <div className="input-wrapper">
                                 <FaUser className="input-icon" />
                                 <input 
                                     type="text" 
-                                    placeholder="Nom complet (ex: Famille Dupont)" 
+                                    placeholder={isInviteFlow ? "Votre Prénom et Nom" : "Nom de la famille (ex: Famille Dupont)"} 
                                     value={fullName}
                                     onChange={(e) => setFullName(e.target.value)}
                                     required={!isLoginMode}
@@ -113,20 +111,23 @@ const AuthScreen = ({ onLogin }) => {
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
                                 disabled={isPending}
-                                minLength={6} // Aide le navigateur à valider
+                                minLength={6}
                             />
                         </div>
                     </div>
 
                     <button type="submit" className="login-btn" disabled={isPending}>
-                        {isPending ? 'Chargement...' : (isLoginMode ? 'Se connecter' : "S'inscrire")}
+                        {isPending ? 'Chargement...' : (isLoginMode ? 'Se connecter' : (isInviteFlow ? "Rejoindre" : "S'inscrire"))}
                     </button>
                 </form>
 
                 <p className="signup-link">
                     {isLoginMode ? "Pas encore de compte ?" : "Déjà un compte ?"}
                     <a href="#" onClick={(e) => { e.preventDefault(); setIsLoginMode(!isLoginMode); setErrorMsg(''); }}>
-                        {isLoginMode ? " Créer un compte familial" : " Se connecter"}
+                        {isLoginMode 
+                            ? (isInviteFlow ? " Créer mon profil invité" : " Créer un compte familial") 
+                            : " Se connecter"
+                        }
                     </a>
                 </p>
             </div>

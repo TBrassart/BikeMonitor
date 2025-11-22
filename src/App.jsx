@@ -18,7 +18,7 @@ import ProfilePage from './components/Settings/ProfilePage';
 // Composants Auth & Layout
 import AuthScreen from './components/Auth/AuthScreen';
 import ProfileSelection from './components/Auth/ProfileSelection';
-import Sidebar from './components/Layout/Sidebar';
+import Sidebar from './components/Layout/SideBar';
 import BottomNav from './components/Layout/BottomNav';
 import JoinFamily from './components/Auth/JoinFamily';
 

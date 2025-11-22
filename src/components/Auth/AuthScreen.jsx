@@ -34,7 +34,7 @@ const AuthScreen = ({ onLogin, isInviteFlow = false, inviteToken }) => {
                     : undefined;
 
                 // On passe l'URL à la fonction signUp (qui a été mise à jour dans api.js)
-                const { error } = await authService.signUp(email, password, fullName, redirectUrl);
+                const { error } = await authService.signUp(email, password, fullName, redirectUrl, inviteToken);
                 
                 if (error) throw error;
                 

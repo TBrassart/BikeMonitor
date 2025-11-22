@@ -1,33 +1,42 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { authService } from '../../services/api';
-import { supabase } from '../../supabaseClient'; // Nécessaire pour écouter l'auth
+import { supabase } from '../../supabaseClient'; 
 import AuthScreen from './AuthScreen'; 
 import Logo from '../Layout/Logo';
 
-const JoinFamily = () => {
+const JoinFamily = ({ onLogin }) => {
     const { token } = useParams();
     const navigate = useNavigate();
-    const [status, setStatus] = useState('loading'); // loading, login_required, joining, success, error
+
+    // 1. DÉTECTION DU RETOUR EMAIL (Hash dans l'URL)
+    // Si l'URL contient "access_token", c'est qu'on revient du mail de validation.
+    // On affiche direct le spinner ("joining") au lieu du formulaire ("login_required").
+    const isMagicLink = window.location.hash.includes('access_token');
+    
+    const [status, setStatus] = useState(isMagicLink ? 'joining' : 'loading'); 
     const [errorMsg, setErrorMsg] = useState('');
 
-    // 1. EFFET PRINCIPAL : Écouteur d'authentification
     useEffect(() => {
         let mounted = true;
 
         const attemptJoin = async () => {
             if (!mounted) return;
             
-            // Si l'utilisateur est connecté, on lance l'invitation
-            if (authService.isAuthenticated) {
+            // Vérification : Est-on connecté ?
+            // On vérifie le localStorage ou la session Supabase active
+            const session = await supabase.auth.getSession();
+            const isConnected = !!session.data.session;
+
+            if (isConnected) {
                 setStatus('joining');
                 try {
+                    // On tente de lier le compte à la famille
                     await authService.acceptInvitation(token);
                     alert("Félicitations ! Vous avez rejoint la famille.");
-                    navigate('/'); // Redirection vers le Dashboard
+                    navigate('/'); 
                 } catch (e) {
                     console.error(e);
-                    // Si l'erreur est "déjà membre", on redirige quand même
                     if (e.message && e.message.includes("duplicate")) {
                         alert("Vous faites déjà partie de cette famille !");
                         navigate('/');
@@ -37,15 +46,17 @@ const JoinFamily = () => {
                     }
                 }
             } else {
-                // Pas connecté -> On affiche le formulaire
-                setStatus('login_required');
+                // Si pas connecté et pas de lien magique en cours -> Formulaire
+                if (!isMagicLink) {
+                    setStatus('login_required');
+                }
             }
         };
 
-        // Lance la tentative au chargement
+        // On lance une première tentative
         attemptJoin();
 
-        // Écoute les changements (ex: l'utilisateur vient de se connecter via le formulaire)
+        // On écoute les changements (connexion via le lien mail ou le formulaire)
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
             if (event === 'SIGNED_IN' && session) {
                 attemptJoin();
@@ -56,13 +67,16 @@ const JoinFamily = () => {
             mounted = false;
             subscription.unsubscribe();
         };
-    }, [token, navigate]);
+    }, [token, navigate, isMagicLink]);
 
+    // Fonction passée au formulaire pour gérer la connexion manuelle
     const handleLocalLogin = async (email, password) => {
+        // Pas de try/catch ici, on laisse l'erreur remonter à AuthScreen
         await authService.login(email, password);
     };
 
-    // 3. RENDU
+    // --- RENDUS ---
+
     if (status === 'error') {
         return (
             <div style={{height: '100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'#12121e', color:'white', gap:'20px', padding:'20px', textAlign:'center'}}>
@@ -79,7 +93,6 @@ const JoinFamily = () => {
     if (status === 'login_required') {
         return (
             <div style={{position:'relative', minHeight:'100vh', background:'var(--color-dark-bg)'}}>
-                {/* Bandeau d'invitation */}
                 <div style={{
                     background:'linear-gradient(90deg, #00e5ff, #ff00c8)', 
                     color:'white', 
@@ -100,10 +113,13 @@ const JoinFamily = () => {
         );
     }
 
+    // État "loading" ou "joining" (Spinner)
     return (
         <div style={{height:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'#12121e', color:'white', gap:'20px'}}>
-            <Logo width={60} className="spin" /> {/* Si tu as une classe spin, sinon juste le logo */}
-            <p style={{fontSize:'1.2rem'}}>Validation de l'invitation...</p>
+            <Logo width={80} className="spin" />
+            <p style={{fontSize:'1.2rem', color:'#ccc'}}>
+                {isMagicLink ? "Validation de votre compte..." : "Connexion à la famille..."}
+            </p>
         </div>
     );
 };

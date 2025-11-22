@@ -54,13 +54,37 @@ const App = () => {
             setIsLoggedIn(!!session);
 
             if (session) {
-                const storedProfile = localStorage.getItem('bm_active_profile');
-                if (storedProfile) {
-                    try {
-                        setCurrentProfile(JSON.parse(storedProfile));
-                    } catch (e) {
-                        localStorage.removeItem('bm_active_profile');
-                    }
+                // 1. Vérification Locale (Backup)
+                let tokenToProcess = localStorage.getItem('pending_invite_token');
+
+                // 2. Vérification Serveur (Cross-Device) - PRIORITAIRE
+                const userMeta = session.user?.user_metadata;
+                if (userMeta && userMeta.pending_invite_token) {
+                    console.log("Invitation trouvée dans le profil utilisateur !");
+                    tokenToProcess = userMeta.pending_invite_token;
+                }
+
+                if (tokenToProcess) {
+                    console.log("Tentative de liaison famille...");
+                    authService.acceptInvitation(tokenToProcess)
+                        .then(async () => {
+                            alert("Félicitations ! Vous avez rejoint la famille automatiquement.");
+                            
+                            // Nettoyage complet (Local + Serveur)
+                            localStorage.removeItem('pending_invite_token');
+                            await authService.clearInviteToken(); // Supprime du profil pour ne pas recommencer
+                            
+                            // Rafraichir pour voir les données
+                            window.location.reload();
+                        })
+                        .catch(async (err) => {
+                            console.error("Erreur invitation", err);
+                            // Si déjà membre ou erreur fatale, on nettoie quand même pour ne pas bloquer
+                            if (err.message && (err.message.includes("duplicate") || err.message.includes("violates"))) {
+                                localStorage.removeItem('pending_invite_token');
+                                await authService.clearInviteToken();
+                            }
+                        });
                 }
             }
         });

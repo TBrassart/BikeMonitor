@@ -13,12 +13,15 @@ export const authService = {
         return data.user;
     },
 
-    async signUp(email, password, fullName, redirectTo) { // Ajout du paramètre
+    async signUp(email, password, fullName, redirectTo, inviteToken) { 
         const options = {
-            data: { full_name: fullName }
+            data: { 
+                full_name: fullName,
+                // ON SAUVEGARDE LE TOKEN DANS LE COMPTE UTILISATEUR
+                pending_invite_token: inviteToken || null 
+            }
         };
         
-        // Si une redirection est demandée, on l'ajoute aux options
         if (redirectTo) {
             options.emailRedirectTo = redirectTo;
         }
@@ -29,6 +32,13 @@ export const authService = {
             options: options
         });
         return { data, error };
+    },
+    
+    // Fonction pour nettoyer le token une fois utilisé (pour ne pas le relancer à chaque fois)
+    async clearInviteToken() {
+        await supabase.auth.updateUser({
+            data: { pending_invite_token: null }
+        });
     },
 
     async logout() {

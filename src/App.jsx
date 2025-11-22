@@ -54,7 +54,14 @@ const App = () => {
             setIsLoggedIn(!!session);
 
             if (session) {
-                // 1. Vérification Locale (Backup)
+                // --- LOGS DE DEBUG ---
+                console.log("👤 Utilisateur connecté :", session.user.email);
+                console.log("📦 Métadonnées :", session.user.user_metadata);
+                
+                const metaToken = session.user.user_metadata?.pending_invite_token;
+                console.log("🔑 Token trouvé dans le profil ?", metaToken || "NON");
+                // ---------------------
+
                 let tokenToProcess = localStorage.getItem('pending_invite_token');
 
                 // 2. Vérification Serveur (Cross-Device) - PRIORITAIRE

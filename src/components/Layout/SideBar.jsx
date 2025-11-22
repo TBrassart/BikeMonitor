@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 // Ajout de FaUser et FaExchangeAlt pour le menu popup
 import { FaHome, FaBicycle, FaTshirt, FaAppleAlt, FaListAlt, FaBook, FaTools, FaCog, FaSignOutAlt, FaUser, FaExchangeAlt, FaChevronUp, FaChevronDown } from 'react-icons/fa';
-import './Sidebar.css';
+import './SideBar.css';
 import Logo from './Logo';
 
 const Sidebar = ({ activeRoute, onNavigate, onLogout, userProfile, onSwitchProfile }) => {

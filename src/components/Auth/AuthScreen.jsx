@@ -15,8 +15,9 @@ const AuthScreen = ({ onLogin }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setIsLoading(true);
-        setError('');
+        setIsPending(true); 
+        setErrorMsg('');
+
         try {
             if (isLoginMode) {
                 await onLogin(email, password);

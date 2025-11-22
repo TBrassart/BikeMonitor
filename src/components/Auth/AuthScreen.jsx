@@ -10,45 +10,51 @@ const AuthScreen = ({ onLogin }) => {
     const [password, setPassword] = useState('');
     const [fullName, setFullName] = useState('');
     
+    // On utilise isPending partout (pas de setIsLoading !)
     const [isPending, setIsPending] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setIsPending(true); 
+        setIsPending(true); // Correct
         setErrorMsg('');
 
         try {
             if (isLoginMode) {
+                // --- CONNEXION ---
                 await onLogin(email, password);
             } else {
-                // INSCRIPTION
-                const { data, error } = await authService.signUp(email, password, fullName);
-                if (error) throw error;
+                // --- INSCRIPTION ---
+                // Validation préventive
+                if (password.length < 6) {
+                    throw new Error("Le mot de passe doit faire au moins 6 caractères.");
+                }
+
+                const { error } = await authService.signUp(email, password, fullName);
+                
+                if (error) throw error; // Si Supabase renvoie une 400, on tombe ici
                 
                 alert("Compte créé avec succès !");
                 
-                // TENTATIVE DE CONNEXION AUTOMATIQUE APRÈS INSCRIPTION
-                // Si Supabase est configuré sans "Confirm Email", cela connectera l'utilisateur direct
-                // Si "Confirm Email" est activé, cela échouera (normal) et demandera la validation
+                // Tentative de connexion auto
                 try {
                     await onLogin(email, password);
                 } catch (loginErr) {
-                    // Si la connexion auto échoue (ex: email non validé), on bascule juste sur l'écran de login
                     setIsLoginMode(true);
-                    setError("Veuillez vérifier vos emails pour valider le compte, puis connectez-vous.");
+                    setErrorMsg("Compte créé. Veuillez vérifier vos emails puis vous connecter.");
                 }
             }
-        } catch (err) {
-            setError(err.message);
+        } catch (error) {
+            console.error("Erreur Auth:", error);
+            // Affiche le vrai message de Supabase (ex: "Password should be at least 6 characters")
+            setErrorMsg(error.message || "Une erreur est survenue.");
         } finally {
-            setIsLoading(false);
+            setIsPending(false); // Correct (c'était ici que ça plantait avant)
         }
     };
 
     return (
         <div className="auth-screen">
-            {/* LOGO ET TITRE */}
             <div className="auth-brand">
                 <Logo width={80} height={80} />
                 <h1>BikeMonitor</h1>
@@ -59,6 +65,7 @@ const AuthScreen = ({ onLogin }) => {
             <div className="login-form">
                 <h2>{isLoginMode ? 'Connexion' : 'Créer un compte'}</h2>
                 
+                {/* Affichage de l'erreur en rouge */}
                 {errorMsg && <div className="error-banner">{errorMsg}</div>}
 
                 <form onSubmit={handleSubmit}>
@@ -102,7 +109,7 @@ const AuthScreen = ({ onLogin }) => {
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
                                 disabled={isPending}
-                                minLength={6}
+                                minLength={6} // Aide le navigateur à valider
                             />
                         </div>
                     </div>
@@ -114,7 +121,7 @@ const AuthScreen = ({ onLogin }) => {
 
                 <p className="signup-link">
                     {isLoginMode ? "Pas encore de compte ?" : "Déjà un compte ?"}
-                    <a href="#" onClick={(e) => { e.preventDefault(); setIsLoginMode(!isLoginMode); }}>
+                    <a href="#" onClick={(e) => { e.preventDefault(); setIsLoginMode(!isLoginMode); setErrorMsg(''); }}>
                         {isLoginMode ? " Créer un compte familial" : " Se connecter"}
                     </a>
                 </p>

@@ -116,41 +116,65 @@ export const authService = {
 
     // 2. Accepter une invitation (Quand l'invité clique)
     async acceptInvitation(token) {
-        // A. Vérifier le token
-        const { data: invite, error: inviteError } = await supabase
-            .from('family_invitations')
-            .select('*')
-            .eq('token', token)
-            .single(); // On enlève le check 'pending' strict pour être plus souple
-
-        if (inviteError || !invite) throw new Error("Lien invalide ou expiré.");
-
-        // B. Récupérer l'utilisateur actuel
-        const user = (await supabase.auth.getUser()).data.user;
-        if (!user) throw new Error("Vous devez être connecté.");
-
-        if (user.id === invite.inviter_id) throw new Error("Auto-invitation impossible.");
-
-        // C. Créer le lien familial (CORRECTION 409 ICI)
-        const { error: linkError } = await supabase
+        // 1. On récupère les infos de l'invitation
+        const { data: invitation, error: inviteError } = await supabase
             .from('family_links')
-            .insert([{ 
-                owner_id: invite.inviter_id, 
-                member_id: user.id           
-            }]); // On retire le .select() pour simplifier
+            .select(`
+                owner_id, // ID de l'inviteur (peut être B)
+                member_email,
+                id // ID du lien, pour le supprimer/marquer comme utilisé
+            `)
+            .eq('token', token)
+            .single();
 
-        // Si erreur, on regarde si c'est un doublon (code 23505)
-        if (linkError) {
-            // Si c'est "Unique Violation" (déjà membre), on considère que c'est un succès
-            if (linkError.code === '23505') {
-                console.log("Info : L'utilisateur est déjà membre de cette famille.");
-                return true; 
-            }
-            // Sinon c'est une vraie erreur
-            throw linkError;
+        if (inviteError || !invitation) {
+            console.error("Invitation non trouvée ou erreur:", inviteError);
+            throw new Error("Lien d'invitation invalide ou expiré.");
         }
 
-        return true;
+        // 2. On récupère l'ID de l'utilisateur qui vient d'accepter l'invitation
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user.email !== invitation.member_email) {
+            throw new Error("L'utilisateur connecté ne correspond pas à l'invité.");
+        }
+        
+        // 3. NOUVEAU: On récupère le family_owner_id du compte invitant (B)
+        const { data: inviterProfile, error: profileError } = await supabase
+            .from('family_members')
+            .select('family_owner_id') 
+            .eq('user_id', invitation.owner_id) // On cherche le profil de l'inviteur (B)
+            .single();
+
+        if (profileError || !inviterProfile) {
+            console.error("Impossible de trouver le propriétaire de la famille pour l'inviteur.", profileError);
+            throw new Error("Erreur interne lors de la validation de la famille.");
+        }
+        
+        const trueFamilyOwnerId = inviterProfile.family_owner_id; // C'est l'ID de A
+        
+        // 4. On crée le lien dans family_members pour cet utilisateur (C)
+        const { error: memberError } = await supabase
+            .from('family_members')
+            .insert([
+                { 
+                    user_id: user.id, 
+                    family_owner_id: trueFamilyOwnerId, // On lie C au vrai Owner A
+                    name: user.user_metadata.full_name || user.email.split('@')[0],
+                    // ... autres champs
+                }
+            ]);
+
+        if (memberError) {
+            console.error("Erreur création membre familial:", memberError);
+            throw new Error("Impossible de rejoindre la famille.");
+        }
+        
+        // 5. On marque le lien d'invitation comme utilisé
+        await supabase.from('family_links').delete().eq('id', invitation.id);
+
+        // 6. Nettoyage du token en cours
+        await this.clearInviteToken(); 
     },
 
     // Récupérer tous les membres que le RLS autorise à voir

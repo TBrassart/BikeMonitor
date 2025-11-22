@@ -32,9 +32,17 @@ const JoinFamily = ({ onLogin }) => {
                 setStatus('joining');
                 try {
                     // On tente de lier le compte à la famille
-                    await authService.acceptInvitation(token);
-                    alert("Félicitations ! Vous avez rejoint la famille.");
-                    navigate('/'); 
+                    await authService.acceptInvitation(token); 
+                    
+                    if (mounted) {
+                        setStatus('success'); // Afficher l'écran de succès
+                        // La fonction onLogin met à jour le contexte global (nécessaire)
+                        onLogin(); 
+                        
+                        // Redirection immédiate vers la sélection de profil après onLogin.
+                        // Ceci remplace le setTimeout(..., 2000) pour une meilleure UX.
+                        navigate('/app/profiles', { replace: true });
+                    }
                 } catch (e) {
                     console.error(e);
                     if (e.message && e.message.includes("duplicate")) {

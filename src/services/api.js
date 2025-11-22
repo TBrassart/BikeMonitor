@@ -153,48 +153,20 @@ export const authService = {
         return true;
     },
 
-    // Récupérer les membres de ma famille (ceux que j'ai invités ou qui m'ont invité)
+    // Récupérer tous les membres que le RLS autorise à voir
     async getFamilyMembers() {
-        const user = (await supabase.auth.getUser()).data.user;
-
-        // 1. Récupérer mon propre profil
-        const { data: ownerProfile, error: ownerError } = await supabase
+        // La requête est simple, le filtre complexe est géré par la RLS Policy ci-dessus
+        const { data: roster, error } = await supabase
             .from('family_members')
             .select('*')
-            .eq('user_id', user.id)
-            .single();
-
-        if (ownerError && ownerError.code !== 'PGRST116') throw ownerError; // Erreur non-PGRST116
-
-        // 2. Récupérer les liens : ceux que j'ai invités ET ceux qui m'ont invité
-        const { data: linksData } = await supabase
-            .from('family_links')
-            .select(`
-                member:family_members!member_id (*),
-                owner:family_members!owner_id (*)
-            `)
-            .or(`owner_id.eq.${user.id},member_id.eq.${user.id}`);
-
-        const roster = new Map();
+            .order('name', { ascending: true }); // Trier par nom
         
-        // 3. Ajouter mon profil (moi = Thomas)
-        if (ownerProfile) {
-            roster.set(ownerProfile.id, ownerProfile);
+        if (error) {
+            console.error("Erreur de chargement du roster (Vérifiez la RLS sur family_members)", error);
+            throw error;
         }
-
-        // 4. Ajouter les profils liés (Membres)
-        linksData.forEach(link => {
-            // Identifier qui est l'autre personne
-            const otherMember = (link.owner.user_id === user.id) ? link.member : link.owner;
-            
-            // S'assurer qu'on n'ajoute pas mon propre profil deux fois
-            if (otherMember.user_id !== user.id) {
-                roster.set(otherMember.id, otherMember);
-            }
-        });
-
-        // Convertir la Map en tableau final
-        return Array.from(roster.values());
+        
+        return roster; 
     },
 
     // Supprimer un membre (le bannir de la famille)

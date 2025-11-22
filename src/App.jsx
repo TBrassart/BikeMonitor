@@ -206,15 +206,18 @@ const App = () => {
 
     return (
         <div className="App is-authenticated">
-            <Sidebar 
-                activeRoute={activeRoute} 
-                onNavigate={handleNavigate} 
-                onLogout={handleLogout}
-                userProfile={currentProfile}
-                onSwitchProfile={handleSwitchProfile}
-            />
+            {/* ON CACHE LA SIDEBAR SI C'EST UNE PAGE FULLSCREEN */}
+            {!isFullScreenPage && (
+                <Sidebar 
+                    activeRoute={activeRoute} 
+                    onNavigate={handleNavigate} 
+                    onLogout={handleLogout}
+                    userProfile={currentProfile}
+                    onSwitchProfile={handleSwitchProfile}
+                />
+            )}
 
-            <main className="main-content">
+            <main className="main-content" style={isFullScreenPage ? { marginLeft: 0, width: '100%' } : {}}>
                 <Routes>
                     <Route path="/" element={<Dashboard currentProfile={currentProfile} />} />
                     <Route path="/garage" element={
@@ -227,12 +230,18 @@ const App = () => {
                     <Route path="/settings/" element={<Settings currentProfile={currentProfile} onSyncComplete={fetchInitialData} />} />
                     <Route path="/activities" element={<ActivitiesPage currentProfile={currentProfile} />} />
                     <Route path="/profile" element={<ProfilePage currentProfile={currentProfile} onProfileUpdate={(updated) => {setCurrentProfile(updated);localStorage.setItem('bm_active_profile', JSON.stringify(updated));}} />} />
+                    
+                    {/* Route Join */}
                     <Route path="/join/:token" element={<JoinFamily onLogin={handleLogin} />} />
+                    
                     <Route path="*" element={<Navigate to="/" />} />
                 </Routes>
             </main>
             
-            <BottomNav activeRoute={activeRoute} onNavigate={handleNavigate} />
+            {/* ON CACHE LA NAV MOBILE AUSSI */}
+            {!isFullScreenPage && (
+                <BottomNav activeRoute={activeRoute} onNavigate={handleNavigate} />
+            )}
         </div>
     );
 };

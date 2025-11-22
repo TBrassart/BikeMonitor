@@ -58,14 +58,8 @@ const JoinFamily = () => {
         };
     }, [token, navigate]);
 
-    // 2. FONCTION DE LOGIN LOCAL (Pour AuthScreen)
     const handleLocalLogin = async (email, password) => {
-        try {
-            await authService.login(email, password);
-            // Pas besoin de faire plus, l'écouteur 'onAuthStateChange' ci-dessus va détecter le login et lancer attemptJoin
-        } catch (e) {
-            alert("Erreur de connexion : " + e.message);
-        }
+        await authService.login(email, password);
     };
 
     // 3. RENDU

@@ -18,7 +18,7 @@ import ProfilePage from './components/Settings/ProfilePage';
 // Composants Auth & Layout
 import AuthScreen from './components/Auth/AuthScreen';
 import ProfileSelection from './components/Auth/ProfileSelection';
-import Sidebar from './components/Layout/Sidebar';
+import SideBar from './components/Layout/SideBar';
 import BottomNav from './components/Layout/BottomNav';
 import JoinFamily from './components/Auth/JoinFamily';
 
@@ -203,7 +203,7 @@ const App = () => {
             
             {/* 3. ON CACHE LA SIDEBAR SUR LES PAGES FULLSCREEN (LOGIN/JOIN) */}
             {isLoggedIn && currentProfile && !isFullScreenPage && (
-                <Sidebar 
+                <SideBar 
                     activeRoute={activeRoute} 
                     onNavigate={handleNavigate} 
                     onLogout={handleLogout}

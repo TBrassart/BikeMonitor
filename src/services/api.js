@@ -156,19 +156,45 @@ export const authService = {
     // Récupérer les membres de ma famille (ceux que j'ai invités ou qui m'ont invité)
     async getFamilyMembers() {
         const user = (await supabase.auth.getUser()).data.user;
-        
-        // On cherche les liens où je suis owner
-        const { data: members, error } = await supabase
+
+        // 1. Récupérer mon propre profil
+        const { data: ownerProfile, error: ownerError } = await supabase
+            .from('family_members')
+            .select('*')
+            .eq('user_id', user.id)
+            .single();
+
+        if (ownerError && ownerError.code !== 'PGRST116') throw ownerError; // Erreur non-PGRST116
+
+        // 2. Récupérer les liens : ceux que j'ai invités ET ceux qui m'ont invité
+        const { data: linksData } = await supabase
             .from('family_links')
             .select(`
-                id, 
-                created_at,
-                member:family_members!member_id (name, avatar, id)
+                member:family_members!member_id (*),
+                owner:family_members!owner_id (*)
             `)
-            .eq('owner_id', user.id);
+            .or(`owner_id.eq.${user.id},member_id.eq.${user.id}`);
 
-        if (error) throw error;
-        return members.map(m => m.member); // On retourne juste la liste propre
+        const roster = new Map();
+        
+        // 3. Ajouter mon profil (moi = Thomas)
+        if (ownerProfile) {
+            roster.set(ownerProfile.id, ownerProfile);
+        }
+
+        // 4. Ajouter les profils liés (Membres)
+        linksData.forEach(link => {
+            // Identifier qui est l'autre personne
+            const otherMember = (link.owner.user_id === user.id) ? link.member : link.owner;
+            
+            // S'assurer qu'on n'ajoute pas mon propre profil deux fois
+            if (otherMember.user_id !== user.id) {
+                roster.set(otherMember.id, otherMember);
+            }
+        });
+
+        // Convertir la Map en tableau final
+        return Array.from(roster.values());
     },
 
     // Supprimer un membre (le bannir de la famille)

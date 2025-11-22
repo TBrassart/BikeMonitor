@@ -15,23 +15,33 @@ const AuthScreen = ({ onLogin }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setIsPending(true);
-        setErrorMsg('');
-
+        setIsLoading(true);
+        setError('');
         try {
             if (isLoginMode) {
                 await onLogin(email, password);
             } else {
-                const { error } = await authService.signUp(email, password, fullName);
+                // INSCRIPTION
+                const { data, error } = await authService.signUp(email, password, fullName);
                 if (error) throw error;
-                alert("Compte créé ! Vérifiez vos emails pour confirmer (si activé) ou connectez-vous.");
-                setIsLoginMode(true);
+                
+                alert("Compte créé avec succès !");
+                
+                // TENTATIVE DE CONNEXION AUTOMATIQUE APRÈS INSCRIPTION
+                // Si Supabase est configuré sans "Confirm Email", cela connectera l'utilisateur direct
+                // Si "Confirm Email" est activé, cela échouera (normal) et demandera la validation
+                try {
+                    await onLogin(email, password);
+                } catch (loginErr) {
+                    // Si la connexion auto échoue (ex: email non validé), on bascule juste sur l'écran de login
+                    setIsLoginMode(true);
+                    setError("Veuillez vérifier vos emails pour valider le compte, puis connectez-vous.");
+                }
             }
-        } catch (error) {
-            console.error(error);
-            setErrorMsg(error.message || "Une erreur est survenue.");
+        } catch (err) {
+            setError(err.message);
         } finally {
-            setIsPending(false);
+            setIsLoading(false);
         }
     };
 

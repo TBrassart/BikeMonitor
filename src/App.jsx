@@ -18,7 +18,7 @@ import ProfilePage from './components/Settings/ProfilePage';
 // Composants Auth & Layout
 import AuthScreen from './components/Auth/AuthScreen';
 import ProfileSelection from './components/Auth/ProfileSelection';
-import SideBar from './components/Layout/SideBar';
+import Sidebar from './components/Layout/Sidebar';
 import BottomNav from './components/Layout/BottomNav';
 import JoinFamily from './components/Auth/JoinFamily';
 
@@ -30,10 +30,7 @@ import { supabase } from './supabaseClient';
 const App = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const activeRoute = location.pathname;
     
-    // 1. DÉCLARATION DE LA VARIABLE MANQUANTE
-    // On détecte si on est sur une page "Plein écran" (comme l'invitation)
     const isFullScreenPage = location.pathname.startsWith('/join');
 
     const [session, setSession] = useState(null);
@@ -47,53 +44,54 @@ const App = () => {
     const [selectedBike, setSelectedBike] = useState(null); 
     const [isDetailOpen, setIsDetailOpen] = useState(false); 
 
-    // --- RESTAURATION DU PROFIL ---
+    // --- GESTION SESSION & INVITATIONS ---
     useEffect(() => {
         supabase.auth.getSession().then(({ data: { session } }) => {
             setSession(session);
             setIsLoggedIn(!!session);
 
+            // Restauration profil local
             if (session) {
-                // --- LOGS DE DEBUG ---
-                console.log("👤 Utilisateur connecté :", session.user.email);
-                console.log("📦 Métadonnées :", session.user.user_metadata);
-                
-                const metaToken = session.user.user_metadata?.pending_invite_token;
-                console.log("🔑 Token trouvé dans le profil ?", metaToken || "NON");
-                // ---------------------
-
-                let tokenToProcess = localStorage.getItem('pending_invite_token');
-
-                // 2. Vérification Serveur (Cross-Device) - PRIORITAIRE
-                const userMeta = session.user?.user_metadata;
-                if (userMeta && userMeta.pending_invite_token) {
-                    console.log("Invitation trouvée dans le profil utilisateur !");
-                    tokenToProcess = userMeta.pending_invite_token;
+                const storedProfile = localStorage.getItem('bm_active_profile');
+                if (storedProfile) {
+                    try { setCurrentProfile(JSON.parse(storedProfile)); } catch (e) {}
                 }
+            }
+            
+            // --- LOGIQUE INVITATION ROBUSTE ---
+            if (session) {
+                // 1. On cherche le token partout (Serveur OU Local)
+                let tokenToProcess = session.user?.user_metadata?.pending_invite_token 
+                                     || localStorage.getItem('pending_invite_token');
 
                 if (tokenToProcess) {
-                    console.log("Tentative de liaison famille...");
+                    console.log("🎟️ Traitement de l'invitation...");
+                    
                     authService.acceptInvitation(tokenToProcess)
                         .then(async () => {
-                            alert("Félicitations ! Vous avez rejoint la famille automatiquement.");
+                            console.log("✅ Invitation traitée avec succès (ou déjà membre).");
+                            alert("Félicitations ! Vous avez rejoint la famille.");
                             
-                            // Nettoyage complet (Local + Serveur)
+                            // 2. Nettoyage IMPÉRATIF
                             localStorage.removeItem('pending_invite_token');
-                            await authService.clearInviteToken(); // Supprime du profil pour ne pas recommencer
+                            await authService.clearInviteToken();
                             
-                            // Rafraichir pour voir les données
-                            window.location.reload();
+                            // 3. Recharger les données proprement sans reload bourrin
+                            // Si on a déjà un profil actif, on rafraichit
+                            if (currentProfile) fetchInitialData();
                         })
                         .catch(async (err) => {
-                            console.error("Erreur invitation", err);
-                            // Si déjà membre ou erreur fatale, on nettoie quand même pour ne pas bloquer
-                            if (err.message && (err.message.includes("duplicate") || err.message.includes("violates"))) {
+                            console.error("⚠️ Erreur invitation :", err);
+                            // Si erreur "Déjà membre" ou "Conflit" -> ON NETTOIE QUAND MÊME
+                            if (err.message && (err.message.includes("duplicate") || err.message.includes("violates") || err.code === '23505')) {
+                                console.log("ℹ️ Déjà membre, nettoyage du token obsolète.");
                                 localStorage.removeItem('pending_invite_token');
                                 await authService.clearInviteToken();
                             }
                         });
                 }
             }
+            // ----------------------------------
         });
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -103,7 +101,6 @@ const App = () => {
                 setBikes([]); 
                 setCurrentProfile(null);
                 localStorage.removeItem('bm_active_profile'); 
-                // Si on est sur une invitation, on ne redirige pas de force
                 if (!location.pathname.startsWith('/join')) {
                     navigate('/');
                 }
@@ -111,13 +108,12 @@ const App = () => {
         });
 
         return () => subscription.unsubscribe();
-    }, [navigate, location.pathname]);
+    }, [navigate, location.pathname]); // Retrait de currentProfile des dépendances pour éviter boucles
 
     // --- CHARGEMENT DONNÉES ---
     useEffect(() => {
         if (currentProfile) {
             fetchInitialData();
-            // Synchro silencieuse
             stravaService.syncActivities(currentProfile.id).catch(() => {});
         }
     }, [currentProfile]);
@@ -202,9 +198,6 @@ const App = () => {
 
     // --- RENDU PRINCIPAL ---
     
-    // 2. LOGIQUE DE REDIRECTION INTELLIGENTE
-    // Si on n'est pas connecté ET qu'on n'est PAS sur une page d'invitation, on bloque.
-    // Si on est sur /join/..., on laisse passer (JoinFamily gérera le login).
     if (!isLoggedIn && !isFullScreenPage) {
         return <AuthScreen onLogin={handleLogin} />;
     }
@@ -232,9 +225,8 @@ const App = () => {
     return (
         <div className={`App ${isLoggedIn ? 'is-authenticated' : ''}`}>
             
-            {/* 3. ON CACHE LA SIDEBAR SUR LES PAGES FULLSCREEN (LOGIN/JOIN) */}
             {isLoggedIn && currentProfile && !isFullScreenPage && (
-                <SideBar 
+                <Sidebar 
                     activeRoute={activeRoute} 
                     onNavigate={handleNavigate} 
                     onLogout={handleLogout}
@@ -257,7 +249,6 @@ const App = () => {
                     <Route path="/activities" element={<ActivitiesPage currentProfile={currentProfile} />} />
                     <Route path="/profile" element={<ProfilePage currentProfile={currentProfile} onProfileUpdate={(updated) => {setCurrentProfile(updated);localStorage.setItem('bm_active_profile', JSON.stringify(updated));}} />} />
                     
-                    {/* Route d'invitation (accessible même si non connecté grâce au bypass plus haut) */}
                     <Route path="/join/:token" element={<JoinFamily onLogin={handleLogin} />} />
                     
                     <Route path="*" element={<Navigate to="/" />} />

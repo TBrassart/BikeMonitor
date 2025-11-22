@@ -91,8 +91,11 @@ const JoinFamily = () => {
                     🚀 Vous êtes invité à rejoindre une famille !
                 </div>
                 
-                {/* On passe notre fonction de login locale */}
-                <AuthScreen onLogin={handleLocalLogin} />
+                <AuthScreen 
+                    onLogin={handleLocalLogin} 
+                    isInviteFlow={true} 
+                    inviteToken={token}
+                />
             </div>
         );
     }

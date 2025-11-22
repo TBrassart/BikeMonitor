@@ -13,15 +13,20 @@ export const authService = {
         return data.user;
     },
 
-    async signUp(email, password, fullName) {
+    async signUp(email, password, fullName, redirectTo) { // Ajout du paramètre
+        const options = {
+            data: { full_name: fullName }
+        };
+        
+        // Si une redirection est demandée, on l'ajoute aux options
+        if (redirectTo) {
+            options.emailRedirectTo = redirectTo;
+        }
+
         const { data, error } = await supabase.auth.signUp({
             email,
             password,
-            options: {
-                data: {
-                    full_name: fullName 
-                }
-            }
+            options: options
         });
         return { data, error };
     },

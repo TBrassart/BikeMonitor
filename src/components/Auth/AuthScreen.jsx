@@ -16,12 +16,11 @@ const AuthScreen = ({ onLogin }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setIsPending(true); // Correct
+        setIsPending(true);
         setErrorMsg('');
 
         try {
             if (isLoginMode) {
-                // --- CONNEXION ---
                 await onLogin(email, password);
             } else {
                 // --- INSCRIPTION ---
@@ -30,11 +29,16 @@ const AuthScreen = ({ onLogin }) => {
                     throw new Error("Le mot de passe doit faire au moins 6 caractères.");
                 }
 
-                const { error } = await authService.signUp(email, password, fullName);
+                const redirectUrl = inviteToken 
+                    ? `${window.location.origin}/join/${inviteToken}`
+                    : undefined;
+
+                // On passe l'URL à la fonction signUp mise à jour
+                const { error } = await authService.signUp(email, password, fullName, redirectUrl);
                 
-                if (error) throw error; // Si Supabase renvoie une 400, on tombe ici
+                if (error) throw error;
                 
-                alert("Compte créé avec succès !");
+                alert("Compte créé ! Cliquez sur le lien reçu par email pour valider et rejoindre la famille.");
                 
                 // Tentative de connexion auto
                 try {

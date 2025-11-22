@@ -5,7 +5,7 @@ import './AuthScreen.css';
 import Logo from '../Layout/Logo';
 
 // CORRECTION ICI : Ajout de 'inviteToken' dans les props
-const AuthScreen = ({ onLogin, isInviteFlow = false, inviteToken }) => {
+const AuthScreen = ({ onLogin, isInviteFlow = false, inviteToken = null, forceSignUp = false }) => {
     const [isLoginMode, setIsLoginMode] = useState(true);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -65,14 +65,12 @@ const AuthScreen = ({ onLogin, isInviteFlow = false, inviteToken }) => {
             <p className="subtitle">Assistant intelligent pour la famille cycliste.</p>
             
             <div className="login-form">
-                <h2>{isLoginMode ? 'Connexion' : (isInviteFlow ? 'Créer mon profil' : 'Créer un compte')}</h2>
-                
+                <h2>{isLoginMode ? 'Connexion' : (isInviteFlow ? 'Créer mon profil invité' : 'Créer un compte')}</h2>                
                 {errorMsg && <div className="error-banner">{errorMsg}</div>}
 
                 <form onSubmit={handleSubmit}>
                     {!isLoginMode && (
                         <div className="input-group">
-                            {/* AJOUTE LE WRAPPER CSS ICI SI CE N'EST PAS DÉJÀ FAIT DANS TON FICHIER */}
                             <div className="input-wrapper">
                                 <FaUser className="input-icon" />
                                 <input 
@@ -117,19 +115,21 @@ const AuthScreen = ({ onLogin, isInviteFlow = false, inviteToken }) => {
                     </div>
 
                     <button type="submit" className="login-btn" disabled={isPending}>
-                        {isPending ? 'Chargement...' : (isLoginMode ? 'Se connecter' : (isInviteFlow ? "Rejoindre" : "S'inscrire"))}
+                        {isPending ? 'Chargement...' : (isLoginMode ? 'Se connecter' : (isInviteFlow ? "Rejoindre la famille" : "S'inscrire"))}
                     </button>
                 </form>
 
-                <p className="signup-link">
-                    {isLoginMode ? "Pas encore de compte ?" : "Déjà un compte ?"}
-                    <a href="#" onClick={(e) => { e.preventDefault(); setIsLoginMode(!isLoginMode); setErrorMsg(''); }}>
-                        {isLoginMode 
-                            ? (isInviteFlow ? " Créer mon profil invité" : " Créer un compte familial") 
-                            : " Se connecter"
-                        }
-                    </a>
-                </p>
+                {/* ON CACHE LE LIEN DE SWITCH SI L'INSCRIPTION EST FORCÉE */}
+                {!forceSignUp && (
+                    <p className="signup-link">
+                        {isLoginMode ? "Pas encore de compte ?" : "Déjà un compte ?"}
+                        <a href="#" onClick={(e) => { e.preventDefault(); setIsLoginMode(!isLoginMode); setErrorMsg(''); }}>
+                            {isLoginMode ? " Créer un compte familial" : " Se connecter"}
+                        </a>
+                    </p>
+                )}
+                {/* Le lien de switch doit être visible seulement si on n'est pas en mode Forcé */}
+                {/* ... sinon le reste de AuthScreen gère le switch ... */}
             </div>
         </div>
     );

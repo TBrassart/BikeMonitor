@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { FaSave, FaHeartbeat, FaBolt, FaRulerVertical, FaWeight } from 'react-icons/fa';
-import { bikeService } from '../../services/api'; // Ou authService selon où tu as mis la fonction
+import { FaSave, FaHeartbeat, FaBolt, FaRulerVertical, FaWeight, FaPen, FaUser } from 'react-icons/fa';
+import { bikeService } from '../../services/api'; 
 import './ProfilePage.css';
 
 const ProfilePage = ({ currentProfile, onProfileUpdate }) => {
     const [formData, setFormData] = useState({
+        name: '', // AJOUT du nom
+        avatar: '', // AJOUT de l'avatar
         weight: '',
         height: '',
         ftp: '',
@@ -18,6 +20,8 @@ const ProfilePage = ({ currentProfile, onProfileUpdate }) => {
     useEffect(() => {
         if (currentProfile) {
             setFormData({
+                name: currentProfile.name || '', // Chargement du nom
+                avatar: currentProfile.avatar || '🦄', // Chargement de l'avatar
                 weight: currentProfile.weight || '',
                 height: currentProfile.height || '',
                 ftp: currentProfile.ftp || '',
@@ -37,19 +41,21 @@ const ProfilePage = ({ currentProfile, onProfileUpdate }) => {
         e.preventDefault();
         setIsSaving(true);
         try {
-            // NETTOYAGE DES DONNÉES AVANT ENVOI
+            // Nettoyage des données
             const cleanData = {
-                ...formData,
-                // Si la date est vide, on met null (pour que SQL comprenne)
-                birth_date: formData.birth_date === '' ? null : formData.birth_date,
-                // Optionnel : Nettoyer les nombres vides aussi pour éviter des erreurs
-                weight: formData.weight === '' ? null : formData.weight,
-                height: formData.height === '' ? null : formData.height,
-                ftp: formData.ftp === '' ? null : formData.ftp,
-                max_hr: formData.max_hr === '' ? null : formData.max_hr,
-                resting_hr: formData.resting_hr === '' ? null : formData.resting_hr,
+                // S'assurer que les champs sont null si vides (pour SQL date/nombre)
+                weight: formData.weight || null,
+                height: formData.height || null,
+                ftp: formData.ftp || null,
+                max_hr: formData.max_hr || null,
+                resting_hr: formData.resting_hr || null,
+                birth_date: formData.birth_date || null,
+                // Champs de texte simples
+                name: formData.name, 
+                avatar: formData.avatar 
             };
 
+            // Appel API pour l'update
             const updated = await bikeService.updateProfileDetails(currentProfile.id, cleanData);
             
             if (onProfileUpdate) onProfileUpdate(updated);
@@ -81,9 +87,37 @@ const ProfilePage = ({ currentProfile, onProfileUpdate }) => {
         <div className="profile-page-container">
             <header className="page-header">
                 <div className="header-user">
-                    <span className="big-avatar">{currentProfile.avatar}</span>
+                    {/* AVATAR ÉDITABLE */}
+                    <div className="big-avatar" onClick={() => { /* Ouvrir le picker d'avatar */ }}>
+                        <input 
+                            type="text" 
+                            name="avatar" 
+                            value={formData.avatar} 
+                            onChange={handleChange} 
+                            maxLength={2} // Limité aux emojis
+                            style={{width: '80px', height: '80px', textAlign: 'center', fontSize: '3rem', background:'none', border:'none', padding:0, cursor:'pointer'}}
+                            title="Modifier l'avatar"
+                        />
+                    </div>
                     <div>
-                        <h1>{currentProfile.name}</h1>
+                        {/* NOM ÉDITABLE */}
+                        <h1>
+                            <input 
+                                type="text" 
+                                name="name" 
+                                value={formData.name} 
+                                onChange={handleChange} 
+                                style={{
+                                    fontSize: '2rem', 
+                                    background: 'none', 
+                                    border: 'none', 
+                                    color: 'white', 
+                                    padding: '5px 0',
+                                    fontWeight: 'bold',
+                                    borderBottom: '1px solid #444'
+                                }}
+                            />
+                        </h1>
                         <p>Profil Athlète</p>
                     </div>
                 </div>

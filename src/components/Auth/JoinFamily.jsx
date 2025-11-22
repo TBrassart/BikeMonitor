@@ -108,6 +108,7 @@ const JoinFamily = ({ onLogin }) => {
                     onLogin={handleLocalLogin} 
                     isInviteFlow={true} 
                     inviteToken={token}
+                    forceSignUp={true}
                 />
             </div>
         );

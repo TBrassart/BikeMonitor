@@ -1,0 +1,166 @@
+/* src/components/Bike/BikeDetailShell.css */
+
+.bike-detail-shell {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--color-dark-bg);
+    width: 100%; /* Force la largeur */
+}
+
+/* --- HEADER RICHE --- */
+.detail-header-rich {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 220px;
+    position: relative;
+    color: white;
+    transition: background 0.3s ease;
+    flex-shrink: 0; /* Empêche le header de s'écraser */
+}
+
+.header-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 10; /* Assure que les boutons sont au-dessus de l'image */
+}
+
+/* Boutons Glassmorphism CORRIGÉS */
+.back-btn-glass, .edit-photo-btn {
+    /* ... garde tes styles de bouton (background, border...) ... */
+    width: 44px;
+    height: 44px;
+    /* On ajoute flex pour bien centrer */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* ... */
+}
+
+/* CIBLAGE DIRECT ET FORCÉ DE L'ICÔNE */
+.back-btn-glass svg, .edit-photo-btn svg {
+    color: white !important;
+    
+    /* ON FORCE LA TAILLE EN PIXELS */
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important; /* Sécurité */
+    min-height: 24px !important;
+    
+    display: block !important;
+    opacity: 1 !important;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
+}
+
+.back-btn-glass:hover svg, .edit-photo-btn:hover svg {
+    color: var(--color-neon-primary) !important;
+    transform: scale(1.1); /* Petit effet de zoom sympa */
+}
+
+/* Info Principale */
+.header-main-info {
+    margin-top: auto; 
+    z-index: 5;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.8); /* Ombre portée pour lisibilité sur photo */
+}
+
+.title-row h1 {
+    margin: 0;
+    font-size: 1.8rem;
+    display: flex;
+    align-items: center;
+}
+
+/* --- GRILLE STATS --- */
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    background: rgba(0, 0, 0, 0.6); /* Fond plus sombre */
+    padding: 12px;
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    margin-top: 15px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.stat-icon {
+    color: var(--color-neon-primary);
+    font-size: 1.2rem;
+    margin-bottom: 4px;
+}
+
+.stat-value {
+    font-weight: bold;
+    font-size: 1rem;
+    color: white;
+}
+
+/* --- TABS CORRIGÉS --- */
+.detail-tabs {
+    display: flex;
+    overflow-x: auto;
+    background-color: var(--color-surface);
+    padding: 0 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    
+    /* FIX LARGEUR ET RÉTRÉCISSEMENT */
+    width: 100%; 
+    flex-shrink: 0; 
+    box-sizing: border-box;
+}
+
+.tab-item {
+    background: none;
+    border: none;
+    padding: 15px 20px;
+    color: #888;
+    font-weight: bold;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    white-space: nowrap;
+    flex-shrink: 0; /* Empêche le texte de se casser */
+}
+
+.tab-item.active {
+    color: var(--color-neon-primary);
+    border-bottom: 3px solid var(--color-neon-primary);
+}
+
+.detail-content {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 20px;
+    background-color: var(--color-dark-bg);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Desktop */
+@media (min-width: 768px) {
+    .detail-header-rich {
+        padding: 40px;
+        min-height: 280px;
+    }
+    .stats-grid {
+        max-width: 500px;
+    }
+}
+
+.specs-subtitle {
+    color: white;
+    font-size: 1.1rem; /* Un peu plus grand */
+    margin: 0 0 5px 0;
+    font-weight: 500;
+    opacity: 0.9;
+}

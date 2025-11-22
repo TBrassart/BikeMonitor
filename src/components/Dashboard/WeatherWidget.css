@@ -1,0 +1,93 @@
+/* src/components/Dashboard/WeatherWidget.css */
+
+.weather-widget {
+    background: #1e1e2d;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255,255,255,0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Variantes de couleur selon le temps */
+.weather-widget.ideal { border-left: 5px solid #f1c40f; background: linear-gradient(135deg, rgba(241, 196, 15, 0.1), rgba(0,0,0,0)); }
+.weather-widget.wet { border-left: 5px solid #3498db; background: linear-gradient(135deg, rgba(52, 152, 219, 0.1), rgba(0,0,0,0)); }
+.weather-widget.bad { border-left: 5px solid #e74c3c; }
+
+.weather-main {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.weather-icon {
+    font-size: 2.5rem;
+}
+
+.weather-temp {
+    font-size: 2rem;
+    font-weight: bold;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    line-height: 1;
+}
+
+.weather-label {
+    font-size: 0.9rem;
+    color: #aaa;
+    font-weight: normal;
+    margin-top: 5px;
+}
+
+.weather-details {
+    display: flex;
+    gap: 20px;
+    color: #ccc;
+    font-size: 0.9rem;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* ALERTE PRESSION */
+.tire-alert {
+    background-color: rgba(52, 152, 219, 0.2);
+    border: 1px solid #3498db;
+    padding: 10px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #3498db;
+    animation: fadeIn 0.5s ease;
+}
+
+.tire-alert strong {
+    display: block;
+    font-size: 0.9rem;
+}
+
+.tire-alert p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #ccc;
+}
+
+@media (min-width: 768px) {
+    .weather-widget {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .tire-alert {
+        max-width: 300px;
+    }
+}

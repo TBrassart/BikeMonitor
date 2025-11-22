@@ -1,0 +1,146 @@
+/* src/components/Bike/PartsTab.css */
+
+.parts-tab-container {
+    padding-bottom: 70px; 
+}
+
+.parts-tab-container h2 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    color: var(--color-neon-primary);
+}
+
+/* Liste en Grille pour Desktop */
+.parts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.part-item {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    border-radius: 8px;
+    background-color: var(--color-surface-dark); /* Fond sombre */
+    border: 1px solid #2a2a3e;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s;
+}
+
+.part-item:hover {
+    border-color: var(--color-neon-primary);
+    transform: translateY(-2px);
+}
+
+.part-icon-container {
+    font-size: 1.8rem;
+    margin-right: 20px;
+    padding: 12px;
+    border-radius: 50%;
+    background-color: #12121e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #333;
+}
+
+.part-info {
+    flex-grow: 1;
+}
+
+.part-name {
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: white;
+}
+
+.part-category {
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+    margin-bottom: 8px;
+}
+
+/* Barre de progression */
+.wear-bar-container {
+    height: 6px;
+    background-color: #333;
+    border-radius: 4px;
+    margin-top: 8px;
+    overflow: hidden;
+    width: 100%;
+    max-width: 300px; /* Limite la longueur de la barre sur grand écran */
+}
+
+.wear-details {
+    font-size: 0.85rem;
+    margin-top: 5px;
+    color: var(--color-text-secondary);
+}
+
+.replace-btn {
+    margin-left: 20px;
+    background: transparent;
+    border: 1px solid var(--color-text-secondary);
+    padding: 10px;
+    border-radius: 50%;
+    color: var(--color-text-light);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.replace-btn:hover {
+    border-color: var(--color-neon-primary);
+    color: var(--color-neon-primary);
+    box-shadow: 0 0 8px rgba(0, 229, 255, 0.4);
+}
+
+/* Copie du style du bouton flottant pour l'onglet Pièces */
+.cta-float {
+    position: fixed;
+    bottom: 40px;
+    right: 40px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: #00e5ff !important;
+    color: #12121e !important;
+    border: none;
+    box-shadow: 0 0 15px rgba(0, 229, 255, 0.6);
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1000;
+    transition: transform 0.2s;
+}
+
+.cta-float:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 25px rgba(0, 229, 255, 0.8);
+}
+
+/* --- MODE DESKTOP --- */
+@media (min-width: 768px) {
+    .parts-list {
+        display: grid;
+        /* Grille adaptative : minimum 400px de large par pièce */
+        grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+        gap: 20px;
+    }
+    
+    .part-item {
+        flex-direction: row; /* Garder l'alignement horizontal interne */
+    }
+    
+    /* Etat vide centré */
+    .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding-top: 100px;
+    }
+    
+    /* Bouton d'ajout flottant -> On pourrait le cacher et mettre un bouton standard en haut comme pour Entretien */
+}

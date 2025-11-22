@@ -1,0 +1,231 @@
+/* src/components/Bike/BikeForm.css */
+
+/* --- CONTENEUR MODAL --- */
+.bike-form-container {
+    background-color: var(--color-dark-bg);
+    position: fixed;
+    inset: 0; /* Prend tout l'écran */
+    z-index: 2000; /* Très haut pour passer au-dessus de tout */
+    overflow-y: auto; /* Scroll vertical activé */
+    padding: 40px 20px; /* Marge confortable autour */
+    
+    /* Centrage horizontal uniquement */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* En-tête */
+.form-header {
+    width: 100%;
+    max-width: 900px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
+}
+
+.form-header h2 { margin: 0; font-size: 2rem; color: white; }
+
+.close-btn {
+    background: rgba(255,255,255,0.1);
+    border: none;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.close-btn:hover { background-color: rgba(255, 0, 0, 0.2); color: #ff4d4d; }
+
+/* --- FORMULAIRE --- */
+.bike-form {
+    width: 100%;
+    max-width: 900px;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    padding-bottom: 50px; /* Marge en bas pour le scroll */
+}
+
+/* --- ZONE PHOTO --- */
+.photo-upload-section {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.photo-dropzone {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 2px dashed #444;
+    background-color: #1e1e2d;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    overflow: hidden;
+    transition: all 0.2s;
+}
+
+.photo-dropzone:hover {
+    border-color: var(--color-neon-primary);
+    background-color: rgba(0, 229, 255, 0.05);
+}
+
+.photo-dropzone img { width: 100%; height: 100%; object-fit: cover; }
+.photo-placeholder { color: #666; font-size: 1.8rem; margin-bottom: 5px; }
+
+/* --- SECTIONS (CARTES) --- */
+.form-section {
+    background-color: #1e1e2d;
+    padding: 30px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    
+    /* CORRECTIF HAUTEUR : On ne force plus 100% */
+    height: auto; 
+}
+
+.form-section h3 {
+    margin: 0;
+    color: var(--color-neon-primary);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+/* --- INPUTS --- */
+.input-group {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.input-group label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #ccc;
+}
+
+.input-wrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.input-icon {
+    position: absolute;
+    left: 15px;
+    color: #666;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.bike-form input, .bike-form select {
+    width: 100%; /* Grâce au fix index.css, ça ne débordera plus ! */
+    height: 50px;
+    padding: 0 15px 0 45px;
+    background-color: #151521;
+    border: 1px solid #333;
+    color: white;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border 0.2s;
+}
+
+.bike-form input:focus, .bike-form select:focus {
+    outline: none;
+    border-color: var(--color-neon-primary);
+    background-color: #1a1a25;
+}
+
+/* --- GRILLES --- */
+.type-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+}
+
+.type-card {
+    background-color: #151521;
+    border: 1px solid #444;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    height: 80px;
+    transition: all 0.2s;
+}
+
+.type-card:hover { border-color: #666; background-color: #252535; }
+.type-card.active {
+    background-color: rgba(0, 229, 255, 0.15);
+    border-color: var(--color-neon-primary);
+    color: var(--color-neon-primary);
+}
+
+.details-grid, .input-row-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+/* --- ACTIONS --- */
+.form-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: flex-end;
+    gap: 20px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.save-btn {
+    background: var(--gradient-neon);
+    color: white;
+    font-weight: bold;
+    padding: 15px 50px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+}
+
+/* --- RESPONSIVE --- */
+@media (min-width: 1024px) {
+    .bike-form {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 40px;
+        align-items: start; /* Empêche l'étirement vertical */
+    }
+    .photo-upload-section { grid-column: 1 / -1; }
+    .form-actions { grid-column: 1 / -1; }
+}
+
+@media (max-width: 768px) {
+    .type-grid { grid-template-columns: repeat(2, 1fr); }
+    .details-grid { grid-template-columns: 1fr; }
+}

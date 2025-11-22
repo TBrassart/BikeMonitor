@@ -1,0 +1,87 @@
+/* src/App.css */
+
+/* 1. RESET TOTAL */
+#root {
+  width: 100%;
+  max-width: 100vw !important; /* ON FORCE LA LARGEUR MAX */
+  margin: 0;
+  padding: 0;
+  text-align: left; /* Annule le centrage du texte par défaut */
+}
+
+/* 2. CONTENEUR PRINCIPAL */
+.App {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    width: 100%;
+    background-color: var(--color-dark-bg);
+    position: relative; /* Important pour les position: fixed enfants */
+}
+
+.main-content {
+    flex-grow: 1;
+    width: 100%;
+    padding-bottom: 80px; /* Espace pour la barre mobile */
+}
+
+/* ---------------------------------------------------- */
+/* --- Adaptation PC (Largeur minimale de 768px) --- */
+/* ---------------------------------------------------- */
+@media (min-width: 768px) {
+    
+    /* DÉCALAGE DU CONTENU SI SIDEBAR PRÉSENTE */
+    .App.is-authenticated .main-content {
+        margin-left: 250px; /* Largeur de la Sidebar */
+        width: calc(100% - 250px);
+        padding: 0;
+    }
+    
+    /* Si pas connecté (Page Login), on prend tout */
+    .App:not(.is-authenticated) .main-content {
+        margin-left: 0;
+        width: 100%;
+    }
+    
+    .bottom-nav {
+        display: none !important;
+    }
+}
+
+/* Variables globales (pour rappel) */
+:root {
+  --color-primary: #3498db;
+  --color-neon-primary: #00e5ff;
+  --gradient-neon: linear-gradient(135deg, #00e5ff 0%, #ff00c8 100%);
+  --color-dark-bg: #12121e;
+  --color-surface: #1e1e2d;
+  --color-surface-dark: #151521;
+  --color-text-light: #ffffff;
+  --color-text-secondary: #a0a0b0;
+  --color-alert: #e74c3c;
+}
+
+/* Dans App.css */
+h1, .form-header h2 {
+    background: var(--gradient-neon);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: inline-block; /* Important pour que le dégradé ne s'étale pas sur toute la ligne */
+}
+
+/* Boutons de sauvegarde, d'ajout, etc. */
+.save-btn, 
+.cta-add, 
+.cta-add-standard, 
+.cta-float,
+.connect-btn {
+    background: var(--gradient-neon) !important; /* Remplace background-color */
+    color: white !important; /* Texte blanc obligatoire sur dégradé */
+    border: none !important;
+    transition: filter 0.2s, transform 0.2s;
+}
+
+.save-btn:hover, .cta-add:hover, .cta-float:hover {
+    filter: brightness(1.1); /* On éclaircit au survol */
+    box-shadow: 0 0 15px rgba(0, 229, 255, 0.4); /* Lueur cyan */
+}

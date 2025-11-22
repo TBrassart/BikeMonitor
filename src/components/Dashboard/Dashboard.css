@@ -1,0 +1,265 @@
+/* src/components/Dashboard/Dashboard.css */
+
+.dashboard-container {
+    padding: 20px;
+    padding-bottom: 80px;
+    background-color: var(--color-dark-bg);
+    min-height: 100vh;
+}
+
+.dashboard-header {
+    margin-bottom: 30px;
+}
+
+.dashboard-header h1 {
+    margin: 0;
+    font-size: 1.8rem;
+    color: white;
+}
+
+.subtitle {
+    margin: 5px 0 0 0;
+    color: var(--color-text-secondary);
+}
+
+/* KPIS */
+.stats-overview {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background-color: var(--color-surface);
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 15px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.stat-card.highlight {
+    border-color: var(--color-neon-primary);
+    background: linear-gradient(135deg, rgba(0,229,255,0.1) 0%, rgba(0,0,0,0) 100%);
+}
+
+.stat-icon {
+    font-size: 1.5rem;
+    color: var(--color-neon-primary);
+    margin-bottom: 5px;
+}
+
+.stat-content h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: white;
+}
+
+.stat-content p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #888;
+}
+
+/* SECTIONS */
+.dashboard-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.section-header h2 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.section-header a {
+    color: var(--color-neon-primary);
+    font-size: 0.9rem;
+    text-decoration: none;
+}
+
+/* Alertes */
+.alert-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.alert-item {
+    background-color: #2a2a3e;
+    border-left: 4px solid #e74c3c; /* Rouge par défaut */
+    padding: 12px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.alert-icon {
+    color: #e74c3c;
+    font-size: 1.2rem;
+}
+
+.alert-info h4 {
+    margin: 0;
+    color: white;
+    font-size: 1rem;
+}
+
+.alert-info p {
+    margin: 2px 0 0 0;
+    color: #aaa;
+    font-size: 0.85rem;
+}
+
+.empty-card {
+    background-color: rgba(46, 204, 113, 0.1);
+    border: 1px dashed #2ecc71;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    color: #2ecc71;
+}
+
+/* CTA Principal */
+.cta-main {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background-color: var(--color-neon-primary);
+    color: #000;
+    font-weight: bold;
+    padding: 15px;
+    border-radius: 12px;
+    text-decoration: none;
+    margin-top: 40px;
+    box-shadow: 0 0 20px rgba(0, 229, 255, 0.3);
+    transition: transform 0.2s;
+}
+
+.cta-main:hover {
+    transform: scale(1.02);
+}
+
+@media (min-width: 768px) {
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.stats-filter-bar {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 5px;
+    margin-bottom: 20px;
+    scrollbar-width: none;
+}
+
+.filter-chip {
+    background: transparent;
+    border: 1px solid #444;
+    color: #aaa;
+    padding: 6px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    white-space: nowrap;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.filter-chip:hover {
+    border-color: var(--color-neon-primary);
+    color: white;
+}
+
+.filter-chip.active {
+    background: var(--gradient-neon); 
+    border: none;
+    color: white;
+    font-weight: bold;
+    box-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
+}
+
+/* Barre outils qui contient Chips + Toggle */
+.stats-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    background-color: rgba(255,255,255,0.03);
+    padding: 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+.stats-filter-chips {
+    display: flex;
+    gap: 10px;
+}
+
+/* Toggle Switch Design */
+.rolling-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+}
+
+.toggle-label {
+    font-size: 0.9rem;
+    color: #888;
+    transition: color 0.2s;
+}
+
+.toggle-label.active {
+    color: var(--color-neon-primary);
+    font-weight: bold;
+}
+
+.toggle-switch {
+    width: 44px;
+    height: 24px;
+    background-color: #333;
+    border-radius: 12px;
+    position: relative;
+    transition: background-color 0.3s;
+    border: 1px solid #555;
+}
+
+.toggle-switch.on {
+    background-color: rgba(0, 229, 255, 0.3);
+    border-color: var(--color-neon-primary);
+}
+
+.toggle-handle {
+    width: 18px;
+    height: 18px;
+    background-color: white;
+    border-radius: 50%;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.toggle-switch.on .toggle-handle {
+    transform: translateX(20px); /* Bouge le rond vers la droite */
+    background-color: var(--color-neon-primary); /* Le rond devient cyan */
+}

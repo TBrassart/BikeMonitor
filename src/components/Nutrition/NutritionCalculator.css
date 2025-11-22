@@ -1,0 +1,141 @@
+/* src/components/Nutrition/NutritionCalculator.css */
+
+.calculator-container {
+    background-color: var(--color-surface-dark);
+    border: 1px solid #2a2a3e;
+    border-radius: 12px;
+    padding: 30px;
+    margin-bottom: 40px;  
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    border-left: 5px solid var(--color-neon-primary);
+}
+
+.calculator-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.calculator-header h2 {
+    margin: 0;
+    color: white;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.calc-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto; /* Durée | Intensité | Bouton */
+    gap: 20px;
+    align-items: end;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: var(--color-text-secondary);
+}
+
+.form-group select, 
+.form-group input {
+    background-color: #12121e;
+    border: 1px solid #444;
+    color: white;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 1rem;
+}
+
+.calc-btn {
+    background-color: #00e5ff !important; /* Cyan Néon forcé */
+    color: #12121e !important; /* Texte sombre forcé */
+    font-weight: bold;
+    border: none;
+    padding: 0 30px; /* Padding horizontal */
+    border-radius: 6px;
+    cursor: pointer;
+    height: 49px; /* Ajusté pour s'aligner parfaitement avec les inputs standards */
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    white-space: nowrap; /* Empêche le texte de passer à la ligne */
+}
+
+.calc-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 15px rgba(0, 229, 255, 0.6);
+}
+
+/* RÉSULTATS */
+.calc-result {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.needs-summary {
+    font-size: 1.1rem;
+    color: var(--color-neon-primary);
+    margin-bottom: 15px;
+}
+
+.suggestion-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.suggestion-card {
+    background-color: #12121e;
+    border: 1px solid var(--color-text-secondary);
+    padding: 10px 20px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: white;
+}
+
+.suggestion-card strong {
+    color: var(--color-neon-primary);
+    font-size: 1.2rem;
+}
+
+.consume-btn {
+    margin-top: 20px;
+    background: transparent;
+    border: 1px solid #2ecc71;
+    color: #2ecc71;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.2s;
+}
+
+.consume-btn:hover {
+    background-color: #2ecc71;
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .calc-form {
+        grid-template-columns: 1fr; /* Empiler sur mobile */
+    }
+}

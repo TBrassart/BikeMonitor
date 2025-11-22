@@ -1,0 +1,145 @@
+/* src/components/Auth/AuthScreen.css */
+
+.auth-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+    text-align: center;
+    background-color: var(--color-dark-bg);
+    width: 100%;
+}
+
+/* NOUVEAU : Bloc Logo + Titre */
+.auth-brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 10px;
+    animation: fadeIn 0.8s ease-out;
+}
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+
+.auth-brand h1 {
+    font-size: 3.5rem;
+    margin: 10px 0 0 0;
+    /* Dégradé sur le texte */
+    background: var(--gradient-neon); /* Utilise la variable globale si définie, sinon linear-gradient */
+    background: linear-gradient(135deg, #00e5ff 0%, #ff00c8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: inline-block;
+}
+
+.subtitle {
+    color: var(--color-text-secondary);
+    margin-bottom: 40px;
+    font-size: 1.1rem;
+}
+
+.login-form {
+    width: 100%;
+    max-width: 400px;
+    background-color: var(--color-surface-dark);
+    padding: 40px;
+    border-radius: 12px;
+    border: 1px solid #2a2a3e;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3); /* Ombre un peu plus marquée */
+}
+
+.login-form h2 {
+    color: white;
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+.input-wrapper {
+    display: flex;
+    align-items: center;
+    position: relative; 
+    border: 1px solid #444;
+    border-radius: 8px;
+    background-color: #12121e;
+    padding: 12px;
+}
+
+.input-icon {
+    color: #666;
+    margin-right: 15px; 
+    font-size: 1.1rem;
+
+}
+
+.login-form input {
+    flex-grow: 1;
+    border: none;
+    background: transparent;
+    color: white;
+    font-size: 1rem;
+    outline: none;
+    padding: 0; 
+}
+
+/* Autocomplete hack */
+.login-form input:-webkit-autofill,
+.login-form input:-webkit-autofill:hover, 
+.login-form input:-webkit-autofill:focus, 
+.login-form input:-webkit-autofill:active{
+    -webkit-box-shadow: 0 0 0 30px #12121e inset !important;
+    -webkit-text-fill-color: white !important;
+}
+
+.login-btn {
+    width: 100%;
+    padding: 15px;
+    /* Dégradé néon sur le bouton */
+    background: var(--gradient-neon); 
+    background: linear-gradient(135deg, #00e5ff 0%, #ff00c8 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s, filter 0.2s;
+    margin-top: 10px;
+}
+
+.login-btn:hover {
+    filter: brightness(1.1);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 229, 255, 0.3);
+}
+
+.signup-link {
+    margin-top: 20px;
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+}
+
+.signup-link a {
+    color: #00e5ff; /* Cyan */
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.signup-link a:hover {
+    text-decoration: underline;
+}
+
+.error-banner {
+    background-color: rgba(231, 76, 60, 0.1);
+    color: #e74c3c;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    border: 1px solid #e74c3c;
+    font-size: 0.9rem;
+}

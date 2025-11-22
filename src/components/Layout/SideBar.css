@@ -1,0 +1,172 @@
+/* src/components/Layout/Sidebar.css */
+
+.sidebar {
+    width: 250px;
+    height: 100vh;
+    background-color: #1e1e2d;
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.2);
+}
+
+.sidebar-header {
+    padding: 30px 20px;
+    text-align: center;
+}
+
+.sidebar-header h2 {
+    margin: 0;
+    color: var(--color-neon-primary);
+    font-size: 1.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* NAVIGATION */
+.sidebar-nav {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 20px 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center; /* Centre verticalement */
+    gap: 15px;
+    padding: 12px 15px;
+    border-radius: 8px;
+    background: transparent;
+    border: none;
+    color: #aaa;
+    cursor: pointer;
+    font-size: 1rem;
+    width: 100%;
+    transition: all 0.2s;
+    text-align: left;
+}
+
+.nav-item:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: white;
+}
+
+.nav-item.active {
+    background: linear-gradient(90deg, rgba(0, 229, 255, 0.15) 0%, rgba(255, 0, 200, 0.05) 100%); /* Dégradé très léger en fond */
+    color: white;
+    border-left: 3px solid; 
+    border-image: var(--gradient-neon) 1; /* La bordure prend le dégradé ! */
+}
+
+.nav-item.active .nav-icon {
+    color: #00e5ff; /* Fallback */
+}
+
+/* ICÔNES (Correction taille) */
+.nav-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem; /* Taille augmentée */
+    width: 24px; /* Largeur fixe pour alignement */
+}
+
+/* FOOTER (Profil + Logout) */
+.sidebar-footer {
+    padding: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    background-color: #1a1a28;
+}
+
+/* Badge Profil */
+.user-menu-wrapper {
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+.current-profile-badge {
+    display: flex; 
+    align-items: center; 
+    gap: 12px; 
+    padding: 10px; 
+    background-color: rgba(255,255,255,0.05);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+}
+
+.current-profile-badge:hover {
+    border-color: var(--color-neon-primary);
+    background-color: rgba(255,255,255,0.1);
+}
+
+/* Popup Menu */
+.user-popup-menu {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    width: 100%;
+    background-color: #2a2a3e;
+    border: 1px solid #444;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    padding: 5px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+    z-index: 101;
+    animation: slideUp 0.2s ease;
+}
+
+@keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+.user-popup-menu button {
+    width: 100%;
+    background: none;
+    border: none;
+    color: #ccc;
+    padding: 12px;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+.user-popup-menu button:hover {
+    background-color: var(--color-neon-primary);
+    color: #000;
+    font-weight: bold;
+}
+
+/* BOUTON DÉCONNEXION (Correction style) */
+.logout-btn {
+    width: 100%;
+    background-color: transparent;
+    border: 1px solid #e74c3c; /* Bordure rouge */
+    color: #e74c3c;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-weight: bold;
+    transition: all 0.2s;
+}
+
+.logout-btn:hover {
+    background-color: #e74c3c;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3);
+}

@@ -7,7 +7,7 @@ import './ProfileSelection.css';
 // Définition de la carte de profil (à adapter si tu as un fichier ProfileCard.jsx séparé)
 const ProfileCard = ({ profile, onSelectProfile }) => {
     return (
-        <div key={profile.id} className="profile-card" onClick={() => onSelectProfile(profile)}>
+        <div key={profile.id} className="profile-card" onClick={() => onSelectProfile && onSelectProfile(profile)}>
             {/* On ne garde que l'affichage et la sélection */}
             <div className="profile-avatar">
                 {profile.avatar}

@@ -18,19 +18,23 @@ import ProfilePage from './components/Settings/ProfilePage';
 // Composants Auth & Layout
 import AuthScreen from './components/Auth/AuthScreen';
 import ProfileSelection from './components/Auth/ProfileSelection';
-import Sidebar from './components/Layout/SideBar';
+import Sidebar from './components/Layout/Sidebar';
 import BottomNav from './components/Layout/BottomNav';
 import JoinFamily from './components/Auth/JoinFamily';
 
 // Services
 import { authService, bikeService } from './services/api';
-import { stravaService } from './services/stravaService'; // <--- IMPORT AJOUTÉ ICI
+import { stravaService } from './services/stravaService'; 
 import { supabase } from './supabaseClient';
 
 const App = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const activeRoute = location.pathname;
+    
+    // 1. DÉCLARATION DE LA VARIABLE MANQUANTE
+    // On détecte si on est sur une page "Plein écran" (comme l'invitation)
+    const isFullScreenPage = location.pathname.startsWith('/join');
 
     const [session, setSession] = useState(null);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -43,26 +47,18 @@ const App = () => {
     const [selectedBike, setSelectedBike] = useState(null); 
     const [isDetailOpen, setIsDetailOpen] = useState(false); 
 
-    // --- 1. RESTAURATION DU PROFIL AU CHARGEMENT ---
+    // --- RESTAURATION DU PROFIL ---
     useEffect(() => {
-        // A. Vérifier la session Supabase
         supabase.auth.getSession().then(({ data: { session } }) => {
             setSession(session);
             setIsLoggedIn(!!session);
 
-            // B. Si connecté, essayer de restaurer le profil depuis le localStorage
             if (session) {
                 const storedProfile = localStorage.getItem('bm_active_profile');
                 if (storedProfile) {
                     try {
-                        const profile = JSON.parse(storedProfile);
-                        setCurrentProfile(profile);
-                        // Si on restaure le profil, on lance aussi le chargement des données !
-                        // Note : On appelle fetchInitialData via un useEffect séparé ou ici directement
-                        // Pour faire simple, on le fera via l'effet de dépendance [currentProfile] plus bas si besoin
-                        // ou on appelle une fonction dédiée.
+                        setCurrentProfile(JSON.parse(storedProfile));
                     } catch (e) {
-                        console.error("Erreur lecture profil stocké", e);
                         localStorage.removeItem('bm_active_profile');
                     }
                 }
@@ -75,35 +71,25 @@ const App = () => {
             if (!session) {
                 setBikes([]); 
                 setCurrentProfile(null);
-                localStorage.removeItem('bm_active_profile'); // Nettoyage
-                navigate('/'); 
+                localStorage.removeItem('bm_active_profile'); 
+                // Si on est sur une invitation, on ne redirige pas de force
+                if (!location.pathname.startsWith('/join')) {
+                    navigate('/');
+                }
             }
         });
 
         return () => subscription.unsubscribe();
-    }, [navigate]);
+    }, [navigate, location.pathname]);
 
-    // --- 2. EFFET DE CHARGEMENT DES DONNÉES ---
-    // On déclenche le chargement dès que currentProfile est défini (manuellement ou via localStorage)
+    // --- CHARGEMENT DONNÉES ---
     useEffect(() => {
         if (currentProfile) {
-            // 1. On charge les données locales (Vélos, etc.)
             fetchInitialData();
-
-            // 2. AUTO-SYNC STRAVA (En arrière-plan)
-            // On ne met pas de 'await' pour ne pas bloquer l'interface utilisateur
-            // L'utilisateur peut naviguer pendant que ça charge.
-            stravaService.syncActivities(currentProfile.id)
-                .then(result => {
-                    if (result.added > 0) {
-                        console.log(`Auto-sync: +${result.added} nouvelles sorties.`);
-                        // Optionnel : Ajouter un petit Toast ici pour dire "3 nouvelles sorties importées"
-                    }
-                })
-                .catch(err => console.log("Auto-sync silencieuse échouée (peut-être pas connecté)"));
+            // Synchro silencieuse
+            stravaService.syncActivities(currentProfile.id).catch(() => {});
         }
     }, [currentProfile]);
-
 
     const fetchInitialData = async () => {
         setIsLoadingInitialData(true);
@@ -117,16 +103,15 @@ const App = () => {
         }
     };
 
-    // --- 3. SAUVEGARDE LORS DE LA SÉLECTION ---
     const handleProfileSelect = (profile) => {
         setCurrentProfile(profile);
-        localStorage.setItem('bm_active_profile', JSON.stringify(profile)); // <-- Sauvegarde ici
+        localStorage.setItem('bm_active_profile', JSON.stringify(profile)); 
         navigate('/'); 
     };
 
     const handleSwitchProfile = () => {
         setCurrentProfile(null);
-        localStorage.removeItem('bm_active_profile'); // <-- Nettoyage ici
+        localStorage.removeItem('bm_active_profile'); 
     };
 
     const handleLogin = async (email, password) => {
@@ -141,7 +126,7 @@ const App = () => {
         await authService.logout();
         setIsLoggedIn(false);
         setCurrentProfile(null);
-        localStorage.removeItem('bm_active_profile'); // <-- Nettoyage ici
+        localStorage.removeItem('bm_active_profile'); 
         navigate('/');
     };
 
@@ -184,10 +169,19 @@ const App = () => {
         fetchInitialData();
     };
 
-    // --- RENDU ---
+    // --- RENDU PRINCIPAL ---
     
-    if (!isLoggedIn) return <AuthScreen onLogin={handleLogin} />;
-    if (!currentProfile) return <ProfileSelection onSelectProfile={handleProfileSelect} />;
+    // 2. LOGIQUE DE REDIRECTION INTELLIGENTE
+    // Si on n'est pas connecté ET qu'on n'est PAS sur une page d'invitation, on bloque.
+    // Si on est sur /join/..., on laisse passer (JoinFamily gérera le login).
+    if (!isLoggedIn && !isFullScreenPage) {
+        return <AuthScreen onLogin={handleLogin} />;
+    }
+
+    if (isLoggedIn && !currentProfile && !isFullScreenPage) {
+        return <ProfileSelection onSelectProfile={handleProfileSelect} />;
+    }
+    
     if (isLoadingInitialData) return <div className="loading-screen">Chargement...</div>;
 
     if (isFormOpen) {
@@ -205,9 +199,10 @@ const App = () => {
     }
 
     return (
-        <div className="App is-authenticated">
-            {/* ON CACHE LA SIDEBAR SI C'EST UNE PAGE FULLSCREEN */}
-            {!isFullScreenPage && (
+        <div className={`App ${isLoggedIn ? 'is-authenticated' : ''}`}>
+            
+            {/* 3. ON CACHE LA SIDEBAR SUR LES PAGES FULLSCREEN (LOGIN/JOIN) */}
+            {isLoggedIn && currentProfile && !isFullScreenPage && (
                 <Sidebar 
                     activeRoute={activeRoute} 
                     onNavigate={handleNavigate} 
@@ -217,7 +212,7 @@ const App = () => {
                 />
             )}
 
-            <main className="main-content" style={isFullScreenPage ? { marginLeft: 0, width: '100%' } : {}}>
+            <main className="main-content" style={isFullScreenPage ? {marginLeft: 0, width: '100%'} : {}}>
                 <Routes>
                     <Route path="/" element={<Dashboard currentProfile={currentProfile} />} />
                     <Route path="/garage" element={
@@ -231,15 +226,14 @@ const App = () => {
                     <Route path="/activities" element={<ActivitiesPage currentProfile={currentProfile} />} />
                     <Route path="/profile" element={<ProfilePage currentProfile={currentProfile} onProfileUpdate={(updated) => {setCurrentProfile(updated);localStorage.setItem('bm_active_profile', JSON.stringify(updated));}} />} />
                     
-                    {/* Route Join */}
+                    {/* Route d'invitation (accessible même si non connecté grâce au bypass plus haut) */}
                     <Route path="/join/:token" element={<JoinFamily onLogin={handleLogin} />} />
                     
                     <Route path="*" element={<Navigate to="/" />} />
                 </Routes>
             </main>
             
-            {/* ON CACHE LA NAV MOBILE AUSSI */}
-            {!isFullScreenPage && (
+            {!isFormOpen && !isDetailOpen && isLoggedIn && currentProfile && !isFullScreenPage && (
                 <BottomNav activeRoute={activeRoute} onNavigate={handleNavigate} />
             )}
         </div>

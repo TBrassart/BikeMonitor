@@ -2,7 +2,9 @@ import { supabase } from './api';
 
 const CLIENT_ID = import.meta.env.VITE_STRAVA_CLIENT_ID;
 const CLIENT_SECRET = import.meta.env.VITE_STRAVA_CLIENT_SECRET;
-const REDIRECT_URI = import.meta.env.VITE_STRAVA_REDIRECT_URI || (window.location.origin + '/strava-callback');
+const getRedirectUri = () => {
+    return window.location.origin + '/strava-callback';
+};
 
 export const stravaService = {
     // --- AUTHENTIFICATION ---
@@ -13,9 +15,10 @@ export const stravaService = {
             return;
         }
         // Scopes nécessaires pour lire le profil et les activités
+        const redirectUri = getRedirectUri();
+        console.log("🚀 Redirection Strava vers :", redirectUri);
         const scope = 'read,activity:read_all';
-        const authUrl = `https://www.strava.com/oauth/authorize?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${REDIRECT_URI}&approval_prompt=force&scope=${scope}`;
-        window.location.href = authUrl;
+        const authUrl = `https://www.strava.com/oauth/authorize?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${redirectUri}&approval_prompt=force&scope=${scope}`;        window.location.href = authUrl;
     },
 
     async handleCallback(code) {

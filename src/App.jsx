@@ -57,7 +57,7 @@ function App() {
             <main className="main-content">
                 <Routes>
                     <Route path="/" element={<Navigate to="/app/dashboard" />} />
-                    
+                    <Route path="/strava-callback" element={<StravaCallback />} />
                     <Route path="/app/dashboard" element={<Dashboard />} />
                     <Route path="/app/garage" element={<BikeGarage />} />
                     <Route path="/app/add-bike" element={<BikeForm />} />

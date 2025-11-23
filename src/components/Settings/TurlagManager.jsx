@@ -96,7 +96,7 @@ function TurlagManager() {
                         </button>
                     </>
                 ) : (
-                    <button onClick={() => setView('list')} className="secondary-btn back-btn">
+                    <button onClick={() => setView('list')} className="back-action-btn">
                         <FaTimes /> Annuler
                     </button>
                 )}

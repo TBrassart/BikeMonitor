@@ -1,134 +1,223 @@
+/* src/components/Settings/TurlagDetail.css */
+
 .turlag-detail-page {
     padding-bottom: 50px;
 }
 
-/* HERO */
+/* --- HERO HEADER (Correction Alignement) --- */
 .turlag-hero {
     display: flex;
-    align-items: center;
-    gap: 20px;
+    align-items: center; /* Centre verticalement flèche et contenu */
+    gap: 25px; /* Espace entre flèche et icône */
     padding: 30px;
     margin-bottom: 30px;
     position: relative;
+    flex-wrap: wrap; /* Permet de passer à la ligne sur très petit écran */
+}
+
+/* Bouton Retour (Rond et stylé) */
+.back-icon {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white;
+    width: 45px; height: 45px; /* Un peu plus grand */
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; /* Empêche l'écrasement */
+    transition: all 0.2s;
+}
+.back-icon:hover { background: rgba(255,255,255,0.2); transform: translateX(-3px); }
+
+.hero-content {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex: 1; /* Prend la place dispo */
 }
 
 .turlag-icon-large {
-    width: 80px; height: 80px;
-    border-radius: 20px;
+    width: 70px; height: 70px;
+    border-radius: 18px;
     background: var(--gradient-secondary);
     display: flex; align-items: center; justify-content: center;
-    font-size: 2.5rem; color: white;
+    font-size: 2rem; color: white;
     overflow: hidden;
+    flex-shrink: 0;
+    box-shadow: 0 0 15px rgba(14, 165, 233, 0.3);
 }
 .turlag-icon-large img { width: 100%; height: 100%; object-fit: cover; }
 
-.hero-content h1 { margin: 0; font-size: 2rem; color: white; }
-.turlag-desc { color: var(--text-secondary); margin: 5px 0 0 0; }
+/* Titres */
+.hero-content h1 { margin: 0; font-size: 1.8rem; color: white; line-height: 1.2; }
+.turlag-desc { color: var(--text-secondary); margin: 5px 0 0 0; font-size: 0.9rem; }
 
-.back-icon, .edit-btn {
+.edit-btn {
+    margin-left: auto;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    border: none;
     background: rgba(255,255,255,0.1);
-    border: none; color: white;
-    width: 40px; height: 40px; border-radius: 50%;
-    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    color: white;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
 }
-.edit-btn { margin-left: auto; background: var(--gradient-primary); }
+.edit-btn:hover { background: var(--gradient-primary); }
 
-/* LAYOUT */
+/* --- LAYOUT --- */
 .turlag-layout {
     display: grid;
-    grid-template-columns: 300px 1fr;
+    grid-template-columns: 320px 1fr;
     gap: 30px;
 }
 
-/* INVITE CARD */
-.invite-card {
-    padding: 15px;
-    margin-bottom: 20px;
-    text-align: center;
-}
-.code-box {
-    background: rgba(0,0,0,0.3);
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px dashed var(--neon-blue);
-    display: flex; justify-content: space-between; align-items: center;
-    cursor: pointer;
-    margin-top: 5px;
-    color: var(--neon-blue);
-}
-
-/* MEMBERS */
+/* --- MEMBRES (Correction Alignement) --- */
 .members-list { padding: 20px; }
-.members-list h3 { margin-top: 0; font-size: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+.members-list h3 { margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
 
 .member-row {
-    display: flex; align-items: center; gap: 10px;
-    padding: 10px 0;
+    display: flex;
+    align-items: center; /* Centre verticalement l'avatar et le texte */
+    gap: 15px;
+    padding: 12px 0;
     border-bottom: 1px solid rgba(255,255,255,0.05);
 }
+
 .member-avatar {
-    width: 35px; height: 35px; border-radius: 50%;
+    width: 40px; height: 40px; 
+    border-radius: 50%;
     background: var(--gradient-primary);
     display: flex; align-items: center; justify-content: center;
     font-weight: bold; color: white;
+    flex-shrink: 0; /* Empêche l'écrasement */
+    font-size: 1rem;
 }
-.member-info { flex: 1; display: flex; flex-direction: column; }
-.member-name { font-size: 0.9rem; color: white; }
-.role-tag { font-size: 0.7rem; color: var(--text-secondary); display: flex; align-items: center; gap: 4px; text-transform: capitalize; }
+
+.member-info { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+.member-name { font-size: 0.95rem; color: white; font-weight: 500; }
+.role-tag { font-size: 0.7rem; color: var(--text-secondary); display: flex; align-items: center; gap: 4px; margin-top: 2px; }
 .role-tag.admin { color: #fde047; }
-.role-tag.moderator { color: var(--neon-blue); }
 
-.promote-btn {
-    font-size: 0.7rem; background: transparent; border: 1px solid var(--border-color); color: var(--text-secondary); padding: 2px 8px; border-radius: 4px; cursor: pointer;
-}
-
-/* EVENTS */
+/* --- ÉVÉNEMENTS & BOUTONS --- */
 .events-header {
     display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
 }
-.add-event-btn {
-    background: var(--gradient-success); color: white; border: none;
-    padding: 8px 16px; border-radius: 20px; font-weight: 600; cursor: pointer;
-    display: flex; align-items: center; gap: 6px;
-}
 
-.event-card {
-    display: flex; gap: 20px; padding: 20px; margin-bottom: 15px;
+/* Bouton Créer Événement (Néon) */
+.add-event-btn {
+    background: var(--gradient-success);
+    color: white; border: none;
+    padding: 10px 20px; 
+    border-radius: 12px; 
+    font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+    box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+    transition: transform 0.2s;
 }
+.add-event-btn:hover { transform: translateY(-2px); }
+
+.event-card { display: flex; gap: 20px; padding: 20px; margin-bottom: 15px; }
 .event-date-box {
     background: rgba(255,255,255,0.05);
-    padding: 10px; border-radius: 10px;
+    padding: 12px; border-radius: 12px;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    min-width: 60px;
+    min-width: 65px;
+    border: 1px solid rgba(255,255,255,0.1);
 }
-.day { font-size: 1.5rem; font-weight: 700; color: var(--neon-blue); }
-.month { font-size: 0.8rem; text-transform: uppercase; color: var(--text-secondary); }
+.day { font-size: 1.6rem; font-weight: 700; color: var(--neon-blue); line-height: 1; }
+.month { font-size: 0.8rem; text-transform: uppercase; color: var(--text-secondary); margin-top: 2px; }
 
-.event-content h4 { margin: 0 0 5px 0; color: white; font-size: 1.1rem; }
-.event-meta { color: var(--text-secondary); font-size: 0.85rem; display: flex; gap: 10px; margin-bottom: 10px; }
+.event-content h4 { margin: 0 0 5px 0; color: white; font-size: 1.2rem; }
+.event-meta { color: var(--text-secondary); font-size: 0.9rem; display: flex; gap: 15px; margin-bottom: 10px; }
 
-/* FORMS */
-.event-form, .modal-content { padding: 20px; margin-bottom: 20px; }
+/* --- FORMULAIRES (Modales & Events) --- */
+.event-form, .modal-content { padding: 25px; margin-bottom: 20px; }
+
+/* Inputs stylés */
 .event-form input, .event-form textarea, .modal-content input, .modal-content textarea {
-    width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color);
-    color: white; padding: 10px; border-radius: 8px; margin-bottom: 10px; box-sizing: border-box;
+    width: 100%;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border-color);
+    color: white;
+    padding: 12px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    box-sizing: border-box;
+    font-size: 1rem;
 }
-.form-actions { display: flex; justify-content: flex-end; gap: 10px; }
+.event-form input:focus, .modal-content input:focus {
+    border-color: var(--neon-blue); outline: none;
+}
 
-/* Leave Btn */
+/* Boutons Formulaires (Annuler / Valider) */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.form-actions button[type="button"] { /* Bouton Annuler */
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.2);
+    color: var(--text-secondary);
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 500;
+}
+.form-actions button[type="button"]:hover {
+    background: rgba(255,255,255,0.05);
+    color: white;
+}
+
+.form-actions button[type="submit"] { /* Bouton Valider */
+    background: var(--gradient-primary);
+    border: none;
+    color: white;
+    padding: 10px 25px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
+
+/* INVITE & LEAVE */
+.invite-card { padding: 20px; text-align: center; }
+.code-box {
+    background: rgba(0,0,0,0.3);
+    padding: 12px; border-radius: 10px;
+    border: 1px dashed var(--neon-blue);
+    display: flex; justify-content: space-between; align-items: center;
+    cursor: pointer; margin-top: 10px;
+    color: var(--neon-blue); font-family: monospace; font-size: 1.1rem;
+}
 .leave-group-btn {
-    width: 100%; margin-top: 20px; background: rgba(239,68,68,0.1); border: 1px solid #ef4444;
-    color: #ef4444; padding: 10px; border-radius: 8px; cursor: pointer;
+    width: 100%; margin-top: 20px;
+    background: rgba(239,68,68,0.15);
+    border: 1px solid #ef4444;
+    color: #ef4444;
+    padding: 12px; border-radius: 10px;
+    cursor: pointer; font-weight: 600;
+    transition: all 0.2s;
 }
+.leave-group-btn:hover { background: rgba(239,68,68,0.25); }
 
-/* MODAL */
+/* MODAL FIXE */
 .modal-overlay {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
-    display: flex; align-items: center; justify-content: center; z-index: 100;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000;
 }
-.modal-content { width: 400px; max-width: 90%; }
+.modal-content { width: 500px; max-width: 95%; }
 
+/* MOBILE */
 @media (max-width: 900px) {
     .turlag-layout { grid-template-columns: 1fr; }
+    .hero-content { flex-direction: column; text-align: center; }
+    .turlag-hero { flex-direction: column; }
+    .back-icon { position: absolute; top: 20px; left: 20px; }
+    .edit-btn { position: absolute; top: 20px; right: 20px; }
 }

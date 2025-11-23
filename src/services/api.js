@@ -220,6 +220,33 @@ export const api = {
         const { error } = await supabase.from('history').insert([item]);
         if (error) throw error;
     },
+    // --- ACTIVITE --- 
+    async getActivities() {
+        // 1. On récupère l'utilisateur technique
+        const user = await authService.getCurrentUser();
+        if (!user) return [];
+
+        // 2. On récupère son PROFIL (car c'est lui qui est lié aux activités)
+        const profile = await authService.getMyProfile();
+        
+        if (!profile) {
+            console.warn("Profil introuvable pour charger les activités.");
+            return [];
+        }
+
+        // 3. On requête avec profile.id (qui correspond à ta colonne en base)
+        const { data, error } = await supabase
+            .from('activities')
+            .select('*')
+            .eq('profile_id', profile.id) // <-- C'est la clé du fix
+            .order('start_date', { ascending: false });
+
+        if (error) {
+            console.error("Erreur API Activités:", error);
+            return [];
+        }
+        return data;
+    },
     // --- NUTRITION ---
     async getNutrition() {
         const { data, error } = await supabase.from('nutrition').select('*');

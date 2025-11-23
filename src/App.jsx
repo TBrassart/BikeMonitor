@@ -24,52 +24,53 @@ import ProfilePage from './components/Settings/ProfilePage';
 import './App.css';
 
 function App() {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    checkSession();
-  }, []);
+    // Au lancement, on vérifie si une session existe déjà
+    useEffect(() => {
+        checkSession();
+    }, []);
 
-  const checkSession = async () => {
-    const currentUser = await authService.getCurrentUser();
-    setUser(currentUser);
-    setLoading(false);
-  };
+    const checkSession = async () => {
+        try {
+            const currentUser = await authService.getCurrentUser();
+            setUser(currentUser);
+        } catch (e) {
+            console.error("Erreur session", e);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-  if (loading) return <div className="app-loading">Chargement...</div>;
+    if (loading) return <div className="app-loading">Chargement...</div>;
 
-  // Si pas connecté, on affiche l'écran d'Auth
-  if (!user) {
-    return <AuthScreen onLogin={checkSession} />;
-  }
+    // Si pas d'utilisateur, on affiche le Login
+    if (!user) {
+        return <AuthScreen onLogin={checkSession} />;
+    }
 
-  // MODIF : On a retiré la balise <Router> ici
-  return (
-      <div className="app-container">
-        <SideBar />
-        <main className="main-content">
-          <Routes>
-            <Route path="/" element={<Navigate to="/app/dashboard" />} />
-            
-            {/* Routes principales */}
-            <Route path="/app/dashboard" element={<Dashboard />} />
-            <Route path="/app/garage" element={<BikeGarage />} />
-            <Route path="/app/add-bike" element={<BikeForm />} />
-            <Route path="/app/bike/:bikeId" element={<BikeDetailShell />} />
-            <Route path="/app/settings" element={<SettingsPage />} />
-            
-            {/* Redirections de sécurité */}
-            <Route path="/join/*" element={<Navigate to="/app/settings" />} />
-            
-            {/* Route Catch-all */}
-            <Route path="*" element={<Navigate to="/app/dashboard" />} />
-          </Routes>
-        </main>
-        <BottomNav />
-      </div>
-  );
-  // MODIF : On a retiré la balise </Router> ici
+    // Si utilisateur connecté, on affiche l'App
+    return (
+        <div className="app-container">
+            <SideBar />
+            <main className="main-content">
+                <Routes>
+                    <Route path="/" element={<Navigate to="/app/dashboard" />} />
+                    
+                    <Route path="/app/dashboard" element={<Dashboard />} />
+                    <Route path="/app/garage" element={<BikeGarage />} />
+                    <Route path="/app/add-bike" element={<BikeForm />} />
+                    <Route path="/app/bike/:bikeId" element={<BikeDetailShell />} />
+                    <Route path="/app/settings" element={<SettingsPage />} />
+                    
+                    {/* Redirection par défaut */}
+                    <Route path="*" element={<Navigate to="/app/dashboard" />} />
+                </Routes>
+            </main>
+            <BottomNav />
+        </div>
+    );
 }
 
 export default App;

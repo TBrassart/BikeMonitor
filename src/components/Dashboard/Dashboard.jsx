@@ -3,7 +3,7 @@ import { api, authService } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
 import { 
     FaRoad, FaMountain, FaClock, FaBicycle, 
-    FaExclamationTriangle, FaWrench, FaCalendarAlt, FaSync, FaTimes, FaArrowRight, FaPlus, FaUsers
+    FaExclamationTriangle, FaWrench, FaCalendarAlt, FaSync, FaTimes, FaArrowRight, FaPlus, FaUsers 
 } from 'react-icons/fa';
 import ChartsSection from './ChartsSection';
 import WeatherWidget from './WeatherWidget';

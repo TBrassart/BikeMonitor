@@ -19,7 +19,7 @@ import KitsPage from './components/Kits/KitsPage';
 import ActivitiesPage from './components/Activities/ActivitiesPage';
 import LibraryPage from './components/Library/LibraryPage';
 import ProfilePage from './components/Settings/ProfilePage';
-
+import TurlagManager from './components/Settings/TurlagManager';
 
 import './App.css';
 
@@ -62,6 +62,7 @@ function App() {
                     <Route path="/app/garage" element={<BikeGarage />} />
                     <Route path="/app/add-bike" element={<BikeForm />} />
                     <Route path="/app/bike/:bikeId" element={<BikeDetailShell />} />
+                    <Route path="/app/turlag" element={<div className="page-container"><h2>Gestion d'équipe</h2><TurlagManager /></div>} />
                     <Route path="/app/settings" element={<SettingsPage />} />
                     
                     {/* Redirection par défaut */}

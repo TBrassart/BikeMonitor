@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { bikeService } from '../../services/api'; // Utilise l'adaptateur
+import { bikeService } from '../../services/api';
+import { FaArrowLeft, FaCamera, FaPen, FaTrash, FaMountain, FaClock, FaRoad } from 'react-icons/fa';
 import './BikeDetailShell.css';
 
-// Import des onglets (Assurez-vous que ces chemins sont corrects)
+// Import des onglets
 import MaintenanceTab from './MaintenanceTab';
 import PartsTab from './PartsTab';
 import TirePressureTab from './TirePressureTab';
@@ -12,10 +13,11 @@ import HistoryTab from './HistoryTab';
 function BikeDetailShell() {
     const { bikeId } = useParams();
     const navigate = useNavigate();
+    const fileInputRef = useRef(null);
     
     const [bike, setBike] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('maintenance'); // maintenance, parts, tires, history
+    const [activeTab, setActiveTab] = useState('parts'); // On commence par les pièces par défaut
 
     useEffect(() => {
         loadBikeDetails();
@@ -24,79 +26,120 @@ function BikeDetailShell() {
     const loadBikeDetails = async () => {
         try {
             setLoading(true);
-            // Appel sécurisé via l'adaptateur
             const data = await bikeService.getById(bikeId);
             setBike(data);
         } catch (e) {
-            console.error("Erreur chargement vélo:", e);
-            // Optionnel : Rediriger vers le garage si vélo non trouvé
-            // navigate('/app/garage');
+            console.error("Erreur", e);
         } finally {
             setLoading(false);
         }
     };
 
-    // --- PROTECTION CONTRE LE CRASH ---
-    if (loading) {
-        return <div className="bike-detail-loading">Chargement des données du vélo...</div>;
-    }
+    const handlePhotoUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        try {
+            const url = await bikeService.uploadPhoto(file);
+            await bikeService.update(bikeId, { photo_url: url });
+            loadBikeDetails(); // Refresh
+        } catch (error) {
+            alert("Erreur upload photo");
+        }
+    };
 
-    if (!bike) {
-        return (
-            <div className="bike-detail-error">
-                <p>Vélo introuvable.</p>
-                <button onClick={() => navigate('/app/garage')}>Retour au garage</button>
-            </div>
-        );
-    }
-    // ----------------------------------
+    const handleDelete = async () => {
+        if (window.confirm("Supprimer définitivement ce vélo ?")) {
+            await bikeService.delete(bikeId);
+            navigate('/app/garage');
+        }
+    };
+
+    if (loading) return <div className="loading-state">Chargement du cockpit...</div>;
+    if (!bike) return <div className="error-state">Vélo introuvable</div>;
 
     return (
         <div className="bike-detail-shell">
-            <header className="bike-header">
-                <button onClick={() => navigate('/app/garage')} className="back-btn">←</button>
-                <div className="bike-identity">
+            {/* HEADER AVEC PHOTO EN FOND */}
+            <div className="bike-hero" style={{ backgroundImage: `url(${bike.photo_url || ''})` }}>
+                <div className="hero-overlay"></div>
+                
+                <div className="hero-top-bar">
+                    <button onClick={() => navigate('/app/garage')} className="icon-btn back-btn">
+                        <FaArrowLeft />
+                    </button>
+                    <div className="hero-actions">
+                        <button onClick={() => fileInputRef.current.click()} className="icon-btn action-glass">
+                            <FaCamera />
+                        </button>
+                        <button onClick={() => navigate(`/app/edit-bike/${bikeId}`)} className="icon-btn action-glass">
+                            <FaPen />
+                        </button>
+                        <button onClick={handleDelete} className="icon-btn action-glass delete">
+                            <FaTrash />
+                        </button>
+                    </div>
+                </div>
+
+                <div className="hero-content">
                     <h1>{bike.name}</h1>
-                    {/* Affichage sécurisé du propriétaire */}
-                    <span className="owner-label">
-                        {bike.profiles ? `Appartient à ${bike.profiles.name}` : ''}
+                    <span className="owner-badge-hero">
+                        {bike.profiles ? `Pilote : ${bike.profiles.name}` : 'Mon vélo'}
                     </span>
                 </div>
-                <div className="bike-kpi">
-                    <span className="kpi-value">{bike.total_km} km</span>
-                </div>
-            </header>
 
+                <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    style={{display:'none'}} 
+                    onChange={handlePhotoUpload} 
+                    accept="image/*"
+                />
+            </div>
+
+            {/* STATS RAPIDES (Barre Néon) */}
+            <div className="stats-bar glass-panel">
+                <div className="stat-item">
+                    <FaRoad className="stat-icon" />
+                    <div>
+                        <span className="stat-val">{Math.round(bike.total_km).toLocaleString()}</span>
+                        <span className="stat-label">km</span>
+                    </div>
+                </div>
+                <div className="stat-item">
+                    <FaMountain className="stat-icon" />
+                    <div>
+                        <span className="stat-val">{Math.round(bike.total_elevation || 0).toLocaleString()}</span>
+                        <span className="stat-label">m D+</span>
+                    </div>
+                </div>
+                <div className="stat-item">
+                    <FaClock className="stat-icon" />
+                    <div>
+                        <span className="stat-val">{Math.round(bike.total_hours || 0)}</span>
+                        <span className="stat-label">h</span>
+                    </div>
+                </div>
+            </div>
+
+            {/* NAVIGATION ONGLETS */}
             <nav className="detail-tabs">
-                <button 
-                    className={activeTab === 'maintenance' ? 'active' : ''} 
-                    onClick={() => setActiveTab('maintenance')}
-                >
-                    Entretien
-                </button>
-                <button 
-                    className={activeTab === 'parts' ? 'active' : ''} 
-                    onClick={() => setActiveTab('parts')}
-                >
-                    Pièces
-                </button>
-                <button 
-                    className={activeTab === 'tires' ? 'active' : ''} 
-                    onClick={() => setActiveTab('tires')}
-                >
-                    Pneus
-                </button>
-                <button 
-                    className={activeTab === 'history' ? 'active' : ''} 
-                    onClick={() => setActiveTab('history')}
-                >
-                    Historique
-                </button>
+                {['parts', 'maintenance', 'tires', 'history'].map(tab => (
+                    <button 
+                        key={tab}
+                        className={`tab-btn ${activeTab === tab ? 'active' : ''}`} 
+                        onClick={() => setActiveTab(tab)}
+                    >
+                        {tab === 'parts' && 'Pièces'}
+                        {tab === 'maintenance' && 'Entretien'}
+                        {tab === 'tires' && 'Pneus'}
+                        {tab === 'history' && 'Historique'}
+                    </button>
+                ))}
             </nav>
 
             <div className="tab-content">
-                {activeTab === 'maintenance' && <MaintenanceTab bikeId={bikeId} bikeKm={bike.total_km} />}
                 {activeTab === 'parts' && <PartsTab bikeId={bikeId} />}
+                {activeTab === 'maintenance' && <MaintenanceTab bikeId={bikeId} bikeKm={bike.total_km} />}
                 {activeTab === 'tires' && <TirePressureTab bikeId={bikeId} bikeWeight={bike.weight} />}
                 {activeTab === 'history' && <HistoryTab bikeId={bikeId} />}
             </div>

@@ -1,146 +1,104 @@
-/* src/components/Bike/PartsTab.css */
-
-.parts-tab-container {
-    padding-bottom: 70px; 
-}
-
-.parts-tab-container h2 {
-    font-size: 1.5rem;
+.tab-actions-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 20px;
-    color: var(--color-neon-primary);
 }
 
-/* Liste en Grille pour Desktop */
+.add-mini-btn {
+    width: 35px; height: 35px;
+    border-radius: 50%;
+    background: var(--gradient-primary);
+    border: none; color: white;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+}
+
 .parts-list {
     display: flex;
     flex-direction: column;
     gap: 15px;
 }
 
-.part-item {
+.part-card {
     display: flex;
     align-items: center;
-    padding: 20px;
-    border-radius: 8px;
-    background-color: var(--color-surface-dark); /* Fond sombre */
-    border: 1px solid #2a2a3e;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    padding: 15px;
+    gap: 15px;
+    position: relative;
     transition: transform 0.2s;
 }
 
-.part-item:hover {
-    border-color: var(--color-neon-primary);
-    transform: translateY(-2px);
+.critical-border {
+    border: 1px solid #ef4444 !important;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
 }
 
-.part-icon-container {
-    font-size: 1.8rem;
-    margin-right: 20px;
-    padding: 12px;
-    border-radius: 50%;
-    background-color: #12121e;
+.part-icon-box {
+    font-size: 1.5rem;
+    background: rgba(255,255,255,0.05);
+    width: 50px; height: 50px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+}
+
+.part-content {
+    flex: 1;
+}
+
+.part-header {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid #333;
-}
-
-.part-info {
-    flex-grow: 1;
-}
-
-.part-name {
-    font-weight: bold;
-    font-size: 1.1rem;
-    color: white;
-}
-
-.part-category {
-    font-size: 0.85rem;
-    color: var(--color-text-secondary);
+    justify-content: space-between;
     margin-bottom: 8px;
 }
 
-/* Barre de progression */
-.wear-bar-container {
-    height: 6px;
-    background-color: #333;
+.part-header h4 {
+    margin: 0;
+    font-size: 1rem;
+    color: white;
+}
+
+.part-cat {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    background: rgba(255,255,255,0.05);
+    padding: 2px 6px;
     border-radius: 4px;
-    margin-top: 8px;
-    overflow: hidden;
-    width: 100%;
-    max-width: 300px; /* Limite la longueur de la barre sur grand écran */
 }
 
-.wear-details {
-    font-size: 0.85rem;
-    margin-top: 5px;
-    color: var(--color-text-secondary);
-}
-
-.replace-btn {
-    margin-left: 20px;
-    background: transparent;
-    border: 1px solid var(--color-text-secondary);
-    padding: 10px;
-    border-radius: 50%;
-    color: var(--color-text-light);
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.replace-btn:hover {
-    border-color: var(--color-neon-primary);
-    color: var(--color-neon-primary);
-    box-shadow: 0 0 8px rgba(0, 229, 255, 0.4);
-}
-
-/* Copie du style du bouton flottant pour l'onglet Pièces */
-.cta-float {
-    position: fixed;
-    bottom: 40px;
-    right: 40px;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background-color: #00e5ff !important;
-    color: #12121e !important;
-    border: none;
-    box-shadow: 0 0 15px rgba(0, 229, 255, 0.6);
-    font-size: 1.5rem;
+.wear-container {
     display: flex;
-    align-items: center;
-    justify-content: center;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.wear-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.progress-bg {
+    width: 100%;
+    height: 6px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.5s ease;
+}
+
+.trash-icon {
+    background: transparent;
+    border: none;
+    color: #ef4444;
+    opacity: 0.5;
     cursor: pointer;
-    z-index: 1000;
-    transition: transform 0.2s;
 }
-
-.cta-float:hover {
-    transform: scale(1.1);
-    box-shadow: 0 0 25px rgba(0, 229, 255, 0.8);
-}
-
-/* --- MODE DESKTOP --- */
-@media (min-width: 768px) {
-    .parts-list {
-        display: grid;
-        /* Grille adaptative : minimum 400px de large par pièce */
-        grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-        gap: 20px;
-    }
-    
-    .part-item {
-        flex-direction: row; /* Garder l'alignement horizontal interne */
-    }
-    
-    /* Etat vide centré */
-    .empty-state {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding-top: 100px;
-    }
-    
-    /* Bouton d'ajout flottant -> On pourrait le cacher et mettre un bouton standard en haut comme pour Entretien */
-}
+.trash-icon:hover { opacity: 1; }

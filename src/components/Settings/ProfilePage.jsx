@@ -128,10 +128,37 @@ function ProfilePage() {
         );
     };
 
-    if (loading) return <div className="loading-state">Chargement...</div>;
+    if (loading) return <div className="loading-state">Chargement de ton profil...</div>;
 
     return (
         <div className="profile-page">
+            {/* --- MODALE DE SÉLECTION D'AVATAR (Doit être au top) --- */}
+            {isSelectingAvatar && (
+                <div className="avatar-selection-overlay" onClick={() => setIsSelectingAvatar(false)}>
+                    {/* On arrête la propagation sur le contenu pour pouvoir cliquer les boutons de la modale */}
+                    <div className="avatar-selection-modal glass-panel" onClick={e => e.stopPropagation()}>
+                        <div className="selection-header">
+                            <h4>Choisir un avatar</h4>
+                            <button className="close-btn" onClick={() => setIsSelectingAvatar(false)}><FaTimes /></button>
+                        </div>
+                        <div className="grid-list-wrapper">
+                            <div className="avatar-selection-grid">
+                                {defaultAvatars.map((emo, index) => (
+                                    <div 
+                                        key={index} 
+                                        className={`avatar-option ${emo === avatar ? 'active' : ''}`}
+                                        onClick={() => handleAvatarSelect(emo)}
+                                    >
+                                        {emo}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* ------------------------------------- */}
+
             <div className="profile-header glass-panel">
                 {/* Rendre l'avatar cliquable */}
                 <div 

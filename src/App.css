@@ -1,72 +1,68 @@
-/* src/App.css */
-:root {
-  --sidebar-width: 260px;
-  --header-height: 60px;
-  --bg-color: #f3f4f6;
-  --text-primary: #111827;
-  --primary-color: #2563eb;
-}
-
-body {
-  background-color: var(--bg-color);
-  margin: 0;
-  font-family: 'Inter', sans-serif;
-}
-
 .app-container {
   display: flex;
   min-height: 100vh;
-  width: 100vw;
-  overflow-x: hidden;
+  background-color: var(--bg-dark);
+  position: relative;
 }
 
-/* --- SIDEBAR (Desktop) --- */
+/* --- SIDEBAR --- */
 .sidebar {
-  width: var(--sidebar-width);
-  background: white;
-  border-right: 1px solid #e5e7eb;
+  width: 260px;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-color);
   position: fixed;
   height: 100vh;
   top: 0;
   left: 0;
-  display: flex;
-  flex-direction: column;
   z-index: 50;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5); /* Ombre portée */
 }
 
 /* --- CONTENU PRINCIPAL --- */
 .main-content {
   flex: 1;
-  margin-left: var(--sidebar-width); /* Pousse le contenu */
+  margin-left: 260px;
   padding: 30px;
-  max-width: 1200px; /* Évite que ça s'étale trop sur grands écrans */
-  width: calc(100% - var(--sidebar-width));
+  width: calc(100% - 260px);
 }
 
-/* --- MOBILE --- */
-@media (max-width: 768px) {
-  .sidebar {
-    display: none; /* On cache la sidebar PC */
-  }
+/* Override des cartes pour le thème sombre */
+.chart-card, .auth-card, .bike-card, .settings-content, .turlag-card {
+  background-color: var(--bg-card) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3) !important;
+}
 
+/* Textes dans les cartes */
+.chart-card h4, .turlag-info h3, .bike-info h3 {
+  color: var(--text-primary) !important;
+}
+
+/* Boutons Néon */
+button.primary-btn, .add-btn, .action-btn:not(.outline) {
+  background: linear-gradient(135deg, var(--neon-blue), #2563eb) !important;
+  color: white !important;
+  border: none !important;
+  box-shadow: 0 0 10px rgba(14, 165, 233, 0.5);
+}
+
+button.secondary-btn {
+  background: transparent !important;
+  border: 1px solid var(--neon-purple) !important;
+  color: var(--neon-purple) !important;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+  .sidebar { display: none; }
   .main-content {
     margin-left: 0;
     width: 100%;
-    padding: 15px;
-    padding-bottom: 90px; /* Place pour la nav du bas */
+    padding-bottom: 100px;
   }
-
   .bottom-nav {
-    display: flex;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background: white;
-    border-top: 1px solid #e5e7eb;
-    height: 70px;
-    z-index: 50;
-    justify-content: space-around;
-    align-items: center;
+    background: var(--bg-sidebar) !important;
+    border-top: 1px solid var(--border-color) !important;
   }
 }

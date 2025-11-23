@@ -1,31 +1,43 @@
-/* src/index.css */
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-  color-scheme: dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #12121e;
-  --primary-color: #2563eb;
-  --text-color: #1f2937;
-  --card-bg: #ffffff;
-  --background-color: #f0f2f5;
-}
-
-/* --- LE FIX CRITIQUE EST ICI --- */
-/* Cela oblige tous les éléments à inclure le padding dans leur largeur */
-*, *::before, *::after {
-  box-sizing: border-box;
+  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  
+  /* THÈME CYBERPUNK / DARK */
+  --bg-dark: #0f172a;       /* Fond très sombre (bleu nuit) */
+  --bg-card: #1e293b;       /* Fond des cartes */
+  --bg-sidebar: #0b1120;    /* Fond sidebar */
+  
+  --text-primary: #f8fafc;  /* Blanc cassé */
+  --text-secondary: #94a3b8; /* Gris clair */
+  
+  --neon-blue: #0ea5e9;     /* Bleu électrique */
+  --neon-purple: #d946ef;   /* Violet néon */
+  --neon-green: #10b981;    /* Vert néon */
+  
+  --border-color: #334155;
 }
 
 body {
   margin: 0;
-  background-color: var(--background-color);
-  color: var(--text-color);
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
 }
 
-#root {
-  width: 100%;
-  height: 100%;
+h1, h2, h3, h4, h5 {
+  color: var(--text-primary);
+}
+
+/* Scrollbar stylée */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-dark); 
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-color); 
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--neon-blue); 
 }

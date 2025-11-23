@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { FaChartLine, FaBicycle, FaUsers, FaCog, FaBolt } from 'react-icons/fa'; // Imports
 import './SideBar.css';
 
 function SideBar() {
@@ -8,27 +9,29 @@ function SideBar() {
 
     return (
         <aside className="sidebar">
-            <div className="logo-container" style={{ padding: '20px', fontSize: '1.5rem', fontWeight: 'bold', color: '#2563eb' }}>
-                BikeMonitor 🚲
+            <div className="logo-container" style={{ padding: '25px', borderBottom: '1px solid var(--border-color)' }}>
+                <h2 style={{ margin: 0, color: 'var(--neon-blue)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <FaBolt /> BikeMonitor
+                </h2>
             </div>
 
-            <nav className="nav-links" style={{ display: 'flex', flexDirection: 'column', gap: '5px', padding: '10px' }}>
+            <nav className="nav-links" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <Link to="/app/dashboard" className={`nav-item ${isActive('/app/dashboard') ? 'active' : ''}`}>
-                    📊 Tableau de bord
+                    <FaChartLine className="icon" /> Tableau de bord
                 </Link>
 
                 <Link to="/app/garage" className={`nav-item ${isActive('/app/garage') ? 'active' : ''}`}>
-                    🚲 Garage
+                    <FaBicycle className="icon" /> Garage
                 </Link>
 
                 <Link to="/app/turlag" className={`nav-item ${isActive('/app/turlag') ? 'active' : ''}`}>
-                    🛡️ Mon Turlag
+                    <FaUsers className="icon" /> Mon Turlag
                 </Link>
 
-                <div style={{ flex: 1 }}></div>
+                <div className="spacer" style={{ flex: 1 }}></div>
 
                 <Link to="/app/settings" className={`nav-item ${isActive('/app/settings') ? 'active' : ''}`}>
-                    ⚙️ Paramètres
+                    <FaCog className="icon" /> Paramètres
                 </Link>
             </nav>
         </aside>

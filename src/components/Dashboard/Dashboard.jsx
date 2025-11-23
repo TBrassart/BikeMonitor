@@ -59,11 +59,6 @@ function Dashboard() {
                     });
                 }
                 
-                // Maintenance (On regarde si maintenance en retard)
-                // Note: Suppose que l'API getBikes ne renvoie pas maintenance par défaut
-                // Il faudrait idéalement appeler getMaintenance pour chaque vélo, 
-                // mais pour l'instant on se base sur la logique existante ou future.
-                // Pour l'instant, on laisse vide ou on simule si besoin.
             });
             
             setAlertList({ parts: partsIssues, maintenance: maintIssues });

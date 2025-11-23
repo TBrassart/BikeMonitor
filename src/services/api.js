@@ -6,7 +6,7 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // ==========================================
-// 1. SERVICE D'AUTHENTIFICATION (Auth & Profils)
+// 1. SERVICE D'AUTHENTIFICATION
 // ==========================================
 export const authService = {
     // Inscription
@@ -28,19 +28,17 @@ export const authService = {
         return await supabase.auth.signOut();
     },
 
-    // Utilisateur technique actuel
+    // Utilisateur courant
     async getCurrentUser() {
         const { data: { user } } = await supabase.auth.getUser();
         return user;
     },
 
-    // PROFIL APPLICATIF (Table 'profiles')
-    // Récupère ou crée le profil lié à l'utilisateur connecté
+    // Récupère mon profil
     async getMyProfile() {
         const user = await this.getCurrentUser();
         if (!user) return null;
 
-        // 1. Chercher le profil existant
         const { data, error } = await supabase
             .from('profiles')
             .select('*')
@@ -49,11 +47,11 @@ export const authService = {
 
         if (data) return data;
 
-        // 2. Si pas de profil (ex: inscription), on le crée
+        // Création si inexistant
         if (!data) {
             const newProfile = {
                 user_id: user.id,
-                name: user.email.split('@')[0], // Nom par défaut via email
+                name: user.email.split('@')[0],
                 avatar: '🚲'
             };
             const { data: created, error: createError } = await supabase
@@ -65,11 +63,20 @@ export const authService = {
             if (createError) throw createError;
             return created;
         }
-        
         return null;
     },
 
-    // Mettre à jour mon profil
+    // Alias pour la compatibilité (évite le crash "getProfiles is not a function")
+    async getProfiles() {
+        const profile = await this.getMyProfile();
+        return profile ? [profile] : [];
+    },
+
+    // Alias pour AuthScreen (évite "createInitialProfile is not a function")
+    async createInitialProfile(user) {
+        return await this.getMyProfile();
+    },
+
     async updateProfile(updates) {
         const user = await this.getCurrentUser();
         const { data, error } = await supabase
@@ -81,10 +88,8 @@ export const authService = {
         return data?.[0];
     },
 
-    // --- GESTION DES TURLAGS (GROUPES) ---
-    
+    // --- GESTION DES TURLAGS ---
     async getMyTurlags() {
-        // La RLS (Row Level Security) filtre déjà côté serveur
         const { data, error } = await supabase.from('turlags').select('*').order('created_at');
         if (error) throw error;
         return data || [];
@@ -92,14 +97,12 @@ export const authService = {
 
     async createTurlag(name, description = "") {
         const user = await this.getCurrentUser();
-        // 1. Créer le groupe
         const { data: turlag, error: err1 } = await supabase
             .from('turlags')
             .insert([{ name, description, created_by: user.id }])
             .select().single();
         if (err1) throw err1;
 
-        // 2. M'ajouter comme admin
         const { error: err2 } = await supabase
             .from('turlag_members')
             .insert([{ turlag_id: turlag.id, user_id: user.id, role: 'admin' }]);
@@ -114,28 +117,33 @@ export const authService = {
             .from('turlag_members')
             .insert([{ turlag_id: turlagId, user_id: user.id, role: 'member' }]);
         
-        if (error) {
-            if (error.code === '23505') throw new Error("Tu es déjà membre de ce groupe.");
-            throw error;
-        }
+        if (error && error.code === '23505') throw new Error("Tu es déjà membre.");
+        if (error) throw error;
     },
     
     async leaveTurlag(turlagId) {
         const user = await this.getCurrentUser();
         const { error } = await supabase
             .from('turlag_members')
-            .delete()
-            .eq('turlag_id', turlagId)
-            .eq('user_id', user.id);
+            .delete().eq('turlag_id', turlagId).eq('user_id', user.id);
         if (error) throw error;
     }
 };
 
 // ==========================================
-// 2. API MÉTIER (Vélos, Pièces, etc.)
+// 2. API MÉTIER (Vélos, etc.)
 // ==========================================
 export const api = {
     // --- VÉLOS ---
+    async getBikes() {
+        const { data, error } = await supabase
+            .from('bikes')
+            .select(`*, profiles:user_id ( name, avatar )`)
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        return data || [];
+    },
+
     async getBike(id) {
         const { data, error } = await supabase
             .from('bikes')
@@ -178,8 +186,8 @@ export const api = {
 
     // --- STATS ---
     async getStats() {
-        // Récupère les vélos visibles pour calculer les totaux
-        const bikes = await this.getBikes();
+        // Note: On appelle api.getBikes() directement au lieu de this.getBikes() pour éviter les erreurs de contexte
+        const bikes = await api.getBikes();
         const totalKm = bikes.reduce((acc, b) => acc + (b.total_km || 0), 0);
         const totalElevation = bikes.reduce((acc, b) => acc + (b.total_elevation || 0), 0);
         return { totalKm, totalElevation, bikesCount: bikes.length };
@@ -269,13 +277,12 @@ export const api = {
         return data;
     },
 
-    // --- KITS (Optionnel) ---
+    // --- KITS ---
     async getKits() {
         const user = await authService.getCurrentUser();
-        // Vérification de sécurité simple si la table n'existe pas encore
         try {
             const { data, error } = await supabase.from('kits').select('*').eq('user_id', user.id);
-            if (error) return []; 
+            if (error) return [];
             return data || [];
         } catch (e) { return []; }
     },
@@ -288,10 +295,10 @@ export const api = {
 };
 
 // ==========================================
-// 3. COUCHE DE COMPATIBILITÉ (Sécurisée)
+// 3. ADAPTATEURS DE COMPATIBILITÉ (SÉCURISÉS)
 // ==========================================
-// On utilise des fonctions fléchées () => ... pour éviter les erreurs "is not a function"
-// si 'api' n'est pas encore totalement initialisée lors de l'import.
+// Utilisation de fonctions fléchées () => api.fonction() pour éviter les erreurs "is not a function"
+// au chargement des modules.
 
 export const bikeService = {
     getAll: () => api.getBikes(),

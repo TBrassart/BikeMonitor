@@ -1,174 +1,101 @@
 import React, { useState, useEffect } from 'react';
-// Ajoute FaToggleOn/Off si tu veux des icônes, ou on utilise un switch CSS
-import { FaRoad, FaClock, FaCalendarCheck, FaExclamationTriangle, FaBicycle, FaArrowRight } from 'react-icons/fa';
-import { bikeService } from '../../services/api';
-import { Link } from 'react-router-dom';
-import WeatherWidget from './WeatherWidget';
+import { api, authService } from '../../services/api';
+import { useNavigate } from 'react-router-dom';
 import './Dashboard.css';
-import ChartsSection from './ChartsSection';
+// Si tu as ces composants, on peut les garder, sinon commente-les pour l'instant
+import WeatherWidget from './WeatherWidget'; 
+import ChartsSection from './ChartsSection'; 
 
-const Dashboard = ({ currentProfile }) => {
-    const [data, setData] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
-    
-    // ÉTATS FILTRES
-    const [period, setPeriod] = useState('month');
-    const [isRolling, setIsRolling] = useState(false); // False = Calendaire, True = Glissant
+function Dashboard() {
+    const [stats, setStats] = useState({ totalKm: 0, bikesCount: 0, totalElevation: 0 });
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
 
     useEffect(() => {
-        if (currentProfile) {
-            loadDashboard();
-        }
-    }, [currentProfile, period, isRolling]); // Recharge si l'un des deux change
+        loadDashboardData();
+    }, []);
 
-    const loadDashboard = async () => {
+    const loadDashboardData = async () => {
         try {
-            // On passe les deux paramètres
-            const dashboardData = await bikeService.getDashboardData(currentProfile.id, period, isRolling);
-            setData(dashboardData);
+            setLoading(true);
+            // 1. On récupère l'utilisateur
+            const currentUser = await authService.getCurrentUser();
+            setUser(currentUser);
+
+            // 2. On récupère les stats via la nouvelle API unifiée
+            // (Calculées sur tes vélos + ceux de tes Turlags visibles)
+            const dashboardStats = await api.getStats();
+            setStats(dashboardStats);
+
         } catch (e) {
-            console.error("Erreur dashboard", e);
+            console.error("Erreur chargement dashboard:", e);
         } finally {
-            setIsLoading(false);
+            setLoading(false);
         }
     };
 
-    const periods = [
-        { id: 'week', label: 'Semaine' },
-        { id: 'month', label: 'Mois' },
-        { id: 'year', label: 'Année' },
-    ];
-
-    if (isLoading) return <div className="dashboard-container">Chargement...</div>;
-    if (!data) return <div className="dashboard-container">Erreur de chargement.</div>;
+    if (loading) return <div className="dashboard-loading">Chargement des données...</div>;
 
     return (
-        <div className="dashboard-container">
+        <div className="dashboard">
             <header className="dashboard-header">
-                <h1>Bonjour, {currentProfile.name.split(' ')[0]}</h1>
-                <p className="subtitle">Prêt à rouler ? Voici ce qu'il faut savoir.</p>
+                <div className="welcome-text">
+                    <h1>Bonjour, {user?.user_metadata?.full_name || user?.email?.split('@')[0]} 👋</h1>
+                    <p>Prêt à rouler ?</p>
+                </div>
+                {/* Widget Météo (si disponible) */}
+                <div className="weather-container">
+                    <WeatherWidget />
+                </div>
             </header>
 
-            <WeatherWidget />
-
-            {/* BARRE D'OUTILS : FILTRES + TOGGLE */}
-            <div className="stats-toolbar">
-                
-                {/* Zone Gauche : Chips */}
-                <div className="stats-filter-chips">
-                    {periods.map(p => (
-                        <button 
-                            key={p.id}
-                            className={`filter-chip ${period === p.id ? 'active' : ''}`}
-                            onClick={() => setPeriod(p.id)}
-                        >
-                            {p.label}
-                        </button>
-                    ))}
-                </div>
-
-                {/* Zone Droite : Toggle Glissant */}
-                <div className="rolling-toggle" onClick={() => setIsRolling(!isRolling)}>
-                    <span className={`toggle-label ${isRolling ? 'active' : ''}`}>Glissant</span>
-                    <div className={`toggle-switch ${isRolling ? 'on' : 'off'}`}>
-                        <div className="toggle-handle"></div>
+            {/* Cartes de Statistiques */}
+            <section className="stats-grid">
+                <div className="stat-card primary">
+                    <span className="stat-icon">🚴</span>
+                    <div className="stat-info">
+                        <h3>Vélos actifs</h3>
+                        <p className="stat-value">{stats.bikesCount}</p>
                     </div>
                 </div>
-            </div>
 
-            {/* KPI DYNAMIQUES */}
-            <div className="stats-overview">
-                <div className="stat-card highlight">
-                    <div className="stat-icon"><FaRoad /></div>
-                    <div className="stat-content">
-                        <h3>{data.stats.km} km</h3>
-                        <p>Distance</p>
+                <div className="stat-card secondary">
+                    <span className="stat-icon">📏</span>
+                    <div className="stat-info">
+                        <h3>Total KM</h3>
+                        <p className="stat-value">{Math.round(stats.totalKm)} km</p>
                     </div>
                 </div>
-                <div className="stat-card">
-                    <div className="stat-icon"><FaClock /></div>
-                    <div className="stat-content">
-                        <h3>{data.stats.hours} h</h3>
-                        <p>Temps</p>
+
+                <div className="stat-card accent">
+                    <span className="stat-icon">🏔️</span>
+                    <div className="stat-info">
+                        <h3>Dénivelé</h3>
+                        <p className="stat-value">{Math.round(stats.totalElevation)} m</p>
                     </div>
                 </div>
-                <div className="stat-card">
-                    <div className="stat-icon"><FaBicycle /></div>
-                    <div className="stat-content">
-                        <h3>{data.stats.count}</h3>
-                        <p>Sorties</p>
-                    </div>
+            </section>
+
+            {/* Actions Rapides */}
+            <section className="quick-actions">
+                <h2>Actions rapides</h2>
+                <div className="action-buttons">
+                    <button onClick={() => navigate('/app/add-bike')} className="action-btn">
+                        + Ajouter un vélo
+                    </button>
+                    <button onClick={() => navigate('/app/settings')} className="action-btn outline">
+                        Gérer mon Turlag
+                    </button>
                 </div>
-            </div>
+            </section>
 
-            <ChartsSection 
-                profileId={currentProfile.id} 
-                period={period}
-                isRolling={isRolling}
-            />
-
-            <div className="dashboard-grid">
-                <section className="dashboard-section">
-                    <div className="section-header">
-                        <h2><FaCalendarCheck /> Maintenance</h2>
-                        {data.maintenance.length > 0 && <Link to="/garage">Voir tout</Link>}
-                    </div>
-                    
-                    {data.maintenance.length === 0 ? (
-                        <div className="empty-card">
-                            <p>✅ Rien à signaler. Tes vélos sont prêts !</p>
-                        </div>
-                    ) : (
-                        <div className="alert-list">
-                            {data.maintenance.map(m => (
-                                <div key={m.id} className="alert-item">
-                                    <div className="alert-icon maintenance">
-                                        {m.isPart ? <FaExclamationTriangle /> : <FaCalendarCheck />}
-                                    </div>
-                                    <div className="alert-info">
-                                        <h4>{m.type}</h4>
-                                        <p>
-                                            {m.bikes?.name} 
-                                            {!m.isPart && ` • ${new Date(m.date_due).toLocaleDateString()}`}
-                                        </p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </section>
-
-                <section className="dashboard-section">
-                    <div className="section-header">
-                        <h2>🍎 Nutrition & Stock</h2>
-                        <Link to="/nutrition">Gérer</Link>
-                    </div>
-
-                    {data.lowStock.length === 0 ? (
-                        <div className="empty-card">
-                            <p>✅ Stock suffisant.</p>
-                        </div>
-                    ) : (
-                        <div className="alert-list">
-                            {data.lowStock.map(item => (
-                                <div key={item.id} className="alert-item">
-                                    <div className="alert-icon stock"><FaExclamationTriangle /></div>
-                                    <div className="alert-info">
-                                        <h4>{item.name}</h4>
-                                        <p>Reste : <strong>{item.quantity}</strong> (Min: {item.min_quantity})</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </section>
-            </div>
-            
-            <Link to="/kits" className="cta-main">
-                Préparer une sortie <FaArrowRight />
-            </Link>
+            {/* Graphiques (si le composant existe) */}
+            <section className="charts-container">
+                <ChartsSection />
+            </section>
         </div>
     );
-};
+}
 
 export default Dashboard;

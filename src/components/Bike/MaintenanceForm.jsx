@@ -1,152 +1,130 @@
-// src/components/Bike/MaintenanceForm.jsx
-
 import React, { useState } from 'react';
-import { FaSave, FaTimes, FaCalendarAlt, FaRoad } from 'react-icons/fa';
-import './MaintenanceForm.css'; 
+import { maintenanceService } from '../../services/api';
+import './MaintenanceForm.css';
 
-// Presets d'entretien courants (Quick win: preset de types d’entretien [cite: 85])
-const maintenancePresets = [
-    'Nettoyage et graissage chaîne',
-    'Révision générale (Annuelle)',
-    'Changement de câble',
-    'Purge de freins'
-];
+function MaintenanceForm({ bikeId, onSuccess, onCancel }) {
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
-const MaintenanceForm = ({ bikeId, onClose, onSave }) => {
+    // Champs du formulaire
     const [formData, setFormData] = useState({
-        type: '',
-        datePrévue: '',
-        kmPrévu: '',
+        type: 'Révision générale', // Valeur par défaut
+        date_due: '',
+        km_due: '',
         notes: ''
     });
-    const [isSaving, setIsSaving] = useState(false);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-    };
-
-    const handleSelectPreset = (preset) => {
-        setFormData(prev => ({ ...prev, type: preset }));
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
-        // Validation minimale: le type est requis
-        if (!formData.type) {
-            alert("Veuillez spécifier le type d'entretien.");
-            return;
-        }
-        
-        // La date OU le km sont requis pour la planification
-        if (!formData.datePrévue && !formData.kmPrévu) {
-            alert("Veuillez indiquer une date ou un kilométrage prévu.");
-            return;
-        }
+        setLoading(true);
+        setError(null);
 
-        setIsSaving(true);
-        
-        // Appel au service API (POST /bikes/{bikeId}/maintenance)
         try {
-            await onSave(bikeId, formData);
-            // Toast léger "Vélo enregistré ✅" [cite: 24] (simulé par console.log)
-            console.log(`[Toast] Entretien "${formData.type}" planifié ! ✅`);
-            onClose();
-        } catch (error) {
-            console.error("Erreur lors de la planification de l'entretien:", error);
-            // Afficher un bandeau ou toast avec message clair [cite: 7]
-            alert("Erreur: Impossible de planifier l'entretien.");
+            // Préparation de l'objet pour Supabase
+            // On s'assure que les champs vides (comme km_due) sont null et pas ""
+            const payload = {
+                bike_id: bikeId,
+                type: formData.type,
+                date_due: formData.date_due || null,
+                km_due: formData.km_due ? parseInt(formData.km_due) : null,
+                notes: formData.notes,
+                status: 'upcoming' // Par défaut
+            };
+
+            // Appel au service
+            await maintenanceService.add(payload);
+
+            // Si succès, on prévient le parent pour rafraîchir la liste
+            if (onSuccess) {
+                onSuccess();
+            }
+        } catch (err) {
+            console.error("Erreur planification:", err);
+            setError("Impossible de planifier l'entretien. Vérifie ta connexion.");
         } finally {
-            setIsSaving(false);
+            setLoading(false);
         }
     };
 
-    const isFormValid = formData.type && (formData.datePrévue || formData.kmPrévu);
-
     return (
-        <div className="maintenance-form-container">
-            <header className="form-header">
-                <h2>Planifier un Entretien</h2>
-                <button onClick={onClose} className="close-btn" disabled={isSaving}>
-                    <FaTimes />
-                </button>
-            </header>
+        <form className="maintenance-form" onSubmit={handleSubmit}>
+            <h4>Planifier un entretien</h4>
+            
+            {error && <div className="form-error">{error}</div>}
 
-            <form onSubmit={handleSubmit} className="maintenance-form">
-                
-                <section className="form-section">
-                    <h3>Type d'entretien *</h3>
+            <div className="form-group">
+                <label>Type d'entretien</label>
+                <input 
+                    type="text" 
+                    name="type"
+                    placeholder="Ex: Changement chaîne, Révision..."
+                    value={formData.type}
+                    onChange={handleChange}
+                    required 
+                    list="maintenance-types" 
+                />
+                {/* Suggestions pour aider la saisie */}
+                <datalist id="maintenance-types">
+                    <option value="Révision générale" />
+                    <option value="Changement chaîne" />
+                    <option value="Changement plaquettes" />
+                    <option value="Purge freins" />
+                    <option value="Changement pneus" />
+                    <option value="Graissage" />
+                </datalist>
+            </div>
+
+            <div className="form-row">
+                <div className="form-group half">
+                    <label>Date prévue</label>
                     <input 
-                        name="type" 
-                        type="text" 
-                        value={formData.type} 
-                        onChange={handleChange} 
-                        placeholder="Ex: Remplacement plaquettes avant" 
-                        required 
-                    />
-                    
-                    <div className="preset-chips">
-                        {maintenancePresets.map(preset => (
-                            <button
-                                key={preset}
-                                type="button"
-                                className={`chip ${formData.type === preset ? 'active' : ''}`}
-                                onClick={() => handleSelectPreset(preset)}
-                            >
-                                {preset}
-                            </button>
-                        ))}
-                    </div>
-                </section>
-                
-                <section className="form-section">
-                    <h3>Quand planifier ? (Date ou KM)</h3>
-                    
-                    <label htmlFor="datePrévue"><FaCalendarAlt /> Date prévue</label>
-                    <input 
-                        id="datePrévue" 
-                        name="datePrévue" 
                         type="date" 
-                        value={formData.datePrévue} 
-                        onChange={handleChange} 
+                        name="date_due"
+                        value={formData.date_due}
+                        onChange={handleChange}
                     />
-
-                    <label htmlFor="kmPrévu"><FaRoad /> Kilométrage prévu (km)</label>
-                    <input 
-                        id="kmPrévu" 
-                        name="kmPrévu" 
-                        type="number" 
-                        value={formData.kmPrévu} 
-                        onChange={handleChange} 
-                        placeholder="Ex: 3000" 
-                    />
-                </section>
-                
-                <section className="form-section">
-                    <label htmlFor="notes">Notes</label>
-                    <textarea 
-                        id="notes" 
-                        name="notes" 
-                        value={formData.notes} 
-                        onChange={handleChange} 
-                        rows="3"
-                        placeholder="Détails supplémentaires..."
-                    />
-                </section>
-
-                <div className="form-actions">
-                    <button 
-                        type="submit" 
-                        className="save-btn" 
-                        disabled={!isFormValid || isSaving}
-                    >
-                        {isSaving ? 'Enregistrement...' : <><FaSave /> Planifier l'entretien</>}
-                    </button>
                 </div>
-            </form>
-        </div>
+                <div className="form-group half">
+                    <label>À quel kilométrage ?</label>
+                    <input 
+                        type="number" 
+                        name="km_due"
+                        placeholder="Ex: 5000"
+                        value={formData.km_due}
+                        onChange={handleChange}
+                    />
+                </div>
+            </div>
+
+            <div className="form-group">
+                <label>Notes (optionnel)</label>
+                <textarea 
+                    name="notes"
+                    placeholder="Détails, référence pièces..."
+                    value={formData.notes}
+                    onChange={handleChange}
+                    rows="3"
+                />
+            </div>
+
+            <div className="form-buttons">
+                <button type="button" onClick={onCancel} disabled={loading} className="cancel-btn">
+                    Annuler
+                </button>
+                <button type="submit" disabled={loading} className="submit-btn">
+                    {loading ? 'Enregistrement...' : 'Planifier'}
+                </button>
+            </div>
+        </form>
     );
-};
+}
 
 export default MaintenanceForm;

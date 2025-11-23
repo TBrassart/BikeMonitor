@@ -1,87 +1,77 @@
 /* src/App.css */
 
-/* 1. RESET TOTAL */
-#root {
-  width: 100%;
-  max-width: 100vw !important; /* ON FORCE LA LARGEUR MAX */
-  margin: 0;
-  padding: 0;
-  text-align: left; /* Annule le centrage du texte par défaut */
+/* Conteneur global */
+.app-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f8f9fa; /* Fond gris très clair pour faire ressortir les cartes */
+  position: relative;
 }
 
-/* 2. CONTENEUR PRINCIPAL */
-.App {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    width: 100%;
-    background-color: var(--color-dark-bg);
-    position: relative; /* Important pour les position: fixed enfants */
-}
-
+/* Zone de contenu principal */
 .main-content {
-    flex-grow: 1;
-    width: 100%;
-    padding-bottom: 80px; /* Espace pour la barre mobile */
+  flex: 1;
+  padding: 20px;
+  width: 100%;
+  box-sizing: border-box;
+  /* Transition douce lors du redimensionnement de fenêtre */
+  transition: margin 0.3s ease;
 }
 
-/* ---------------------------------------------------- */
-/* --- Adaptation PC (Largeur minimale de 768px) --- */
-/* ---------------------------------------------------- */
-@media (min-width: 768px) {
-    
-    /* DÉCALAGE DU CONTENU SI SIDEBAR PRÉSENTE */
-    .App.is-authenticated .main-content {
-        margin-left: 250px; /* Largeur de la Sidebar */
-        width: calc(100% - 250px);
-        padding: 0;
-    }
-    
-    /* Si pas connecté (Page Login), on prend tout */
-    .App:not(.is-authenticated) .main-content {
-        margin-left: 0;
-        width: 100%;
-    }
-    
-    .bottom-nav {
-        display: none !important;
-    }
+/* --- VERSION MOBILE (Par défaut ou max-width) --- */
+@media (max-width: 768px) {
+  .app-container {
+    flex-direction: column;
+  }
+
+  .main-content {
+    /* Laisse de la place en bas pour la BottomNav (hauteur approx 70-80px) */
+    margin-bottom: 80px;
+    margin-left: 0;
+  }
+
+  /* On cache la Sidebar sur mobile */
+  .sidebar {
+    display: none;
+  }
+
+  /* On affiche la BottomNav */
+  .bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+  }
 }
 
-/* Variables globales (pour rappel) */
-:root {
-  --color-primary: #3498db;
-  --color-neon-primary: #00e5ff;
-  --gradient-neon: linear-gradient(135deg, #00e5ff 0%, #ff00c8 100%);
-  --color-dark-bg: #12121e;
-  --color-surface: #1e1e2d;
-  --color-surface-dark: #151521;
-  --color-text-light: #ffffff;
-  --color-text-secondary: #a0a0b0;
-  --color-alert: #e74c3c;
-}
+/* --- VERSION DESKTOP --- */
+@media (min-width: 769px) {
+  .app-container {
+    flex-direction: row;
+  }
 
-/* Dans App.css */
-h1, .form-header h2 {
-    background: var(--gradient-neon);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    display: inline-block; /* Important pour que le dégradé ne s'étale pas sur toute la ligne */
-}
+  .main-content {
+    /* Pousse le contenu vers la droite pour laisser la place à la Sidebar */
+    /* Ajuste 250px selon la largeur réelle définie dans SideBar.css */
+    margin-left: 250px; 
+    margin-bottom: 0;
+  }
 
-/* Boutons de sauvegarde, d'ajout, etc. */
-.save-btn, 
-.cta-add, 
-.cta-add-standard, 
-.cta-float,
-.connect-btn {
-    background: var(--gradient-neon) !important; /* Remplace background-color */
-    color: white !important; /* Texte blanc obligatoire sur dégradé */
-    border: none !important;
-    transition: filter 0.2s, transform 0.2s;
-}
+  /* On affiche la Sidebar fixe à gauche */
+  .sidebar {
+    display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 250px; /* Doit correspondre au margin-left ci-dessus */
+    z-index: 1000;
+  }
 
-.save-btn:hover, .cta-add:hover, .cta-float:hover {
-    filter: brightness(1.1); /* On éclaircit au survol */
-    box-shadow: 0 0 15px rgba(0, 229, 255, 0.4); /* Lueur cyan */
+  /* On cache la BottomNav sur Desktop */
+  .bottom-nav {
+    display: none;
+  }
 }

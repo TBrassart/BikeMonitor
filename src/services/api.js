@@ -69,29 +69,119 @@ export const authService = {
         if (error) throw error;
         return data?.[0];
     },
-    // --- TURLAGS ---
+    // --- GESTION TURLAGS (AMÉLIORÉE) ---
     async getMyTurlags() {
-        const { data, error } = await supabase.from('turlags').select('*').order('created_at');
+        // On récupère les turlags où je suis membre
+        // Note: La structure de retour dépend de votre RLS, ici on fait simple
+        const { data: memberships, error } = await supabase
+            .from('turlag_members')
+            .select(`
+                role,
+                turlags ( id, name, description, icon_url, created_by )
+            `)
+            .eq('user_id', (await this.getCurrentUser()).id);
+            
         if (error) throw error;
-        return data || [];
+        
+        // Aplatir la structure
+        return memberships.map(m => ({
+            ...m.turlags,
+            my_role: m.role
+        }));
     },
-    async createTurlag(name, description = "") {
-        const user = await this.getCurrentUser();
-        const { data: turlag, error: err1 } = await supabase.from('turlags').insert([{ name, description, created_by: user.id }]).select().single();
+
+    async getTurlagDetails(turlagId) {
+        // 1. Infos du groupe
+        const { data: turlag, error: err1 } = await supabase
+            .from('turlags')
+            .select('*')
+            .eq('id', turlagId)
+            .single();
         if (err1) throw err1;
-        const { error: err2 } = await supabase.from('turlag_members').insert([{ turlag_id: turlag.id, user_id: user.id, role: 'admin' }]);
+
+        // 2. Membres avec profils
+        const { data: members, error: err2 } = await supabase
+            .from('turlag_members')
+            .select(`
+                id, user_id, role, joined_at,
+                profiles:user_id ( name, avatar )
+            `)
+            .eq('turlag_id', turlagId);
         if (err2) throw err2;
-        return turlag;
+
+        // 3. Événements
+        const { data: events, error: err3 } = await supabase
+            .from('turlag_events')
+            .select('*')
+            .eq('turlag_id', turlagId)
+            .order('event_date', { ascending: true });
+        
+        // Pas d'erreur fatale si pas d'events (table peut ne pas exister encore)
+        
+        return { turlag, members, events: events || [] };
     },
-    async joinTurlag(turlagId) {
+
+    async createTurlag(name, desc) {
         const user = await this.getCurrentUser();
-        const { error } = await supabase.from('turlag_members').insert([{ turlag_id: turlagId, user_id: user.id, role: 'member' }]);
-        if (error && error.code === '23505') throw new Error("Tu es déjà membre.");
+        const { data: t } = await supabase.from('turlags').insert([{name, description: desc, created_by: user.id}]).select().single();
+        await supabase.from('turlag_members').insert([{turlag_id: t.id, user_id: user.id, role: 'admin'}]);
+        return t;
+    },
+
+    async updateTurlag(id, updates) {
+        const { error } = await supabase.from('turlags').update(updates).eq('id', id);
         if (error) throw error;
     },
+
+    async joinTurlag(id) {
+        const u = await this.getCurrentUser();
+        await supabase.from('turlag_members').insert([{turlag_id: id, user_id: u.id, role: 'member'}]);
+    },
+
+    // CORRECTION DU BUG "QUITTER LE GROUPE"
     async leaveTurlag(turlagId) {
         const user = await this.getCurrentUser();
-        const { error } = await supabase.from('turlag_members').delete().eq('turlag_id', turlagId).eq('user_id', user.id);
+        
+        // Vérifier si je suis le dernier membre
+        const { count } = await supabase
+            .from('turlag_members')
+            .select('*', { count: 'exact', head: true })
+            .eq('turlag_id', turlagId);
+
+        if (count <= 1) {
+            // Si je suis le dernier, on supprime TOUT le groupe
+            const { error } = await supabase.from('turlags').delete().eq('id', turlagId);
+            if (error) throw error;
+        } else {
+            // Sinon je pars juste
+            const { error } = await supabase
+                .from('turlag_members')
+                .delete()
+                .eq('turlag_id', turlagId)
+                .eq('user_id', user.id);
+            if (error) throw error;
+        }
+    },
+
+    async updateMemberRole(turlagId, userId, newRole) {
+        const { error } = await supabase
+            .from('turlag_members')
+            .update({ role: newRole })
+            .eq('turlag_id', turlagId)
+            .eq('user_id', userId);
+        if (error) throw error;
+    },
+
+    async addTurlagEvent(eventData) {
+        const user = await this.getCurrentUser();
+        const { error } = await supabase
+            .from('turlag_events')
+            .insert([{ ...eventData, created_by: user.id }]);
+        if (error) throw error;
+    },
+    
+    async deleteTurlagEvent(id) {
+        const { error } = await supabase.from('turlag_events').delete().eq('id', id);
         if (error) throw error;
     }
 };

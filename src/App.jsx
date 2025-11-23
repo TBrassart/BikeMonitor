@@ -20,6 +20,7 @@ import LibraryPage from './components/Library/LibraryPage';
 import ActivitiesPage from './components/Activities/ActivitiesPage';
 
 import TurlagManager from './components/Settings/TurlagManager';
+import TurlagDetail from './components/Settings/TurlagDetail';
 import SettingsPage from './components/Settings/SettingsPage';
 import StravaCallback from './components/Settings/StravaCallback';
 
@@ -81,6 +82,7 @@ function App() {
                             <TurlagManager />
                         </div>
                     } />
+                    <Route path="/app/turlag/:turlagId" element={<TurlagDetail />} />
                     <Route path="/app/settings" element={<SettingsPage />} />
                     
                     <Route path="*" element={<Navigate to="/app/dashboard" />} />

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { authService } from '../../services/api';
 import { FaUsers, FaPlus, FaSignInAlt, FaCopy, FaCrown, FaTrash, FaTimes } from 'react-icons/fa';
 import './TurlagManager.css';
 
 function TurlagManager() {
+    const navigate = useNavigate();
     const [turlags, setTurlags] = useState([]);
     const [loading, setLoading] = useState(true);
     const [view, setView] = useState('list'); // 'list', 'create', 'join'
@@ -115,32 +117,29 @@ function TurlagManager() {
                         </div>
                     ) : (
                         turlags.map(turlag => {
-                            // Note: L'API doit renvoyer le role, sinon on suppose membre
-                            const isAdmin = turlag.created_by_me || false; 
+                            const isAdmin = turlag.my_role === 'admin'; // L'API renvoie my_role maintenant
 
                             return (
-                                <div key={turlag.id} className="turlag-card glass-panel">
+                                <div 
+                                    key={turlag.id} 
+                                    className="turlag-card glass-panel"
+                                    onClick={() => navigate(`/app/turlag/${turlag.id}`)} // Navigation au clic
+                                    style={{cursor: 'pointer'}}
+                                >
                                     <div className="card-header">
-                                        <h3>{turlag.name}</h3>
+                                        <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
+                                            <div className="turlag-mini-icon">
+                                                {turlag.icon_url ? <img src={turlag.icon_url} alt="" /> : <FaUsers />}
+                                            </div>
+                                            <h3>{turlag.name}</h3>
+                                        </div>
                                         {isAdmin && <span className="role-badge admin"><FaCrown /> Admin</span>}
                                     </div>
                                     
                                     <p className="turlag-desc">{turlag.description || "Pas de description"}</p>
                                     
-                                    <div className="code-section">
-                                        <span className="code-label">Code d'invitation :</span>
-                                        <button 
-                                            onClick={() => copyCode(turlag.id)} 
-                                            className={`copy-btn ${copiedId === turlag.id ? 'copied' : ''}`}
-                                        >
-                                            {copiedId === turlag.id ? 'Copié !' : <><FaCopy /> {turlag.id.slice(0, 8)}...</>}
-                                        </button>
-                                    </div>
-
                                     <div className="card-footer">
-                                        <button onClick={() => handleLeave(turlag.id, turlag.name)} className="leave-btn">
-                                            <FaTrash /> Quitter
-                                        </button>
+                                        <span className="enter-link">Entrer dans le QG →</span>
                                     </div>
                                 </div>
                             );

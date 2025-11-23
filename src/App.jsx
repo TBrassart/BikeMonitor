@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+// MODIF : On retire "BrowserRouter as Router" des imports car c'est géré par main.jsx
+import { Routes, Route, Navigate } from 'react-router-dom'; 
 import { authService } from './services/api';
+import { supabase } from './supabaseClient';
 
 // Layouts & Pages
 import AuthScreen from './components/Auth/AuthScreen';
@@ -11,7 +13,13 @@ import BikeGarage from './components/Bike/BikeGarage';
 import BikeDetailShell from './components/Bike/BikeDetailShell';
 import BikeForm from './components/Bike/BikeForm';
 import SettingsPage from './components/Settings/SettingsPage';
-// ... importez vos autres pages (Nutrition, Activities, etc.)
+import NutritionPage from './components/Nutrition/NutritionPage';
+import EquipmentPage from './components/Equipment/EquipmentPage';
+import KitsPage from './components/Kits/KitsPage';
+import ActivitiesPage from './components/Activities/ActivitiesPage';
+import LibraryPage from './components/Library/LibraryPage';
+import ProfilePage from './components/Settings/ProfilePage';
+
 
 import './App.css';
 
@@ -31,14 +39,13 @@ function App() {
 
   if (loading) return <div className="app-loading">Chargement...</div>;
 
-  // Si pas connecté, on affiche l'écran d'Auth (qui gère maintenant la création de profil auto)
+  // Si pas connecté, on affiche l'écran d'Auth
   if (!user) {
     return <AuthScreen onLogin={checkSession} />;
   }
 
-  // Structure de l'application connectée
+  // MODIF : On a retiré la balise <Router> ici
   return (
-    <Router>
       <div className="app-container">
         <SideBar />
         <main className="main-content">
@@ -53,7 +60,6 @@ function App() {
             <Route path="/app/settings" element={<SettingsPage />} />
             
             {/* Redirections de sécurité */}
-            {/* On redirige les vieilles url d'invitation vers les settings pour entrer le code manuellement */}
             <Route path="/join/*" element={<Navigate to="/app/settings" />} />
             
             {/* Route Catch-all */}
@@ -62,8 +68,8 @@ function App() {
         </main>
         <BottomNav />
       </div>
-    </Router>
   );
+  // MODIF : On a retiré la balise </Router> ici
 }
 
 export default App;

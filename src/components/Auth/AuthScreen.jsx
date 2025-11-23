@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { authService } from '../../services/api';
 import './AuthScreen.css';
-// On a supprimé l'import de ProfileSelection car il n'est plus utile
+
+// NOTE : On ne doit PLUS importer ProfileSelection ici.
+// Le but est d'aller directement au Dashboard une fois connecté.
 
 function AuthScreen({ onLogin }) {
     const [loading, setLoading] = useState(true);
@@ -15,18 +17,19 @@ function AuthScreen({ onLogin }) {
 
     const checkUser = async () => {
         try {
+            // 1. On vérifie si l'utilisateur est authentifié (Supabase Auth)
             const user = await authService.getCurrentUser();
+            
             if (user) {
-                // L'utilisateur est authentifié techniquement
-                // On vérifie s'il a un profil applicatif (table profiles)
-                // S'il n'en a pas (première connexion), on le crée automatiquement
+                // 2. On s'assure qu'il a un profil dans la nouvelle table 'profiles'
+                // Si c'est sa première fois, createInitialProfile va le créer auto.
                 const profile = await authService.createInitialProfile(user);
                 
-                // On notifie l'app qu'on est prêt
+                // 3. On connecte l'utilisateur immédiatement (SKIP de la sélection de profil)
                 onLogin(profile);
             }
         } catch (e) {
-            console.error(e);
+            console.error("Erreur vérification utilisateur:", e);
         } finally {
             setLoading(false);
         }

@@ -17,13 +17,12 @@ function PartsTab({ bikeId }) {
         try {
             setLoading(true);
             const data = await partsService.getByBikeId(bikeId);
-            // On filtre les pièces actives si l'API ne le fait pas déjà
             setParts(data.filter(p => p.status !== 'archived'));
         } catch (e) { console.error(e); } 
         finally { setLoading(false); }
     };
 
-    // --- ACTION REMPLACER PIÈCE ---
+    // --- ACTION REMPLACER PIÈCE (CORRIGÉE) ---
     const handleReplace = async (part) => {
         const confirm = window.confirm(`Remplacer "${part.name}" ?\nCela l'archivera et ajoutera une note dans l'historique.`);
         if (!confirm) return;
@@ -32,27 +31,28 @@ function PartsTab({ bikeId }) {
             const today = new Date().toISOString().split('T')[0];
 
             // 1. Archiver la pièce actuelle
+            // CORRECTION : On retire 'notes' qui faisait planter car la colonne n'existe pas sur 'parts'
             await partsService.update(part.id, { 
-                status: 'archived',
-                notes: `Remplacée le ${today}`
+                status: 'archived'
             });
 
-            // 2. Ajouter à l'historique
+            // 2. Ajouter à l'historique (Là on peut mettre une description)
             await historyService.add({
                 bike_id: bikeId,
-                type: 'part_change', // Sera affiché en bleu/engrenage
+                type: 'part_change',
                 title: `Remplacement : ${part.name}`,
-                description: `Pièce remplacée après ${part.km_current} km d'utilisation.`,
-                date: today
+                description: `Pièce archivée après ${part.km_current} km.`,
+                date: today,
+                km: part.km_current // On garde le km final
             });
 
-            // 3. Recharger
             loadParts();
-            // Optionnel : Ouvrir le formulaire pour ajouter la nouvelle
+            // On ouvre le formulaire pour ajouter la remplaçante immédiatement
             setShowForm(true);
 
         } catch (e) {
-            alert("Erreur lors du remplacement");
+            console.error(e);
+            alert("Erreur lors du remplacement. Vérifiez la console.");
         }
     };
 
@@ -128,8 +128,7 @@ function PartsTab({ bikeId }) {
                                 </div>
 
                                 <div className="part-actions">
-                                    {/* BOUTON REMPLACER */}
-                                    <button onClick={() => handleReplace(part)} className="action-icon-btn replace" title="Remplacer la pièce">
+                                    <button onClick={() => handleReplace(part)} className="action-icon-btn replace" title="Remplacer">
                                         <FaSyncAlt />
                                     </button>
                                     <button onClick={() => handleDelete(part.id)} className="action-icon-btn delete" title="Supprimer">

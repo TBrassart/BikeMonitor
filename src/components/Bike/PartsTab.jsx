@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { partsService } from '../../services/api';
-import { FaPlus, FaCogs, FaCompactDisc, FaCircle, FaWrench, FaTrash } from 'react-icons/fa';
+import { partsService, historyService } from '../../services/api';
+import { FaPlus, FaCogs, FaCompactDisc, FaCircle, FaWrench, FaTrash, FaSyncAlt } from 'react-icons/fa';
 import PartForm from './PartForm';
 import './PartsTab.css';
 
@@ -17,37 +17,67 @@ function PartsTab({ bikeId }) {
         try {
             setLoading(true);
             const data = await partsService.getByBikeId(bikeId);
-            setParts(data);
+            // On filtre les pièces actives si l'API ne le fait pas déjà
+            setParts(data.filter(p => p.status !== 'archived'));
         } catch (e) { console.error(e); } 
         finally { setLoading(false); }
     };
 
-    // --- LOGIQUE D'USURE ---
-    const getWearStatus = (current, target) => {
-        if (!target) return { pct: 0, color: 'var(--neon-green)' };
-        const pct = Math.min(Math.round((current / target) * 100), 100);
-        
-        let color = 'var(--neon-green)'; // Vert
-        if (pct >= 75) color = '#f59e0b'; // Orange
-        if (pct >= 100) color = '#ef4444'; // Rouge
-        
-        return { pct, color };
-    };
+    // --- ACTION REMPLACER PIÈCE ---
+    const handleReplace = async (part) => {
+        const confirm = window.confirm(`Remplacer "${part.name}" ?\nCela l'archivera et ajoutera une note dans l'historique.`);
+        if (!confirm) return;
 
-    // --- ICONES ---
-    const getIcon = (cat) => {
-        const c = cat ? cat.toLowerCase() : '';
-        if (c.includes('transmission') || c.includes('chain')) return <FaCogs />;
-        if (c.includes('frein') || c.includes('brake')) return <FaCompactDisc />;
-        if (c.includes('pneu') || c.includes('tire')) return <FaCircle />;
-        return <FaWrench />;
+        try {
+            const today = new Date().toISOString().split('T')[0];
+
+            // 1. Archiver la pièce actuelle
+            await partsService.update(part.id, { 
+                status: 'archived',
+                notes: `Remplacée le ${today}`
+            });
+
+            // 2. Ajouter à l'historique
+            await historyService.add({
+                bike_id: bikeId,
+                type: 'part_change', // Sera affiché en bleu/engrenage
+                title: `Remplacement : ${part.name}`,
+                description: `Pièce remplacée après ${part.km_current} km d'utilisation.`,
+                date: today
+            });
+
+            // 3. Recharger
+            loadParts();
+            // Optionnel : Ouvrir le formulaire pour ajouter la nouvelle
+            setShowForm(true);
+
+        } catch (e) {
+            alert("Erreur lors du remplacement");
+        }
     };
 
     const handleDelete = async (id) => {
-        if(window.confirm("Supprimer cette pièce ?")) {
+        if(window.confirm("Supprimer définitivement cette pièce ?")) {
             await partsService.delete(id);
             loadParts();
         }
+    };
+
+    const getWearStatus = (current, target) => {
+        if (!target) return { pct: 0, color: 'var(--neon-green)' };
+        const pct = Math.min(Math.round((current / target) * 100), 100);
+        let color = 'var(--neon-green)';
+        if (pct >= 75) color = '#f59e0b';
+        if (pct >= 100) color = '#ef4444';
+        return { pct, color };
+    };
+
+    const getIcon = (cat) => {
+        const c = cat ? cat.toLowerCase() : '';
+        if (c.includes('transmission')) return <FaCogs />;
+        if (c.includes('frein')) return <FaCompactDisc />;
+        if (c.includes('pneu')) return <FaCircle />;
+        return <FaWrench />;
     };
 
     if (loading) return <div className="loading-text">Scan des composants...</div>;
@@ -69,9 +99,7 @@ function PartsTab({ bikeId }) {
 
             <div className="parts-list">
                 {parts.length === 0 ? (
-                    <div className="empty-state glass-panel">
-                        <p>Aucune pièce installée.</p>
-                    </div>
+                    <div className="empty-state glass-panel"><p>Aucune pièce active.</p></div>
                 ) : (
                     parts.map(part => {
                         const { pct, color } = getWearStatus(part.km_current, part.life_target_km);
@@ -88,25 +116,26 @@ function PartsTab({ bikeId }) {
                                         <h4>{part.name}</h4>
                                         <span className="part-cat">{part.category}</span>
                                     </div>
-
-                                    {/* BARRE D'USURE */}
                                     <div className="wear-container">
                                         <div className="wear-labels">
                                             <span>Usure {pct}%</span>
                                             <span>{part.km_current} / {part.life_target_km} km</span>
                                         </div>
                                         <div className="progress-bg">
-                                            <div 
-                                                className="progress-fill" 
-                                                style={{ width: `${pct}%`, backgroundColor: color }}
-                                            ></div>
+                                            <div className="progress-fill" style={{ width: `${pct}%`, backgroundColor: color }}></div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <button onClick={() => handleDelete(part.id)} className="trash-icon">
-                                    <FaTrash />
-                                </button>
+                                <div className="part-actions">
+                                    {/* BOUTON REMPLACER */}
+                                    <button onClick={() => handleReplace(part)} className="action-icon-btn replace" title="Remplacer la pièce">
+                                        <FaSyncAlt />
+                                    </button>
+                                    <button onClick={() => handleDelete(part.id)} className="action-icon-btn delete" title="Supprimer">
+                                        <FaTrash />
+                                    </button>
+                                </div>
                             </div>
                         );
                     })

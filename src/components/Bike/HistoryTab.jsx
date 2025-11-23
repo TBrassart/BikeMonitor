@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { historyService } from '../../services/api';
-import { FaPen, FaCalendarDay, FaPlus, FaWrench, FaCogs, FaStickyNote, FaExclamationTriangle } from 'react-icons/fa';
+import { FaPen, FaCalendarDay, FaPlus, FaWrench, FaCogs, FaStickyNote, FaExclamationTriangle, FaTrash } from 'react-icons/fa';
 import './HistoryTab.css';
 
 function HistoryTab({ bikeId }) {
@@ -39,19 +39,29 @@ function HistoryTab({ bikeId }) {
         }
     };
 
-    // --- LOGIQUE VISUELLE DISTINCTIVE ---
+    // NOUVEAU : Suppression d'un élément de l'historique
+    const handleDelete = async (id) => {
+        if(window.confirm("Supprimer cette entrée de l'historique ?")) {
+            try {
+                await historyService.delete(id);
+                loadHistory();
+            } catch (e) {
+                console.error("Erreur suppression", e);
+            }
+        }
+    };
+
     const getEventStyle = (type) => {
         switch(type) {
-            case 'maintenance': return { icon: <FaWrench />, color: '#f59e0b', label: 'Entretien' }; // Orange
-            case 'part_change': return { icon: <FaCogs />, color: '#3b82f6', label: 'Pièce' }; // Bleu
-            case 'incident': return { icon: <FaExclamationTriangle />, color: '#ef4444', label: 'Incident' }; // Rouge
-            default: return { icon: <FaStickyNote />, color: '#94a3b8', label: 'Note' }; // Gris
+            case 'maintenance': return { icon: <FaWrench />, color: '#f59e0b', label: 'Entretien' };
+            case 'part_change': return { icon: <FaCogs />, color: '#3b82f6', label: 'Pièce' };
+            case 'incident': return { icon: <FaExclamationTriangle />, color: '#ef4444', label: 'Incident' };
+            default: return { icon: <FaStickyNote />, color: '#94a3b8', label: 'Note' };
         }
     };
 
     return (
         <div className="history-tab">
-            {/* FORMULAIRE AVEC DATE */}
             <div className="glass-panel history-form-panel">
                 <form onSubmit={handleAddNote} className="note-form">
                     <div className="input-row">
@@ -80,15 +90,20 @@ function HistoryTab({ bikeId }) {
                     const style = getEventStyle(event.type);
                     return (
                         <div key={event.id} className="timeline-item">
-                            {/* Marqueur coloré selon le type */}
                             <div className="timeline-marker" style={{backgroundColor: style.color, boxShadow: `0 0 10px ${style.color}`}}>
                                 {style.icon}
                             </div>
                             
                             <div className="timeline-content glass-panel" style={{borderLeft: `3px solid ${style.color}`}}>
                                 <div className="timeline-header">
-                                    <span className="event-type-badge" style={{color: style.color}}>{style.label}</span>
-                                    <span className="event-date"><FaCalendarDay /> {event.date}</span>
+                                    <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
+                                        <span className="event-type-badge" style={{color: style.color}}>{style.label}</span>
+                                        <span className="event-date"><FaCalendarDay /> {event.date}</span>
+                                    </div>
+                                    {/* Bouton suppression discret */}
+                                    <button onClick={() => handleDelete(event.id)} className="delete-history-btn">
+                                        <FaTrash />
+                                    </button>
                                 </div>
                                 <h4 className="event-title">{event.title}</h4>
                                 {event.description && <p className="event-desc">{event.description}</p>}

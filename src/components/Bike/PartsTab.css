@@ -102,3 +102,25 @@
     cursor: pointer;
 }
 .trash-icon:hover { opacity: 1; }
+
+.part-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-left: 10px;
+}
+
+.action-icon-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    opacity: 0.6;
+    transition: all 0.2s;
+}
+
+.action-icon-btn.replace { color: var(--neon-blue); }
+.action-icon-btn.replace:hover { opacity: 1; transform: rotate(180deg); }
+
+.action-icon-btn.delete { color: #ef4444; }
+.action-icon-btn.delete:hover { opacity: 1; }

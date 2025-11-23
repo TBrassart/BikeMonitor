@@ -72,3 +72,13 @@
     font-size: 0.8rem;
     color: var(--text-secondary);
 }
+
+.delete-history-btn {
+    background: transparent;
+    border: none;
+    color: #ef4444;
+    opacity: 0.3;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+.delete-history-btn:hover { opacity: 1; }

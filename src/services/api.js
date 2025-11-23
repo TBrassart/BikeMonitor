@@ -148,21 +148,19 @@ export const api = {
 
     // --- CALCULS INTELLIGENTS ---
     async getBikeKmAtDate(bikeId, date) {
-        // On récupère toutes les activités de ce vélo avant la date indiquée
         const { data, error } = await supabase
             .from('activities')
-            .select('distance')
+            .select('distance') // Distance est en MÈTRES dans Strava/Activities
             .eq('bike_id', bikeId)
-            .lte('start_date', date); // lte = Less Than or Equal (<=)
+            .lte('start_date', date);
 
-        if (error) {
-            console.warn("Erreur calcul historique:", error);
-            return 0;
-        }
+        if (error) return 0;
         
-        // On fait la somme (distance est supposée être en km dans la BDD)
-        const total = data.reduce((acc, act) => acc + (act.distance || 0), 0);
-        return Math.round(total);
+        // Somme des mètres
+        const totalMeters = data.reduce((acc, act) => acc + (act.distance || 0), 0);
+        
+        // Conversion en KM
+        return Math.round(totalMeters / 1000);
     },
 
     // --- STATS ---
@@ -309,12 +307,7 @@ export const bikeService = {
     getKmAtDate: (id, date) => api.getBikeKmAtDate(id, date) 
 };
 
-export const maintenanceService = {
-    getByBikeId: (id) => api.getMaintenance(id),
-    add: (data) => api.addMaintenance(data),
-    update: (id, data) => api.updateMaintenance(id, data),
-    delete: (id) => api.deleteMaintenance(id)
-};
+export const maintenanceService = { getByBikeId: (id) => api.getMaintenance(id), add: (d) => api.addMaintenance(d), update: (id, d) => api.updateMaintenance(id, d), delete: (id) => api.deleteMaintenance(id) };
 
 export const partsService = {
     getByBikeId: (id) => api.getParts(id),
@@ -326,20 +319,13 @@ export const partsService = {
 
 export const historyService = {
     getByBikeId: (id) => api.getHistory(id),
-    add: (data) => api.addHistory(data)
+    add: (data) => api.addHistory(data),
+    delete: (id) => api.deleteHistory(id)
 };
 
-export const nutritionService = {
-    getAll: () => api.getNutrition(),
-    add: (data) => api.addNutrition(data),
-    update: (id, data) => api.updateNutrition(id, data),
-    delete: (id) => api.deleteNutrition(id)
-};
+export const nutritionService = { getAll: () => api.getNutrition() };
 
-export const libraryService = {
-    getAll: () => api.getComponentLibrary(),
-    add: (data) => api.addToLibrary(data)
-};
+export const libraryService = { getAll: () => api.getComponentLibrary() };
 
 export const kitService = {
     getAll: () => api.getKits(),

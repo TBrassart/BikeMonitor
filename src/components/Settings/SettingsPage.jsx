@@ -2,45 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { authService, supabase } from '../../services/api';
 import { stravaService } from '../../services/stravaService'; 
 import ProfilePage from './ProfilePage';
-import TurlagManager from './TurlagManager'; // Import CRUCIAL
 import './SettingsPage.css';
 
 function SettingsPage() {
-    // On met 'turlags' par défaut si tu veux tester direct, sinon 'profile'
-    const [activeTab, setActiveTab] = useState('turlags'); 
+    const [activeTab, setActiveTab] = useState('profile');
     const [stravaStatus, setStravaStatus] = useState('loading');
 
     useEffect(() => {
-        if (activeTab === 'integrations') {
-            checkStravaStatus();
-        }
+        if (activeTab === 'integrations') checkStravaStatus();
     }, [activeTab]);
 
     const checkStravaStatus = async () => {
+        /* ... (Garder votre logique existante ici) ... */
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
-
-            const { data } = await supabase
-                .from('profile_integrations')
-                .select('*')
-                .eq('profile_id', user.id)
-                .eq('provider', 'strava')
-                .single();
-
-            setStravaStatus(data ? 'connected' : 'disconnected');
-        } catch (e) {
-            setStravaStatus('disconnected');
-        }
-    };
-
-    const handleStravaConnect = async () => await stravaService.initiateAuth();
-
-    const handleStravaDisconnect = async () => {
-        if (window.confirm("Déconnecter Strava ?")) {
-            await stravaService.disconnect();
-            setStravaStatus('disconnected');
-        }
+             const { data: { user } } = await supabase.auth.getUser();
+             // ... requête supabase ...
+             setStravaStatus('disconnected'); // Placeholder si pas de data
+        } catch(e) { console.error(e) }
     };
 
     const handleLogout = async () => {
@@ -50,50 +28,43 @@ function SettingsPage() {
 
     return (
         <div className="settings-page">
-            <header className="settings-header">
-                <h2>Paramètres</h2>
-                <button onClick={handleLogout} className="logout-btn">Déconnexion</button>
-            </header>
+            <h2 style={{ marginBottom: '20px' }}>Paramètres</h2>
 
-            <div className="settings-tabs">
+            <div className="settings-tabs" style={{ display:'flex', gap:'10px', marginBottom:'20px' }}>
                 <button 
-                    className={activeTab === 'profile' ? 'active' : ''} 
+                    className={activeTab === 'profile' ? 'active-tab btn' : 'btn'} 
                     onClick={() => setActiveTab('profile')}
+                    style={{ padding: '10px 20px', cursor:'pointer', background: activeTab==='profile'?'#2563eb':'#eee', color: activeTab==='profile'?'white':'black', border:'none', borderRadius:'6px'}}
                 >
                     Mon Profil
                 </button>
                 <button 
-                    className={activeTab === 'turlags' ? 'active' : ''} 
-                    onClick={() => setActiveTab('turlags')}
-                >
-                    Mes Turlags
-                </button>
-                <button 
-                    className={activeTab === 'integrations' ? 'active' : ''} 
+                    className={activeTab === 'integrations' ? 'active-tab btn' : 'btn'} 
                     onClick={() => setActiveTab('integrations')}
+                    style={{ padding: '10px 20px', cursor:'pointer', background: activeTab==='integrations'?'#2563eb':'#eee', color: activeTab==='integrations'?'white':'black', border:'none', borderRadius:'6px'}}
                 >
                     Intégrations
                 </button>
             </div>
 
-            <div className="settings-content">
+            <div className="settings-content" style={{ background:'white', padding:'20px', borderRadius:'8px', minHeight:'300px' }}>
                 {activeTab === 'profile' && <ProfilePage />}
                 
-                {/* C'est ICI que le composant est appelé */}
-                {activeTab === 'turlags' && <TurlagManager />}
-
                 {activeTab === 'integrations' && (
-                    <div className="integrations-tab">
+                    <div className="integrations">
                         <h3>Strava</h3>
-                        <p>État : {stravaStatus === 'connected' ? '✅ Connecté' : '❌ Déconnecté'}</p>
-                        {stravaStatus === 'disconnected' && (
-                            <button onClick={handleStravaConnect} className="primary-btn">Connecter Strava</button>
-                        )}
-                        {stravaStatus === 'connected' && (
-                            <button onClick={handleStravaDisconnect} className="secondary-btn">Déconnecter</button>
-                        )}
+                        <p>{stravaStatus === 'connected' ? '✅ Connecté' : '❌ Non connecté'}</p>
+                        <button onClick={() => stravaService.initiateAuth()} style={{background:'#fc4c02', color:'white', border:'none', padding:'10px', borderRadius:'5px', cursor:'pointer'}}>
+                            {stravaStatus === 'connected' ? 'Re-synchroniser' : 'Connecter Strava'}
+                        </button>
                     </div>
                 )}
+            </div>
+
+            <div style={{ marginTop: '40px', borderTop: '1px solid #eee', paddingTop: '20px' }}>
+                <button onClick={handleLogout} style={{ width:'100%', padding:'15px', background:'#fee2e2', color:'#dc2626', border:'none', borderRadius:'8px', fontWeight:'bold', cursor:'pointer' }}>
+                    Se déconnecter
+                </button>
             </div>
         </div>
     );

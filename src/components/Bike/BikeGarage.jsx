@@ -75,7 +75,7 @@ function BikeGarage() {
                     <h2>Garage</h2>
                     <p style={{color:'#94a3b8', margin:0}}>Gère ton écurie et celle de ton Turlag</p>
                 </div>
-                <button className="add-btn" onClick={() => navigate('/app/add-bike')}>
+                <button className="add-btn primary-btn" onClick={() => navigate('/app/add-bike')} style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                     <FaPlus />
                 </button>
             </header>

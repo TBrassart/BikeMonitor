@@ -115,6 +115,22 @@
     animation: fadeIn 0.5s ease;
 }
 
+.chart-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.form-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 700;
+    border: 1px solid;
+    font-size: 0.9rem;
+    background: rgba(0,0,0,0.2);
+}
+
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 /* UTILITAIRES */

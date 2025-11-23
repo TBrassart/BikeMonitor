@@ -3,7 +3,7 @@ import { api, authService } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
 import { 
     FaRoad, FaMountain, FaClock, FaBicycle, 
-    FaExclamationTriangle, FaWrench, FaCalendarAlt, FaSync, FaTimes, FaArrowRight, FaPlus, FaUsers
+    FaExclamationTriangle, FaWrench, FaCalendarAlt, FaSync, FaTimes, FaArrowRight 
 } from 'react-icons/fa';
 import ChartsSection from './ChartsSection';
 import WeatherWidget from './WeatherWidget';
@@ -20,9 +20,9 @@ function Dashboard() {
     const [period, setPeriod] = useState('month');
     const [isRolling, setIsRolling] = useState(false);
 
-    // Alertes (Stocke la liste des problèmes, pas juste le nombre)
+    // Alertes (Liste unique)
     const [alertList, setAlertList] = useState({ parts: [], maintenance: [] });
-    const [showAlertModal, setShowAlertModal] = useState(false); // Pour la popup
+    const [showAlertModal, setShowAlertModal] = useState(false);
 
     useEffect(() => {
         loadData();
@@ -40,22 +40,30 @@ function Dashboard() {
             const myBikes = await api.getBikes();
             setBikes(myBikes || []);
 
-            // Analyse des alertes
+            // --- CALCUL DES ALERTES ---
             const partsIssues = [];
             const maintIssues = [];
 
             myBikes.forEach(bike => {
-                // Pièces
+                // Pièces (Critique ou Warning)
                 if (bike.parts) {
                     bike.parts.forEach(p => {
                         if (p.status === 'critical' || p.status === 'warning') {
-                            partsIssues.push({ bikeName: bike.name, bikeId: bike.id, part: p.name, status: p.status });
+                            partsIssues.push({ 
+                                bikeName: bike.name, 
+                                bikeId: bike.id, 
+                                part: p.name, 
+                                status: p.status 
+                            });
                         }
                     });
                 }
-                // Maintenance (Simulation ou vraie donnée)
-                // Si tu as une gestion de maintenance en retard dans 'bikes', ajoute la logique ici
-                // maintIssues.push({ bikeName: bike.name, bikeId: bike.id, task: "Révision annuelle" });
+                
+                // Maintenance (On regarde si maintenance en retard)
+                // Note: Suppose que l'API getBikes ne renvoie pas maintenance par défaut
+                // Il faudrait idéalement appeler getMaintenance pour chaque vélo, 
+                // mais pour l'instant on se base sur la logique existante ou future.
+                // Pour l'instant, on laisse vide ou on simule si besoin.
             });
             
             setAlertList({ parts: partsIssues, maintenance: maintIssues });
@@ -92,14 +100,11 @@ function Dashboard() {
         return { dist: Math.round(dist), elev: Math.round(elev), hours: Math.floor(time / 3600) };
     }, [filteredData]);
 
-    // Gestion du clic sur alerte
-    const handleAlertClick = () => {
-        if (alertList.parts.length > 0 || alertList.maintenance.length > 0) {
-            setShowAlertModal(true);
-        }
-    };
-
     if (loading) return <div className="loading-screen">Chargement...</div>;
+
+    // Calcul pour savoir si on allume les bulles
+    const hasPartAlerts = alertList.parts.length > 0;
+    const hasMaintAlerts = alertList.maintenance.length > 0;
 
     return (
         <div className="dashboard-container">
@@ -108,6 +113,7 @@ function Dashboard() {
                     <h1 className="gradient-text">Bonjour, {user?.user_metadata?.full_name || "Pilote"}</h1>
                     <div className="header-controls">
                         <div className="time-filters glass-panel">
+                            {/* SELECTEUR STYLE CORRIGÉ DANS CSS */}
                             <select value={period} onChange={(e) => setPeriod(e.target.value)} className="filter-select">
                                 <option value="week">Semaine</option>
                                 <option value="month">Mois</option>
@@ -119,19 +125,19 @@ function Dashboard() {
                             </label>
                         </div>
 
-                        {/* ALERTES VISUELLES (Non cliquables si vides, couleur si pleines) */}
-                        <div className="alerts-container" onClick={handleAlertClick} style={{cursor: (alertList.parts.length + alertList.maintenance.length) > 0 ? 'pointer' : 'default'}}>
+                        <div className="alerts-container" onClick={() => (hasPartAlerts || hasMaintAlerts) && setShowAlertModal(true)} 
+                             style={{cursor: (hasPartAlerts || hasMaintAlerts) ? 'pointer' : 'default'}}>
                             
                             {/* Bulle Pièces */}
-                            <div className={`alert-bubble parts ${alertList.parts.length > 0 ? 'active' : 'inactive'}`}>
+                            <div className={`alert-bubble parts ${hasPartAlerts ? 'active' : 'inactive'}`}>
                                 <FaExclamationTriangle />
-                                {alertList.parts.length > 0 && <span className="badge-dot"></span>}
+                                {hasPartAlerts && <span className="badge-dot"></span>}
                             </div>
 
                             {/* Bulle Maintenance */}
-                            <div className={`alert-bubble maintenance ${alertList.maintenance.length > 0 ? 'active' : 'inactive'}`}>
+                            <div className={`alert-bubble maintenance ${hasMaintAlerts ? 'active' : 'inactive'}`}>
                                 <FaWrench />
-                                {alertList.maintenance.length > 0 && <span className="badge-dot"></span>}
+                                {hasMaintAlerts && <span className="badge-dot"></span>}
                             </div>
                         </div>
                     </div>
@@ -161,7 +167,6 @@ function Dashboard() {
                                     <FaArrowRight className="arrow" />
                                 </div>
                             ))}
-                            
                             {alertList.maintenance.map((item, idx) => (
                                 <div key={`maint-${idx}`} className="alert-item warning" onClick={() => navigate(`/app/bike/${item.bikeId}`)}>
                                     <div className="alert-icon"><FaWrench /></div>
@@ -172,10 +177,6 @@ function Dashboard() {
                                     <FaArrowRight className="arrow" />
                                 </div>
                             ))}
-
-                            {alertList.parts.length === 0 && alertList.maintenance.length === 0 && (
-                                <p className="empty-text">Fausse alerte, tout va bien !</p>
-                            )}
                         </div>
                     </div>
                 </div>
@@ -203,7 +204,6 @@ function Dashboard() {
 
             <div className="dashboard-layout">
                 <div className="main-column">
-                    {/* PASSAGE DE LA PROP BIKES */}
                     <ChartsSection activities={filteredData} allActivities={activities} period={period} bikes={bikes} />
                 </div>
                 <div className="side-column">

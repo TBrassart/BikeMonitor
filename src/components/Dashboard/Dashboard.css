@@ -150,12 +150,20 @@
 
 /* Filtres */
 .time-filters {
-    padding: 5px 15px; border-radius: 30px; display: flex; align-items: center; gap: 15px;
-    background: rgba(255,255,255,0.05); border: 1px solid var(--border-color);
+    padding: 5px 15px;
+    border-radius: 30px;
+    display: flex; align-items: center; gap: 15px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border-color);
 }
 
 .filter-select {
-    background: transparent; border: none; color: white; font-size: 0.9rem; cursor: pointer;
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 0.9rem;
+    cursor: pointer;
+    color-scheme: dark; /* Force le menu natif en sombre */
 }
 .filter-select:focus { outline: none; }
 
@@ -164,6 +172,14 @@
     font-size: 0.8rem; color: var(--text-secondary); border-left: 1px solid rgba(255,255,255,0.1);
     padding-left: 15px;
 }
+
+.filter-select option {
+    background-color: #1e1e2d; /* Couleur de fond sombre */
+    color: white;
+}
+
+.filter-select:focus { outline: none; }
+
 .rolling-toggle input { display: none; } /* Cache checkbox */
 .sync-icon { font-size: 0.9rem; color: #6b7280; transition: all 0.3s; }
 .rolling-toggle input:checked ~ .sync-icon { color: var(--neon-blue); transform: rotate(180deg); }

@@ -9,32 +9,23 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 // 1. SERVICE D'AUTHENTIFICATION
 // ==========================================
 export const authService = {
-    // Inscription
     async signUp(email, password) {
         const { data, error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
         return data;
     },
-
-    // Connexion
     async signInWithEmail(email, password) {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         return data;
     },
-
-    // Déconnexion
     async signOut() {
         return await supabase.auth.signOut();
     },
-
-    // Utilisateur courant
     async getCurrentUser() {
         const { data: { user } } = await supabase.auth.getUser();
         return user;
     },
-
-    // Récupère mon profil
     async getMyProfile() {
         const user = await this.getCurrentUser();
         if (!user) return null;
@@ -59,79 +50,54 @@ export const authService = {
                 .insert([newProfile])
                 .select()
                 .single();
-            
             if (createError) throw createError;
             return created;
         }
         return null;
     },
-
-    // Alias pour la compatibilité (évite le crash "getProfiles is not a function")
+    // Alias pour compatibilité
     async getProfiles() {
         const profile = await this.getMyProfile();
         return profile ? [profile] : [];
     },
-
-    // Alias pour AuthScreen (évite "createInitialProfile is not a function")
     async createInitialProfile(user) {
         return await this.getMyProfile();
     },
-
     async updateProfile(updates) {
         const user = await this.getCurrentUser();
-        const { data, error } = await supabase
-            .from('profiles')
-            .update(updates)
-            .eq('user_id', user.id)
-            .select();
+        const { data, error } = await supabase.from('profiles').update(updates).eq('user_id', user.id).select();
         if (error) throw error;
         return data?.[0];
     },
-
-    // --- GESTION DES TURLAGS ---
+    // --- TURLAGS ---
     async getMyTurlags() {
         const { data, error } = await supabase.from('turlags').select('*').order('created_at');
         if (error) throw error;
         return data || [];
     },
-
     async createTurlag(name, description = "") {
         const user = await this.getCurrentUser();
-        const { data: turlag, error: err1 } = await supabase
-            .from('turlags')
-            .insert([{ name, description, created_by: user.id }])
-            .select().single();
+        const { data: turlag, error: err1 } = await supabase.from('turlags').insert([{ name, description, created_by: user.id }]).select().single();
         if (err1) throw err1;
-
-        const { error: err2 } = await supabase
-            .from('turlag_members')
-            .insert([{ turlag_id: turlag.id, user_id: user.id, role: 'admin' }]);
+        const { error: err2 } = await supabase.from('turlag_members').insert([{ turlag_id: turlag.id, user_id: user.id, role: 'admin' }]);
         if (err2) throw err2;
-
         return turlag;
     },
-
     async joinTurlag(turlagId) {
         const user = await this.getCurrentUser();
-        const { error } = await supabase
-            .from('turlag_members')
-            .insert([{ turlag_id: turlagId, user_id: user.id, role: 'member' }]);
-        
+        const { error } = await supabase.from('turlag_members').insert([{ turlag_id: turlagId, user_id: user.id, role: 'member' }]);
         if (error && error.code === '23505') throw new Error("Tu es déjà membre.");
         if (error) throw error;
     },
-    
     async leaveTurlag(turlagId) {
         const user = await this.getCurrentUser();
-        const { error } = await supabase
-            .from('turlag_members')
-            .delete().eq('turlag_id', turlagId).eq('user_id', user.id);
+        const { error } = await supabase.from('turlag_members').delete().eq('turlag_id', turlagId).eq('user_id', user.id);
         if (error) throw error;
     }
 };
 
 // ==========================================
-// 2. API MÉTIER (Vélos, etc.)
+// 2. API MÉTIER
 // ==========================================
 export const api = {
     // --- VÉLOS ---
@@ -143,7 +109,6 @@ export const api = {
         if (error) throw error;
         return data || [];
     },
-
     async getBike(id) {
         const { data, error } = await supabase
             .from('bikes')
@@ -153,28 +118,21 @@ export const api = {
         if (error) throw error;
         return data;
     },
-
     async addBike(bikeData) {
         const user = await authService.getCurrentUser();
-        const { data, error } = await supabase
-            .from('bikes')
-            .insert([{ ...bikeData, user_id: user.id }])
-            .select();
+        const { data, error } = await supabase.from('bikes').insert([{ ...bikeData, user_id: user.id }]).select();
         if (error) throw error;
         return data;
     },
-
     async updateBike(id, updates) {
         const { data, error } = await supabase.from('bikes').update(updates).eq('id', id).select();
         if (error) throw error;
         return data;
     },
-
     async deleteBike(id) {
         const { error } = await supabase.from('bikes').delete().eq('id', id);
         if (error) throw error;
     },
-
     async uploadImage(file, bucket = 'bikes') {
         const fileExt = file.name.split('.').pop();
         const fileName = `${Math.random()}.${fileExt}`;
@@ -183,16 +141,13 @@ export const api = {
         const { data } = supabase.storage.from(bucket).getPublicUrl(fileName);
         return data.publicUrl;
     },
-
     // --- STATS ---
     async getStats() {
-        // Note: On appelle api.getBikes() directement au lieu de this.getBikes() pour éviter les erreurs de contexte
         const bikes = await api.getBikes();
         const totalKm = bikes.reduce((acc, b) => acc + (b.total_km || 0), 0);
         const totalElevation = bikes.reduce((acc, b) => acc + (b.total_elevation || 0), 0);
         return { totalKm, totalElevation, bikesCount: bikes.length };
     },
-
     // --- MAINTENANCE ---
     async getMaintenance(bikeId) {
         const { data, error } = await supabase.from('maintenance').select('*').eq('bike_id', bikeId).order('date_due');
@@ -212,7 +167,6 @@ export const api = {
         const { error } = await supabase.from('maintenance').delete().eq('id', id);
         if (error) throw error;
     },
-
     // --- PIÈCES ---
     async getParts(bikeId) {
         const { data, error } = await supabase.from('parts').select('*').eq('bike_id', bikeId);
@@ -232,7 +186,6 @@ export const api = {
         const { error } = await supabase.from('parts').delete().eq('id', id);
         if (error) throw error;
     },
-
     // --- HISTORIQUE ---
     async getHistory(bikeId) {
         const { data, error } = await supabase.from('history').select('*').eq('bike_id', bikeId).order('date', { ascending: false });
@@ -243,7 +196,6 @@ export const api = {
         const { error } = await supabase.from('history').insert([item]);
         if (error) throw error;
     },
-
     // --- NUTRITION ---
     async getNutrition() {
         const { data, error } = await supabase.from('nutrition').select('*');
@@ -264,8 +216,7 @@ export const api = {
         const { error } = await supabase.from('nutrition').delete().eq('id', id);
         if (error) throw error;
     },
-
-    // --- BIBLIOTHÈQUE ---
+    // --- LIBRARY & KITS ---
     async getComponentLibrary() {
         const { data, error } = await supabase.from('component_library').select('*');
         if (error) throw error;
@@ -276,8 +227,6 @@ export const api = {
         if (error) throw error;
         return data;
     },
-
-    // --- KITS ---
     async getKits() {
         const user = await authService.getCurrentUser();
         try {
@@ -295,14 +244,13 @@ export const api = {
 };
 
 // ==========================================
-// 3. ADAPTATEURS DE COMPATIBILITÉ (SÉCURISÉS)
+// 3. COUCHE DE COMPATIBILITÉ (SÉCURISÉE)
 // ==========================================
-// Utilisation de fonctions fléchées () => api.fonction() pour éviter les erreurs "is not a function"
-// au chargement des modules.
+// Utilisation stricte de fonctions fléchées pour éviter les erreurs "is not a function"
 
 export const bikeService = {
     getAll: () => api.getBikes(),
-    getById: (id) => api.getBike(id),
+    getById: (id) => api.getBike(id), // <-- Indispensable pour le détail
     add: (data) => api.addBike(data),
     update: (id, data) => api.updateBike(id, data),
     delete: (id) => api.deleteBike(id),

@@ -218,6 +218,10 @@ export const api = {
         const { error } = await supabase.from('history').insert([item]);
         if (error) throw error;
     },
+    async deleteHistory(id) {
+        const { error } = await supabase.from('history').delete().eq('id', id);
+        if (error) throw error;
+    },
     // --- ACTIVITE --- 
     async getActivities() {
         // 1. On récupère l'utilisateur technique

@@ -1,13 +1,18 @@
 import React, { useState } from 'react';
 import { authService } from '../../services/api';
+import { FaBolt, FaEnvelope, FaLock, FaUserPlus, FaSignInAlt } from 'react-icons/fa';
 import './AuthScreen.css';
 
 function AuthScreen({ onLogin }) {
     const [isRegister, setIsRegister] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    const [formData, setFormData] = useState({ email: '', password: '' });
     const [error, setError] = useState(null);
+
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+        setError(null); // On efface l'erreur quand l'utilisateur tape
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -16,67 +21,98 @@ function AuthScreen({ onLogin }) {
 
         try {
             if (isRegister) {
-                // Inscription
-                const { user } = await authService.signUp(email, password);
+                // INSCRIPTION
+                const { user } = await authService.signUp(formData.email, formData.password);
                 if (user) {
-                    // Création auto du profil et connexion
+                    // On connecte direct après l'inscription
                     const profile = await authService.getMyProfile();
                     onLogin(profile);
                 }
             } else {
-                // Connexion
-                const { user } = await authService.signInWithEmail(email, password);
+                // CONNEXION
+                const { user } = await authService.signInWithEmail(formData.email, formData.password);
                 if (user) {
-                    // Récupération auto du profil et connexion
                     const profile = await authService.getMyProfile();
                     onLogin(profile);
                 }
             }
         } catch (err) {
             console.error(err);
-            setError(err.message || "Une erreur est survenue.");
+            setError(err.message || "Identifiants incorrects ou erreur réseau.");
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="auth-screen">
-            <div className="auth-card">
-                <h1>BikeMonitor 🚲</h1>
-                <p>{isRegister ? "Rejoins le peloton." : "Connecte-toi à ton écurie."}</p>
+        <div className="auth-container">
+            <div className="auth-card glass-panel">
+                
+                {/* HEADER LOGO */}
+                <div className="auth-header">
+                    <div className="logo-circle">
+                        <FaBolt />
+                    </div>
+                    <h1 className="gradient-text">BikeMonitor</h1>
+                    <p className="auth-subtitle">
+                        {isRegister ? "Rejoins le peloton." : "Pilote ton écurie."}
+                    </p>
+                </div>
 
-                {error && <div className="error-msg">{error}</div>}
+                {/* ERROR BOX */}
+                {error && <div className="auth-error">{error}</div>}
 
-                <form onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label>Email</label>
+                {/* FORMULAIRE */}
+                <form onSubmit={handleSubmit} className="auth-form">
+                    <div className="input-wrapper">
+                        <FaEnvelope className="input-icon" />
                         <input 
                             type="email" 
-                            value={email} 
-                            onChange={e => setEmail(e.target.value)} 
+                            name="email"
+                            placeholder="Email" 
+                            value={formData.email} 
+                            onChange={handleChange} 
                             required 
                         />
                     </div>
-                    <div className="form-group">
-                        <label>Mot de passe</label>
+                    
+                    <div className="input-wrapper">
+                        <FaLock className="input-icon" />
                         <input 
                             type="password" 
-                            value={password} 
-                            onChange={e => setPassword(e.target.value)} 
+                            name="password"
+                            placeholder="Mot de passe" 
+                            value={formData.password} 
+                            onChange={handleChange} 
                             required 
                             minLength={6}
                         />
                     </div>
-                    <button type="submit" disabled={loading} className="primary-btn">
-                        {loading ? 'Chargement...' : (isRegister ? "S'inscrire" : "Se connecter")}
+
+                    <button type="submit" className="primary-btn auth-submit-btn" disabled={loading}>
+                        {loading ? <span className="loader"></span> : (
+                            isRegister ? <><FaUserPlus /> Créer le compte</> : <><FaSignInAlt /> Se connecter</>
+                        )}
                     </button>
                 </form>
 
-                <button className="link-btn" onClick={() => setIsRegister(!isRegister)}>
-                    {isRegister ? "Déjà un compte ? Se connecter" : "Pas de compte ? S'inscrire"}
-                </button>
+                {/* FOOTER SWITCH */}
+                <div className="auth-footer">
+                    <p>
+                        {isRegister ? "Déjà membre ?" : "Pas encore de compte ?"}
+                    </p>
+                    <button 
+                        className="switch-btn" 
+                        onClick={() => { setIsRegister(!isRegister); setError(null); }}
+                    >
+                        {isRegister ? "Se connecter" : "S'inscrire"}
+                    </button>
+                </div>
             </div>
+            
+            {/* DÉCORATION DE FOND (Optionnel) */}
+            <div className="bg-glow glow-1"></div>
+            <div className="bg-glow glow-2"></div>
         </div>
     );
 }

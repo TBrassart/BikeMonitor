@@ -1,43 +1,78 @@
+/* src/index.css */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+
 :root {
-  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Outfit', sans-serif; /* Police plus moderne que Inter */
   
-  /* THÈME CYBERPUNK / DARK */
-  --bg-dark: #0f172a;       /* Fond très sombre (bleu nuit) */
-  --bg-card: #1e293b;       /* Fond des cartes */
-  --bg-sidebar: #0b1120;    /* Fond sidebar */
+  /* PALETTE CYBERPUNK */
+  --bg-deep: #09090b;       /* Fond quasi noir */
+  --bg-card: rgba(24, 24, 27, 0.6); /* Fond carte semi-transparent */
+  --bg-card-hover: rgba(39, 39, 42, 0.8);
   
-  --text-primary: #f8fafc;  /* Blanc cassé */
-  --text-secondary: #94a3b8; /* Gris clair */
+  --text-primary: #ffffff;
+  --text-secondary: #a1a1aa;
   
-  --neon-blue: #0ea5e9;     /* Bleu électrique */
-  --neon-purple: #d946ef;   /* Violet néon */
-  --neon-green: #10b981;    /* Vert néon */
+  /* DÉGRADÉS NÉONS */
+  --gradient-primary: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%); /* Violet -> Rose */
+  --gradient-secondary: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%); /* Bleu Ciel -> Bleu */
+  --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%); /* Vert */
   
-  --border-color: #334155;
+  --border-glass: 1px solid rgba(255, 255, 255, 0.1);
+  --shadow-neon: 0 0 20px rgba(139, 92, 246, 0.15);
 }
 
 body {
   margin: 0;
-  background-color: var(--bg-dark);
+  /* Fond global avec une subtile lueur */
+  background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #09090b 40%);
+  background-color: var(--bg-deep);
   color: var(--text-primary);
-  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
 }
 
-h1, h2, h3, h4, h5 {
-  color: var(--text-primary);
+/* --- STYLES GLOBAUX --- */
+
+h1, h2, h3 {
+  font-weight: 700;
+  letter-spacing: -0.5px;
 }
 
-/* Scrollbar stylée */
-::-webkit-scrollbar {
-  width: 8px;
+/* Effet de verre (Glassmorphism) */
+.glass-panel {
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: var(--border-glass);
+  border-radius: 16px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
 }
-::-webkit-scrollbar-track {
-  background: var(--bg-dark); 
+
+/* Boutons stylés */
+button.primary-btn, .add-btn {
+  background: var(--gradient-primary) !important;
+  border: none !important;
+  color: white !important;
+  font-weight: 600;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(217, 70, 239, 0.3);
 }
-::-webkit-scrollbar-thumb {
-  background: var(--border-color); 
-  border-radius: 4px;
+
+button.primary-btn:hover, .add-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(217, 70, 239, 0.5);
 }
-::-webkit-scrollbar-thumb:hover {
-  background: var(--neon-blue); 
+
+/* Override des cartes existantes pour coller au style */
+.chart-card, .bike-card, .turlag-card, .settings-content, .integration-card {
+  background: var(--bg-card) !important;
+  backdrop-filter: blur(10px);
+  border: var(--border-glass) !important;
+  color: white !important;
+  border-radius: 16px !important;
+}
+
+/* Titres des cartes */
+.chart-card h3, .chart-card h4, .bike-info h3 {
+  color: var(--text-primary) !important;
 }

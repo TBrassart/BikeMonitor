@@ -3,12 +3,10 @@ import { authService } from '../../services/api';
 import './ProfilePage.css';
 
 function ProfilePage() {
-    const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState(null);
 
-    // État du formulaire
     const [formData, setFormData] = useState({
         name: '',
         height: '',
@@ -26,12 +24,8 @@ function ProfilePage() {
     const loadProfile = async () => {
         try {
             setLoading(true);
-            // 1. On récupère le profil complet via la nouvelle API
             const profile = await authService.getMyProfile();
-            
             if (profile) {
-                setUser(profile);
-                // 2. On pré-remplit le formulaire
                 setFormData({
                     name: profile.name || '',
                     height: profile.height || '',
@@ -43,7 +37,7 @@ function ProfilePage() {
                 });
             }
         } catch (e) {
-            console.error("Erreur chargement profil", e);
+            console.error("Erreur profil", e);
         } finally {
             setLoading(false);
         }
@@ -58,10 +52,7 @@ function ProfilePage() {
         e.preventDefault();
         setSaving(true);
         setMessage(null);
-
         try {
-            // 3. CORRECTION CRITIQUE : On envoie juste les données, pas l'ID.
-            // L'API retrouve l'utilisateur toute seule.
             await authService.updateProfile({
                 name: formData.name,
                 height: formData.height ? parseInt(formData.height) : null,
@@ -71,122 +62,144 @@ function ProfilePage() {
                 resting_hr: formData.resting_hr ? parseInt(formData.resting_hr) : null,
                 birth_date: formData.birth_date || null
             });
-
-            setMessage({ type: 'success', text: 'Profil mis à jour avec succès ! ✅' });
-            
-            // Petit refresh pour être sûr
-            loadProfile();
+            setMessage({ type: 'success', text: 'Profil mis à jour ! ✅' });
         } catch (err) {
-            console.error(err);
-            setMessage({ type: 'error', text: 'Erreur lors de la sauvegarde.' });
+            setMessage({ type: 'error', text: 'Erreur sauvegarde.' });
         } finally {
             setSaving(false);
         }
     };
 
-    if (loading) return <div className="loading-state">Chargement de ton profil...</div>;
+    // --- CALCUL DES ZONES ---
+    
+    const renderPowerZones = () => {
+        const ftp = parseInt(formData.ftp);
+        if (!ftp) return <p className="empty-zones">Renseigne ton FTP pour voir tes zones.</p>;
+
+        const zones = [
+            { name: 'Z1 Récup', range: `< ${Math.round(ftp * 0.55)}`, color: '#9ca3af' }, // Gris
+            { name: 'Z2 Endurance', range: `${Math.round(ftp * 0.56)} - ${Math.round(ftp * 0.75)}`, color: '#3b82f6' }, // Bleu
+            { name: 'Z3 Tempo', range: `${Math.round(ftp * 0.76)} - ${Math.round(ftp * 0.90)}`, color: '#10b981' }, // Vert
+            { name: 'Z4 Seuil', range: `${Math.round(ftp * 0.91)} - ${Math.round(ftp * 1.05)}`, color: '#f59e0b' }, // Jaune/Orange
+            { name: 'Z5 VO2 Max', range: `${Math.round(ftp * 1.06)} - ${Math.round(ftp * 1.20)}`, color: '#ef4444' }, // Rouge
+            { name: 'Z6 Anaérobie', range: `> ${Math.round(ftp * 1.21)}`, color: '#7c3aed' }, // Violet
+        ];
+
+        return (
+            <div className="zones-grid">
+                {zones.map((z, i) => (
+                    <div key={i} className="zone-card" style={{ borderLeft: `4px solid ${z.color}` }}>
+                        <span className="zone-name">{z.name}</span>
+                        <span className="zone-value">{z.range} W</span>
+                    </div>
+                ))}
+            </div>
+        );
+    };
+
+    const renderHrZones = () => {
+        const max = parseInt(formData.max_hr);
+        if (!max) return <p className="empty-zones">Renseigne ta FC Max pour voir tes zones.</p>;
+
+        const zones = [
+            { name: 'Z1', range: `${Math.round(max * 0.50)} - ${Math.round(max * 0.60)}`, color: '#9ca3af' },
+            { name: 'Z2', range: `${Math.round(max * 0.61)} - ${Math.round(max * 0.70)}`, color: '#3b82f6' },
+            { name: 'Z3', range: `${Math.round(max * 0.71)} - ${Math.round(max * 0.80)}`, color: '#10b981' },
+            { name: 'Z4', range: `${Math.round(max * 0.81)} - ${Math.round(max * 0.90)}`, color: '#f59e0b' },
+            { name: 'Z5', range: `> ${Math.round(max * 0.91)}`, color: '#ef4444' },
+        ];
+
+        return (
+            <div className="zones-grid">
+                {zones.map((z, i) => (
+                    <div key={i} className="zone-card" style={{ borderLeft: `4px solid ${z.color}` }}>
+                        <span className="zone-name">{z.name}</span>
+                        <span className="zone-value">{z.range} bpm</span>
+                    </div>
+                ))}
+            </div>
+        );
+    };
+
+    if (loading) return <div className="loading-state">Chargement...</div>;
 
     return (
         <div className="profile-page">
-            {/* En-tête avec Avatar */}
             <div className="profile-header glass-panel">
                 <div className="profile-avatar-large">
                     {formData.name ? formData.name.charAt(0).toUpperCase() : 'U'}
                 </div>
                 <div className="profile-title">
-                    <h3>{formData.name || 'Cycliste Inconnu'}</h3>
-                    <p className="subtitle">Pilote principal</p>
+                    <h3>{formData.name || 'Cycliste'}</h3>
+                    <p className="subtitle">Pilote</p>
                 </div>
             </div>
 
-            {message && (
-                <div className={`message-box ${message.type}`}>
-                    {message.text}
-                </div>
-            )}
+            {message && <div className={`message-box ${message.type}`}>{message.text}</div>}
 
-            <form onSubmit={handleSave} className="profile-form">
-                
-                {/* SECTION 1 : Identité */}
-                <div className="form-section glass-panel">
-                    <h4>Identité</h4>
-                    <div className="form-grid">
-                        <div className="form-group full-width">
-                            <label>Nom d'affichage</label>
-                            <input 
-                                type="text" 
-                                name="name" 
-                                value={formData.name} 
-                                onChange={handleChange} 
-                                placeholder="Ton pseudo"
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label>Date de naissance</label>
-                            <input 
-                                type="date" 
-                                name="birth_date" 
-                                value={formData.birth_date} 
-                                onChange={handleChange} 
-                            />
+            <div className="profile-layout">
+                {/* COLONNE GAUCHE : FORMULAIRE */}
+                <form onSubmit={handleSave} className="profile-form">
+                    <div className="form-section glass-panel">
+                        <h4>Identité & Physique</h4>
+                        <div className="form-grid">
+                            <div className="form-group">
+                                <label>Pseudo</label>
+                                <input type="text" name="name" value={formData.name} onChange={handleChange} />
+                            </div>
+                            <div className="form-group">
+                                <label>Date naissance</label>
+                                <input type="date" name="birth_date" value={formData.birth_date} onChange={handleChange} />
+                            </div>
+                            <div className="form-group">
+                                <label>Poids (kg)</label>
+                                <input type="number" step="0.1" name="weight" value={formData.weight} onChange={handleChange} />
+                            </div>
+                            <div className="form-group">
+                                <label>Taille (cm)</label>
+                                <input type="number" name="height" value={formData.height} onChange={handleChange} />
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                {/* SECTION 2 : Physique & Performance */}
-                <div className="form-section glass-panel">
-                    <h4>Physiologie & Perf</h4>
-                    <div className="form-grid">
-                        <div className="form-group">
-                            <label>Poids (kg)</label>
-                            <input 
-                                type="number" 
-                                step="0.1" 
-                                name="weight" 
-                                value={formData.weight} 
-                                onChange={handleChange} 
-                                placeholder="70.5"
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label>Taille (cm)</label>
-                            <input 
-                                type="number" 
-                                name="height" 
-                                value={formData.height} 
-                                onChange={handleChange} 
-                                placeholder="175"
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label>FTP (Watts)</label>
-                            <input 
-                                type="number" 
-                                name="ftp" 
-                                value={formData.ftp} 
-                                onChange={handleChange} 
-                                placeholder="250"
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label>FC Max (bpm)</label>
-                            <input 
-                                type="number" 
-                                name="max_hr" 
-                                value={formData.max_hr} 
-                                onChange={handleChange} 
-                                placeholder="190"
-                            />
+                    <div className="form-section glass-panel">
+                        <h4>Performances</h4>
+                        <div className="form-grid">
+                            <div className="form-group">
+                                <label>FTP (Watts)</label>
+                                <input type="number" name="ftp" value={formData.ftp} onChange={handleChange} placeholder="Ex: 250" />
+                            </div>
+                            <div className="form-group">
+                                <label>FC Max (bpm)</label>
+                                <input type="number" name="max_hr" value={formData.max_hr} onChange={handleChange} placeholder="Ex: 190" />
+                            </div>
+                            <div className="form-group">
+                                <label>FC Repos</label>
+                                <input type="number" name="resting_hr" value={formData.resting_hr} onChange={handleChange} />
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div className="form-actions">
-                    <button type="submit" className="primary-btn save-btn" disabled={saving}>
-                        {saving ? 'Enregistrement...' : 'Enregistrer les modifications'}
-                    </button>
+                    <div className="form-actions">
+                        <button type="submit" className="primary-btn save-btn" disabled={saving}>
+                            {saving ? '...' : 'Sauvegarder'}
+                        </button>
+                    </div>
+                </form>
+
+                {/* COLONNE DROITE : ZONES (Affichage dynamique) */}
+                <div className="zones-column">
+                    <div className="form-section glass-panel">
+                        <h4>Zones de Puissance (Watts)</h4>
+                        {renderPowerZones()}
+                    </div>
+
+                    <div className="form-section glass-panel">
+                        <h4>Zones Cardiaques (BPM)</h4>
+                        {renderHrZones()}
+                    </div>
                 </div>
-            </form>
+            </div>
         </div>
     );
 }

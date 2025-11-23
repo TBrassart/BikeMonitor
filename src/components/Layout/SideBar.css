@@ -107,3 +107,17 @@
     background: rgba(239, 68, 68, 0.1);
     color: #f87171;
 }
+
+.sidebar.glass-panel {
+    /* Haut-Gauche et Bas-Gauche à 0 pour coller au bord de l'écran */
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+    
+    /* Haut-Droite et Bas-Droite arrondis */
+    border-top-right-radius: 30px !important;
+    border-bottom-right-radius: 30px !important;
+    
+    /* On s'assure qu'il n'y a pas de marge à gauche */
+    margin-left: 0 !important;
+    border-left: none !important;
+}

@@ -1,3 +1,67 @@
+.profile-page {
+    max-width: 1100px; /* Plus large pour accueillir les 2 colonnes */
+    margin: 0 auto;
+    padding-bottom: 40px;
+}
+
+.profile-layout {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr; /* Formulaire plus large que les zones */
+    gap: 25px;
+}
+
+/* --- ZONES --- */
+.zones-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.zone-card {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 10px;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+}
+
+.zone-name {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.zone-value {
+    font-size: 1.1rem;
+    color: white;
+    font-weight: 600;
+    margin-top: 2px;
+}
+
+.empty-zones {
+    color: var(--text-secondary);
+    font-style: italic;
+    font-size: 0.9rem;
+}
+
+/* --- Responsive Mobile --- */
+@media (max-width: 900px) {
+    .profile-layout {
+        grid-template-columns: 1fr; /* Une seule colonne sur mobile */
+    }
+    
+    .zones-grid {
+        grid-template-columns: 1fr 1fr 1fr; /* 3 par ligne sur mobile pour gagner de la place */
+    }
+}
+
+@media (max-width: 600px) {
+    .zones-grid {
+        grid-template-columns: 1fr 1fr; /* 2 par ligne sur petit mobile */
+    }
+}
+
 .profile-page-container {
     padding: 20px;
     padding-bottom: 80px;

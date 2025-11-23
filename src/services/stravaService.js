@@ -1,236 +1,260 @@
-import { supabase } from '../supabaseClient';
+import { supabase } from './api';
 
-// CONFIGURATION
-const CLIENT_ID = '178503'; 
-const CLIENT_SECRET = 'd303be516b179e3f5cb9ed1b32bf7c6e44da1fcf'; 
-const REDIRECT_URI = window.location.origin + '/settings/';
+const STRAVA_CLIENT_ID = import.meta.env.VITE_STRAVA_CLIENT_ID;
+const STRAVA_CLIENT_SECRET = import.meta.env.VITE_STRAVA_CLIENT_SECRET;
+const REDIRECT_URI = import.meta.env.VITE_STRAVA_REDIRECT_URI || window.location.origin + '/strava-callback';
 
 export const stravaService = {
-    
-    initiateAuth() {
-        const scope = 'read,activity:read_all,profile:read_all';
-        window.location.href = `https://www.strava.com/oauth/authorize?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${REDIRECT_URI}&approval_prompt=force&scope=${scope}`;
+    // --- AUTHENTIFICATION ---
+
+    async initiateAuth() {
+        if (!STRAVA_CLIENT_ID) {
+            console.error("Client ID Strava manquant dans .env");
+            return;
+        }
+        // Scopes : read (profil), activity:read_all (activités)
+        const scope = 'read,activity:read_all';
+        const authUrl = `https://www.strava.com/oauth/authorize?client_id=${STRAVA_CLIENT_ID}&response_type=code&redirect_uri=${REDIRECT_URI}&approval_prompt=force&scope=${scope}`;
+        window.location.href = authUrl;
     },
 
-    async handleAuthCallback(code, profileId) {
+    async handleCallback(code) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error("Utilisateur non connecté");
+
+        // Échange du code
         const response = await fetch('https://www.strava.com/oauth/token', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                client_id: CLIENT_ID,
-                client_secret: CLIENT_SECRET,
+                client_id: STRAVA_CLIENT_ID,
+                client_secret: STRAVA_CLIENT_SECRET,
                 code: code,
                 grant_type: 'authorization_code'
             })
         });
 
         const data = await response.json();
+        if (data.errors) throw new Error(JSON.stringify(data.errors));
 
-        if (data.errors || data.message === 'Bad Request') {
-            throw new Error(data.message || "Identifiants invalides ou Code expiré");
-        }
-
+        // Sauvegarde dans profile_integrations
         const { error } = await supabase
             .from('profile_integrations')
             .upsert({
-                profile_id: profileId,
+                profile_id: user.id, // Adaptation : profile_id est maintenant l'user_id
                 provider: 'strava',
-                athlete_id: data.athlete.id,
+                athlete_id: data.athlete.id.toString(),
                 access_token: data.access_token,
                 refresh_token: data.refresh_token,
                 expires_at: data.expires_at,
                 updated_at: new Date()
-            }, { onConflict: 'profile_id, provider' });
+            }, { onConflict: 'profile_id,provider' });
 
         if (error) throw error;
         return data.athlete;
     },
 
-    async getIntegrationStatus(profileId) {
-        const { data } = await supabase
-            .from('profile_integrations')
-            .select('*')
-            .eq('profile_id', profileId)
-            .eq('provider', 'strava')
-            .maybeSingle();
-        return !!data;
-    },
-
-    // --- IMPORT DES VÉLOS ---
-    async importUserBikes(profileId) {
-        console.log("🚀 Démarrage importUserBikes...");
-
-        // 1. Récupérer l'intégration
-        const { data: integration } = await supabase
-            .from('profile_integrations')
-            .select('*')
-            .eq('profile_id', profileId)
-            .eq('provider', 'strava')
-            .maybeSingle();
-            
-        if (!integration) {
-            console.log("ℹ️ Pas de compte Strava connecté. Arrêt.");
-            return;
-        }
-
-        // 2. Appel Strava
-        const response = await fetch('https://www.strava.com/api/v3/athlete', {
-            headers: { Authorization: `Bearer ${integration.access_token}` }
-        });
-        
-        if (!response.ok) return;
-
-        const athlete = await response.json();
-        const stravaBikes = athlete.bikes || [];
-
-        if (stravaBikes.length === 0) {
-            console.log("⚠️ Aucun vélo trouvé sur Strava.");
-            return;
-        }
-
-        // 3. Récupérer l'utilisateur connecté
+    async disconnect() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        // --- CORRECTION : DÉFINITION DE LA VARIABLE PROFILE ---
-        const { data: profile } = await supabase
-            .from('family_members')
-            .select('name')
-            .eq('id', profileId)
-            .maybeSingle();
+        const { error } = await supabase
+            .from('profile_integrations')
+            .delete()
+            .eq('profile_id', user.id)
+            .eq('provider', 'strava');
             
-        const ownerName = profile ? profile.name : "Profil importé";
-        // -----------------------------------------------------
-
-        // 4. Boucle sur les vélos
-        for (const bike of stravaBikes) {
-            const kmStrava = Math.round(bike.distance / 1000);
-            
-            const { data: existing } = await supabase
-                .from('bikes')
-                .select('id, total_km')
-                .eq('strava_gear_id', bike.id)
-                .maybeSingle(); 
-
-            if (!existing) {
-                console.log(`➕ Création vélo : ${bike.name}`);
-                await supabase.from('bikes').insert([{
-                    user_id: user.id,
-                    owner: ownerName, // On utilise la variable définie plus haut
-                    name: bike.name,
-                    type: 'Route',
-                    strava_gear_id: bike.id,
-                    total_km: kmStrava
-                }]);
-            } else {
-                if (existing.total_km !== kmStrava) {
-                    console.log(`🔄 Mise à jour KM pour ${bike.name}`);
-                    await supabase
-                        .from('bikes')
-                        .update({ total_km: kmStrava })
-                        .eq('id', existing.id);
-                }
-            }
-        }
+        if (error) throw error;
     },
 
-    // --- SYNCHRO ACTIVITÉS ---
-    async syncActivities(profileId) {
-        // On importe d'abord les vélos pour être sûr qu'ils existent
-        await this.importUserBikes(profileId);
-        
-        const { data: integration } = await supabase
+    // --- SYNCHRONISATION DES ACTIVITÉS ---
+
+    async syncActivities() {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return { added: 0, updated: 0 };
+
+        console.log("🔄 Début de la synchro Strava pour l'utilisateur...");
+
+        // On récupère l'intégration Strava de l'utilisateur
+        const { data: integration, error: intError } = await supabase
             .from('profile_integrations')
             .select('*')
-            .eq('profile_id', profileId)
+            .eq('profile_id', user.id)
             .eq('provider', 'strava')
-            .maybeSingle();
+            .single();
 
-        if (!integration) return { added: 0, totalFetched: 0 };
+        if (intError || !integration) {
+            console.log("Pas d'intégration Strava trouvée.");
+            return { added: 0, updated: 0 };
+        }
 
-        let accessToken = integration.access_token;
+        let addedCount = 0;
+        let updatedCount = 0;
+
+        try {
+            // 1. Refresh du token si besoin
+            const token = await this.refreshAccessTokenIfNeeded(integration);
+
+            // 2. Récupérer la dernière activité sync
+            const { data: lastActivity } = await supabase
+                .from('activities')
+                .select('start_date')
+                .eq('profile_id', user.id)
+                .order('start_date', { ascending: false })
+                .limit(1)
+                .single();
+
+            const after = lastActivity ? new Date(lastActivity.start_date).getTime() / 1000 : 0;
+            
+            // 3. Appel API Strava
+            const activities = await this.fetchStravaActivities(token, after);
+            console.log(`📥 ${activities.length} activités récupérées de Strava.`);
+
+            // 4. Traitement des activités
+            for (const act of activities) {
+                // Trouver le vélo correspondant via gear_id
+                const { data: bike } = await supabase
+                    .from('bikes')
+                    .select('id, total_km')
+                    .eq('strava_gear_id', act.gear_id)
+                    .single();
+
+                const bikeId = bike ? bike.id : null;
+
+                // Insérer l'activité
+                const { error: insertError } = await supabase
+                    .from('activities')
+                    .upsert({
+                        id: act.id.toString(),
+                        profile_id: user.id,
+                        bike_id: bikeId,
+                        name: act.name,
+                        type: act.type,
+                        distance: act.distance / 1000, // mètres -> km
+                        moving_time: act.moving_time, // secondes
+                        total_elevation_gain: act.total_elevation_gain,
+                        start_date: act.start_date,
+                        map_polyline: act.map?.summary_polyline,
+                        external_data: act
+                    }, { onConflict: 'id' });
+
+                if (!insertError) {
+                    addedCount++;
+                    // 5. Mise à jour du vélo et usure
+                    if (bikeId) {
+                        // Incrémenter km vélo (si pas déjà compté, logique simplifiée ici)
+                        // Note: Pour faire propre, Strava donne le km total du vélo, on pourrait juste sync ça
+                        // Mais ici on utilise ta logique de calcul d'usure basée sur les activités
+                        await this.calculateWear(bikeId, act.distance / 1000);
+                        updatedCount++;
+                    }
+                }
+            }
+
+        } catch (e) {
+            console.error("Erreur durant la synchro:", e);
+        }
+
+        return { added: addedCount, updated: updatedCount };
+    },
+
+    // --- UTILITAIRES ---
+
+    async refreshAccessTokenIfNeeded(integration) {
         const now = Math.floor(Date.now() / 1000);
         
-        // Refresh Token
-        if (integration.expires_at < now) {
-            const refreshRes = await fetch('https://www.strava.com/oauth/token', {
+        // Si expire dans moins de 5 min
+        if (integration.expires_at && integration.expires_at < now + 300) {
+            console.log("Token expiré, rafraîchissement...");
+            const response = await fetch('https://www.strava.com/oauth/token', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ client_id: CLIENT_ID, client_secret: CLIENT_SECRET, grant_type: 'refresh_token', refresh_token: integration.refresh_token })
+                body: JSON.stringify({
+                    client_id: STRAVA_CLIENT_ID,
+                    client_secret: STRAVA_CLIENT_SECRET,
+                    grant_type: 'refresh_token',
+                    refresh_token: integration.refresh_token
+                })
             });
-            const refreshData = await refreshRes.json();
-            await supabase.from('profile_integrations').update({
-                access_token: refreshData.access_token, refresh_token: refreshData.refresh_token, expires_at: refreshData.expires_at
-            }).eq('id', integration.id);
-            accessToken = refreshData.access_token;
+
+            const data = await response.json();
+            if (data.errors) throw new Error("Impossible de rafraîchir le token");
+
+            // Sauvegarde du nouveau token
+            await supabase
+                .from('profile_integrations')
+                .update({
+                    access_token: data.access_token,
+                    refresh_token: data.refresh_token,
+                    expires_at: data.expires_at
+                })
+                .eq('id', integration.id);
+
+            return data.access_token;
         }
+        return integration.access_token;
+    },
 
-        // Map des vélos connus
-        const { data: knownBikes } = await supabase
-            .from('bikes')
-            .select('id, strava_gear_id')
-            .not('strava_gear_id', 'is', null);
-            
-        const bikeMap = {};
-        if (knownBikes) {
-            knownBikes.forEach(b => { bikeMap[b.strava_gear_id] = b.id; });
-        }
-
-        // Date dernière activité
-        const { data: lastActivity } = await supabase
-            .from('activities')
-            .select('start_date')
-            .eq('profile_id', profileId)
-            .order('start_date', { ascending: false })
-            .limit(1)
-            .maybeSingle();
-
-        const afterTimestamp = lastActivity ? Math.floor(new Date(lastActivity.start_date).getTime() / 1000) : 946684800; 
-
+    async fetchStravaActivities(token, afterTimestamp) {
         let page = 1;
         let allActivities = [];
         let keepFetching = true;
 
         while (keepFetching) {
-            const url = `https://www.strava.com/api/v3/athlete/activities?per_page=200&page=${page}&after=${afterTimestamp}`;
-            const response = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
+            const url = `https://www.strava.com/api/v3/athlete/activities?after=${afterTimestamp}&page=${page}&per_page=30`;
+            const res = await fetch(url, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
             
-            if (response.status === 429) { console.warn("⛔ Rate Limit Strava atteint."); keepFetching = false; break; }
-            if (!response.ok) throw new Error(`Erreur API Strava: ${response.status}`);
+            if (!res.ok) break;
             
-            const activitiesPage = await response.json();
-
-            if (activitiesPage.length === 0) {
+            const data = await res.json();
+            if (data.length === 0) {
                 keepFetching = false;
             } else {
-                allActivities = [...allActivities, ...activitiesPage];
+                allActivities = [...allActivities, ...data];
                 page++;
             }
-            if (page > 50) keepFetching = false;
+        }
+        return allActivities;
+    },
+
+    // --- CALCUL D'USURE ---
+
+    async calculateWear(bikeId, kmDelta) {
+        // 1. Mettre à jour le total KM du vélo
+        // On récupère le vélo
+        const { data: bike } = await supabase.from('bikes').select('total_km').eq('id', bikeId).single();
+        if (bike) {
+            const newTotal = (bike.total_km || 0) + kmDelta;
+            await supabase.from('bikes').update({ total_km: Math.round(newTotal) }).eq('id', bikeId);
         }
 
-        // Sauvegarde
-        let addedCount = 0;
-        for (const act of allActivities) {
-            const matchedBikeId = act.gear_id && bikeMap[act.gear_id] ? bikeMap[act.gear_id] : null;
-            
-            const { error } = await supabase.from('activities').upsert({
-                id: String(act.id),
-                profile_id: profileId,
-                name: act.name,
-                type: act.type,
-                distance: act.distance,
-                moving_time: act.moving_time,
-                start_date: act.start_date,
-                total_elevation_gain: act.total_elevation_gain,
-                map_polyline: act.map?.summary_polyline || null,
-                external_data: act,
-                bike_id: matchedBikeId
-            }, { onConflict: 'id' });
+        // 2. Mettre à jour les pièces d'usure
+        const { data: parts } = await supabase.from('parts').select('*').eq('bike_id', bikeId);
+        
+        if (parts && parts.length > 0) {
+            for (const part of parts) {
+                // On ajoute les KM à la pièce
+                const newKmCurrent = (part.km_current || 0) + kmDelta;
+                
+                // Calcul du pourcentage d'usure
+                let newWearPercentage = 0;
+                if (part.life_target_km > 0) {
+                    newWearPercentage = (newKmCurrent / part.life_target_km) * 100;
+                }
 
-            if (!error) addedCount++;
+                // Déterminer le statut
+                let newStatus = 'ok';
+                if (newWearPercentage >= 100) newStatus = 'critical'; // À remplacer
+                else if (newWearPercentage >= 75) newStatus = 'warning'; // À surveiller
+
+                await supabase.from('parts').update({
+                    km_current: Math.round(newKmCurrent),
+                    wear_percentage: Math.round(newWearPercentage),
+                    status: newStatus
+                }).eq('id', part.id);
+            }
         }
-
-        return { added: addedCount, totalFetched: allActivities.length };
     }
 };

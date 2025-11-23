@@ -36,6 +36,13 @@ export const authService = {
         return data;
     },
 
+    // Ajout pour compatibilité temporaire (évite le crash getProfiles)
+    async getProfiles() {
+        // Renvoie le profil courant dans un tableau pour tromper l'ancien composant
+        const profile = await this.getUserProfile();
+        return profile ? [profile] : [];
+    },
+
     async createInitialProfile(user) {
         if (!user) return null;
         const existing = await this.getUserProfile();
@@ -260,7 +267,7 @@ export const api = {
 };
 
 // --- ADAPTATEURS DE COMPATIBILITÉ (Legacy) ---
-// Ces exports permettent à vos anciens composants (BikeForm, etc.) de continuer à fonctionner
+// Ces exports permettent à vos anciens composants de continuer à fonctionner
 // sans avoir besoin de tout réécrire. Ils redirigent vers la nouvelle 'api'.
 
 export const bikeService = {

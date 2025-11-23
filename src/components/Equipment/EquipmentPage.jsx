@@ -59,8 +59,8 @@ function EquipmentPage() {
                     <h2 className="gradient-text">Vestiaire</h2>
                     <p className="subtitle">Gère tes tenues et ton matos</p>
                 </div>
-                <button className="add-btn" onClick={() => setShowForm(true)}>
-                    <FaPlus />
+                <button className="add-btn primary-btn" onClick={() => setShowForm(true)} style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                    <FaPlus /> <span className="desktop-only">Ajouter</span>
                 </button>
             </header>
 

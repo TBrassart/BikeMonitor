@@ -1,3 +1,8 @@
+.page-header .add-btn {
+    padding: 10px 20px; /* Plus de padding pour le texte et l'icône */
+    font-size: 1rem;
+}
+
 .equipment-page {
     padding-bottom: 80px;
 }
@@ -31,6 +36,15 @@
 }
 
 .equip-tab:hover { color: white; }
+
+.empty-state {
+    padding: 30px; /* Ajout d'espace interne */
+    text-align: center;
+    color: var(--text-secondary);
+    font-style: italic;
+    width: 100%;
+    box-sizing: border-box; /* S'assurer que le padding ne dépasse pas la taille */
+}
 
 /* GRILLE */
 .equipment-grid {
@@ -80,3 +94,15 @@
     opacity: 0; cursor: pointer; transition: opacity 0.2s;
 }
 .equip-card:hover .delete-icon { opacity: 1; }
+
+/* On cache le texte sur mobile pour garder juste le + */
+@media (max-width: 600px) {
+    .page-header .add-btn .desktop-only {
+        display: none;
+    }
+    .page-header .add-btn {
+        padding: 10px;
+        width: 40px; height: 40px;
+        border-radius: 50%; /* Revenir au cercle */
+    }
+}

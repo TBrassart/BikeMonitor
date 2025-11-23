@@ -22,10 +22,25 @@ function EquipmentForm({ typePreselect, onSuccess, onCancel }) {
         e.preventDefault();
         setLoading(true);
         try {
-            await equipmentService.add(formData);
+            // Nettoyage des données pour éviter les erreurs SQL sur les champs vides
+            const cleanedData = {
+                name: formData.name,
+                brand: formData.brand || null,
+                type: formData.type,
+                category: formData.category || null,
+                season: formData.season,
+                condition: formData.condition,
+                // Si la date est vide (''), Supabase veut NULL
+                purchase_date: formData.purchase_date || null
+                // notes: ... (ajouter ici si tu as un champ notes)
+            };
+
+            await equipmentService.add(cleanedData);
             if (onSuccess) onSuccess();
         } catch (err) {
-            alert("Erreur ajout");
+            // Afficher une erreur plus précise en console
+            console.error("Erreur détaillée lors de l'ajout d'équipement:", err);
+            alert("Erreur ajout. Veuillez vérifier la console pour le détail.");
         } finally {
             setLoading(false);
         }

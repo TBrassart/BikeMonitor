@@ -136,14 +136,14 @@ export const authService = {
 // ==========================================
 export const api = {
     // --- VÉLOS ---
-    async getBikes() {
-        // Récupère MES vélos + ceux de mes Turlags (grâce aux Policies SQL)
+    async getBike(id) {
         const { data, error } = await supabase
             .from('bikes')
-            .select(`*, profiles:user_id ( name, avatar )`) // Jointure pour savoir à qui est le vélo
-            .order('created_at', { ascending: false });
+            .select(`*, profiles:user_id ( name, avatar )`)
+            .eq('id', id)
+            .single();
         if (error) throw error;
-        return data || [];
+        return data;
     },
 
     async addBike(bikeData) {
@@ -295,6 +295,7 @@ export const api = {
 
 export const bikeService = {
     getAll: () => api.getBikes(),
+    getById: (id) => api.getBike(id),
     add: (data) => api.addBike(data),
     update: (id, data) => api.updateBike(id, data),
     delete: (id) => api.deleteBike(id),

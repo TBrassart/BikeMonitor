@@ -85,6 +85,7 @@ function AuthScreen({ onLogin }) {
                     <div className="auth-logo-wrapper">
                        <Logo />
                     </div>
+                    <h1 className="gradient-text" style={{margin: '10px 0 0 0', fontSize: '2rem'}}>BikeMonitor</h1>
                     <p className="auth-subtitle">
                         {isRegister ? "Rejoins le peloton." : "Content de te revoir, pilote."}
                     </p>

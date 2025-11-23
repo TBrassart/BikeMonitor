@@ -3,10 +3,16 @@
 .sidebar {
     display: flex;
     flex-direction: column;
-    /* Utilisation de ta couleur spécifique */
     background-color: var(--bg-sidebar); 
     border-right: 1px solid var(--border-color);
-    /* On retire le backdrop-filter pour avoir la couleur pure */
+    
+    /* --- CORRECTION ARRONDIS --- */
+    /* Uniquement en haut à droite et en bas à droite */
+    border-top-right-radius: 30px;
+    border-bottom-right-radius: 30px;
+    
+    /* On s'assure que ça ne déborde pas */
+    overflow: hidden; 
 }
 
 .logo-container {

@@ -10,8 +10,8 @@ function LibraryPage() {
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
     
-    // Catégories pour le filtre
-    const categories = ['Tous', 'Transmission', 'Freinage', 'Pneus', 'Roues', 'Périphériques', 'Autre'];
+    // On initialise juste avec 'Tous', le reste sera dynamique
+    const [categories, setCategories] = useState(['Tous']);
     const [selectedCat, setSelectedCat] = useState('Tous');
 
     useEffect(() => {
@@ -24,6 +24,14 @@ function LibraryPage() {
             const data = await libraryService.getAll();
             setComponents(data || []);
             setFilteredComponents(data || []);
+
+            // --- GÉNÉRATION DYNAMIQUE DES CATÉGORIES ---
+            // On regarde ce qu'il y a vraiment dans la base
+            const uniqueCats = [...new Set(data.map(item => item.category).filter(Boolean))];
+            // On trie alphabétiquement
+            uniqueCats.sort();
+            setCategories(['Tous', ...uniqueCats]);
+
         } catch (e) {
             console.error(e);
         } finally {
@@ -31,16 +39,13 @@ function LibraryPage() {
         }
     };
 
-    // Logique de filtre
     const handleFilter = (category) => {
         setSelectedCat(category);
         if (category === 'Tous') {
             setFilteredComponents(components);
         } else {
-            // On compare en minuscule pour être souple
-            setFilteredComponents(components.filter(c => 
-                c.category && c.category.toLowerCase().includes(category.toLowerCase())
-            ));
+            // Comparaison stricte maintenant possible car la catégorie vient de la base
+            setFilteredComponents(components.filter(c => c.category === category));
         }
     };
 

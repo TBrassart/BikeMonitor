@@ -4,30 +4,57 @@
     gap: 15px;
     margin-top: 20px;
 }
+
 .activity-card {
     display: flex;
     align-items: center;
-    padding: 15px 20px;
+    padding: 20px;
     gap: 20px;
+    transition: transform 0.2s;
 }
-.act-icon {
-    font-size: 2rem;
-    color: #fc4c02; /* Strava Orange */
+
+.activity-card:hover {
+    transform: translateX(5px);
+    border-color: var(--neon-blue) !important;
 }
+
+.act-icon-container {
+    font-size: 1.8rem;
+    color: var(--text-primary);
+    background: rgba(255,255,255,0.1);
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .act-details {
     flex: 1;
 }
+
 .act-details h4 {
-    margin: 0 0 5px 0;
-    color: white;
+    margin: 0 0 8px 0;
+    font-size: 1.1rem;
 }
+
 .act-meta {
     display: flex;
+    flex-wrap: wrap;
     gap: 15px;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     color: var(--text-secondary);
+    align-items: center;
 }
-.act-elevation {
-    font-weight: bold;
-    color: var(--neon-green);
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.meta-item.highlight {
+    color: var(--neon-blue); /* On met en valeur km et D+ */
+    font-weight: 600;
 }

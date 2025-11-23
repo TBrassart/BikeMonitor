@@ -54,31 +54,28 @@ function SettingsPage() {
         <div className="settings-page">
             <h2 style={{ marginBottom: '20px' }}>Paramètres</h2>
 
-            <div className="settings-tabs" style={{ display:'flex', gap:'10px', marginBottom:'20px' }}>
+            <div className="settings-tabs" style={{ display:'flex', gap:'15px', marginBottom:'25px' }}>
                 <button 
-                    className={activeTab === 'profile' ? 'active-tab btn' : 'btn'} 
                     onClick={() => setActiveTab('profile')}
+                    className={activeTab === 'profile' ? 'primary-btn' : 'secondary-btn'}
                     style={{ 
-                        padding: '10px 20px', 
-                        cursor:'pointer', 
-                        background: activeTab==='profile' ? 'var(--neon-blue)' : 'rgba(255,255,255,0.1)', 
-                        color: 'white', 
-                        border:'none', 
-                        borderRadius:'6px'
+                        padding: '10px 25px', 
+                        borderRadius: '50px', /* Pill shape */
+                        cursor: 'pointer',
+                        fontSize: '1rem'
+                        /* Les couleurs sont gérées par la classe CSS globale maintenant */
                     }}
                 >
                     Mon Profil
                 </button>
                 <button 
-                    className={activeTab === 'integrations' ? 'active-tab btn' : 'btn'} 
                     onClick={() => setActiveTab('integrations')}
+                    className={activeTab === 'integrations' ? 'primary-btn' : 'secondary-btn'}
                     style={{ 
-                        padding: '10px 20px', 
-                        cursor:'pointer', 
-                        background: activeTab==='integrations' ? 'var(--neon-blue)' : 'rgba(255,255,255,0.1)', 
-                        color: 'white', 
-                        border:'none', 
-                        borderRadius:'6px'
+                        padding: '10px 25px', 
+                        borderRadius: '50px',
+                        cursor: 'pointer',
+                        fontSize: '1rem'
                     }}
                 >
                     Intégrations

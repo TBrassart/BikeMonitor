@@ -64,3 +64,33 @@ button.primary-btn:hover, .add-btn:hover {
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-track { background: var(--bg-deep); }
 ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 4px; }
+
+/* --- STYLE DES CHIPS / FILTRES (Pillules) --- */
+.chip, .filter-chip {
+  border-radius: 50px !important; /* Pillule parfaite */
+  padding: 8px 20px !important;   /* Plus grand */
+  font-size: 0.95rem !important;
+  border: 1px solid rgba(255,255,255,0.2) !important;
+  background: rgba(255,255,255,0.05) !important;
+  color: var(--text-secondary) !important;
+  transition: all 0.3s ease;
+}
+
+.chip:hover, .filter-chip:hover {
+  background: rgba(255,255,255,0.1) !important;
+  transform: translateY(-1px);
+}
+
+.chip.active, .filter-chip.active {
+  background: var(--gradient-primary) !important; /* Dégradé quand actif */
+  color: white !important;
+  border: none !important;
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+}
+
+/* --- STYLE DES BOUTONS SECONDAIRES (Inactifs) --- */
+button.secondary-btn {
+  background: transparent !important;
+  border: 1px solid rgba(255,255,255,0.2) !important;
+  color: var(--text-secondary) !important;
+}

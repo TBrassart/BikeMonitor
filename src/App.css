@@ -4,8 +4,10 @@
 .app-container {
   display: flex;
   min-height: 100vh;
-  background-color: #f8f9fa; /* Fond gris très clair pour faire ressortir les cartes */
+  /* On utilise ta variable globale ou un gris bleuté 'dashboard' pour le contraste */
+  background-color: var(--background-color, #f0f2f5); 
   position: relative;
+  overflow-x: hidden; /* Évite le scroll horizontal accidentel */
 }
 
 /* Zone de contenu principal */
@@ -14,8 +16,9 @@
   padding: 20px;
   width: 100%;
   box-sizing: border-box;
-  /* Transition douce lors du redimensionnement de fenêtre */
   transition: margin 0.3s ease;
+  /* On s'assure que le contenu passe au-dessus du fond mais sous les menus si besoin */
+  z-index: 1; 
 }
 
 /* --- VERSION MOBILE (Par défaut ou max-width) --- */
@@ -24,10 +27,15 @@
     flex-direction: column;
   }
 
+  .app-container {
+    flex-direction: column;
+  }
+
   .main-content {
     /* Laisse de la place en bas pour la BottomNav (hauteur approx 70-80px) */
-    margin-bottom: 80px;
+    margin-bottom: 80px; 
     margin-left: 0;
+    padding-bottom: 100px; /* Sécurité supplémentaire pour le scroll */
   }
 
   /* On cache la Sidebar sur mobile */
@@ -54,7 +62,7 @@
 
   .main-content {
     /* Pousse le contenu vers la droite pour laisser la place à la Sidebar */
-    /* Ajuste 250px selon la largeur réelle définie dans SideBar.css */
+    /* 250px correspond à la largeur standard de la sidebar */
     margin-left: 250px; 
     margin-bottom: 0;
   }

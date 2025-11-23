@@ -1,13 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { libraryService } from '../../services/api';
-import { FaPlus, FaCogs } from 'react-icons/fa';
-import LibraryForm from './LibraryForm'; // Assure-toi d'avoir ce formulaire ou commente-le
+import { FaPlus, FaCogs, FaFilter } from 'react-icons/fa';
+import LibraryForm from './LibraryForm';
 import './LibraryPage.css';
 
 function LibraryPage() {
     const [components, setComponents] = useState([]);
+    const [filteredComponents, setFilteredComponents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
+    
+    // Catégories pour le filtre
+    const categories = ['Tous', 'Transmission', 'Freinage', 'Pneus', 'Roues', 'Périphériques', 'Autre'];
+    const [selectedCat, setSelectedCat] = useState('Tous');
 
     useEffect(() => {
         loadLibrary();
@@ -18,6 +23,7 @@ function LibraryPage() {
             setLoading(true);
             const data = await libraryService.getAll();
             setComponents(data || []);
+            setFilteredComponents(data || []);
         } catch (e) {
             console.error(e);
         } finally {
@@ -25,32 +31,63 @@ function LibraryPage() {
         }
     };
 
+    // Logique de filtre
+    const handleFilter = (category) => {
+        setSelectedCat(category);
+        if (category === 'Tous') {
+            setFilteredComponents(components);
+        } else {
+            // On compare en minuscule pour être souple
+            setFilteredComponents(components.filter(c => 
+                c.category && c.category.toLowerCase().includes(category.toLowerCase())
+            ));
+        }
+    };
+
     return (
         <div className="library-page">
             <header className="page-header">
-                <h2>Bibliothèque de composants</h2>
+                <div>
+                    <h2>Bibliothèque</h2>
+                    <p className="subtitle">Catalogue de pièces de référence</p>
+                </div>
                 <button className="add-btn" onClick={() => setShowForm(!showForm)}>
-                    <FaPlus />
+                    <FaPlus /> <span className="desktop-only">Ajouter</span>
                 </button>
             </header>
 
+            {/* BARRE DE FILTRES */}
+            <div className="filters-bar">
+                <span className="filter-icon"><FaFilter /></span>
+                <div className="chips-scroll">
+                    {categories.map(cat => (
+                        <button 
+                            key={cat} 
+                            className={`chip ${selectedCat === cat ? 'active' : ''}`}
+                            onClick={() => handleFilter(cat)}
+                        >
+                            {cat}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
             {showForm && (
                 <div className="glass-panel form-panel">
-                    {/* Placeholder pour le formulaire si tu ne l'as pas encore refait */}
                     <LibraryForm onSuccess={() => { setShowForm(false); loadLibrary(); }} onCancel={() => setShowForm(false)} />
                 </div>
             )}
 
             {loading ? (
-                <p>Chargement du catalogue...</p>
+                <div className="loading-state">Chargement du catalogue...</div>
             ) : (
                 <div className="library-grid">
-                    {components.length === 0 ? (
+                    {filteredComponents.length === 0 ? (
                         <div className="empty-state glass-panel">
-                            <p>La bibliothèque est vide.</p>
+                            <p>Aucune pièce dans cette catégorie.</p>
                         </div>
                     ) : (
-                        components.map(comp => (
+                        filteredComponents.map(comp => (
                             <div key={comp.id} className="library-card glass-panel">
                                 <div className="card-icon">
                                     <FaCogs />
@@ -58,7 +95,9 @@ function LibraryPage() {
                                 <div className="card-content">
                                     <h4>{comp.brand} {comp.model}</h4>
                                     <span className="category-tag">{comp.category}</span>
-                                    <p className="lifespan">Durée estimée : {comp.lifespan_km} km</p>
+                                    <div className="card-meta">
+                                        <span>❤️ {comp.lifespan_km} km</span>
+                                    </div>
                                 </div>
                             </div>
                         ))

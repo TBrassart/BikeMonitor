@@ -1,256 +1,144 @@
-/* src/components/Settings/IntegrationsPage.css */
-
-.integrations-container, .settings-container {
-    padding: 40px;
-    width: 100%;
-    box-sizing: border-box;
-    background-color: var(--color-dark-bg);
-    min-height: 100vh;
+.profile-page {
+    max-width: 800px;
+    margin: 0 auto;
+    padding-bottom: 40px;
 }
 
-.page-header {
-    margin-bottom: 40px;
-    border-bottom: 1px solid rgba(0, 229, 255, 0.2);
-    padding-bottom: 20px;
-}
-
-.page-header h1 {
-    color: var(--color-neon-primary);
-    margin: 0 0 10px 0;
-    font-size: 2rem;
-}
-
-.page-header p {
-    color: var(--color-text-secondary);
-    font-size: 1.1rem;
-}
-
-/* Grille de cartes pour les intégrations */
-.integration-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-    gap: 30px;
-}
-
-.integration-card {
-    background-color: var(--color-surface-dark);
-    border: 1px solid #2a2a3e;
-    border-radius: 12px;
-    padding: 30px;
-    transition: transform 0.2s;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-}
-
-/* Strava Specifics */
-.strava-card {
-    border-left: 5px solid #fc4c02; 
-}
-
-.card-top {
+/* --- HEADER AVATAR --- */
+.profile-header {
     display: flex;
     align-items: center;
+    gap: 25px;
+    padding: 30px;
+    margin-bottom: 30px;
+}
+
+.profile-avatar-large {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: var(--gradient-primary); /* Dégradé défini dans index.css */
+    color: white;
+    font-size: 3rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+    border: 4px solid rgba(255,255,255,0.1);
+}
+
+.profile-title h3 {
+    margin: 0;
+    font-size: 1.8rem;
+    color: var(--text-primary);
+}
+
+.profile-title .subtitle {
+    margin: 5px 0 0 0;
+    color: var(--text-secondary);
+    font-size: 1rem;
+}
+
+/* --- SECTIONS DU FORMULAIRE --- */
+.form-section {
+    padding: 25px;
     margin-bottom: 25px;
 }
 
-.strava-logo {
-    font-size: 3.5rem;
-    color: #fc4c02;
-    margin-right: 20px;
+.form-section h4 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: var(--neon-blue, #3b82f6);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.9rem;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
 }
 
-.card-info h3 {
-    margin: 0 0 5px 0;
-    font-size: 1.3rem;
-    color: white;
-}
-
-.card-info p {
-    margin: 0;
-    color: var(--color-text-secondary);
-    font-size: 0.95rem;
-}
-
-.status-icon.connected {
-    margin-left: auto;
-    color: #2ecc71;
-    font-size: 1.8rem;
-}
-
-/* Boutons */
-.connect-btn {
-    background-color: #fc4c02 !important; /* Orange Strava */
-    color: white !important;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 6px;
-    font-weight: bold;
-    cursor: pointer;
-    width: 100%;
-    font-size: 1rem;
-    transition: filter 0.2s;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-}
-
-.connect-btn:hover {
-    filter: brightness(1.1); /* Eclaircit au survol */
-}
-
-.sync-btn {
-    background-color: #00e5ff !important; /* Cyan Néon */
-    color: #12121e !important; /* Texte Sombre */
-    border: none;
-    padding: 12px 20px;
-    border-radius: 6px;
-    font-weight: bold;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    flex-grow: 1;
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.sync-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 0 10px rgba(0, 229, 255, 0.4);
-}
-
-.disconnect-btn {
-    background: transparent !important;
-    border: 1px solid var(--color-text-secondary) !important;
-    color: var(--color-text-secondary) !important;
-    padding: 12px 20px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.disconnect-btn:hover {
-    border-color: #ff00c8 !important; /* Bordure Magenta */
-    color: #ff00c8 !important;
-}
-
-.spin {
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin { 100% { transform: rotate(360deg); } }
-
-/* Résultat */
-.sync-result {
-    margin-top: 25px;
-    padding: 20px;
-    background-color: rgba(46, 204, 113, 0.1);
-    border: 1px solid #2ecc71;
-    border-radius: 8px;
-}
-
-.sync-result h4 {
-    color: #2ecc71;
-    margin: 0 0 10px 0;
-    font-size: 1.1rem;
-}
-
-.sync-result p {
-    margin: 5px 0;
-    color: #e0e0f0;
-}
-
-/* Placeholder */
-.disabled {
-    opacity: 0.5;
-    filter: grayscale(1);
-    cursor: not-allowed;
-}
-
-.placeholder-icon {
-    font-size: 3rem;
-    margin-right: 20px;
-    color: #666;
-}
-
-.settings-tabs {
-    display: flex;
+/* --- GRILLE RESPONSIVE --- */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 2 colonnes par défaut */
     gap: 20px;
-    margin-bottom: 30px;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 
-.tab-btn {
-    background: none;
-    border: none;
-    padding: 15px 20px;
-    color: #888;
+.full-width {
+    grid-column: 1 / -1; /* Prend toute la largeur */
+}
+
+/* --- INPUTS STYLÉS --- */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.form-group input {
+    background-color: rgba(0, 0, 0, 0.2); /* Fond sombre transparent */
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 12px 15px;
+    border-radius: 8px;
     font-size: 1rem;
-    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--neon-blue, #3b82f6);
+    background-color: rgba(59, 130, 246, 0.05);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* --- BOUTON D'ACTION --- */
+.form-actions {
     display: flex;
-    align-items: center;
-    gap: 10px;
-    border-bottom: 3px solid transparent;
-    transition: all 0.2s;
+    justify-content: flex-end;
+    margin-top: 20px;
 }
 
-.tab-btn.active {
-    color: white;
-    border-bottom-color: var(--color-neon-primary);
-    font-weight: bold;
+.save-btn {
+    padding: 12px 30px !important;
+    font-size: 1rem !important;
 }
 
-.tab-btn:hover { color: white; }
-
-/* --- NOUVEAU : CARTE FAMILLE --- */
-.family-invite-card {
-    background-color: #1e1e2d;
-    border: 1px solid #333;
-    border-radius: 12px;
-    padding: 40px;
-    max-width: 600px;
-    margin: 0 auto; /* Centré */
-    text-align: center;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-}
-
-.family-invite-card h3 { margin-top: 0; color: white; font-size: 1.5rem; }
-.family-invite-card p { color: #ccc; line-height: 1.6; margin-bottom: 30px; }
-
-.invite-action-area {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-}
-
-.link-display {
-    display: flex;
-    width: 100%;
-    gap: 10px;
-}
-
-.link-display input {
-    flex-grow: 1;
-    background: #12121e;
-    border: 1px solid var(--color-neon-primary);
-    color: var(--color-neon-primary);
-    padding: 12px;
+/* --- MESSAGES FEEDBACK --- */
+.message-box {
+    padding: 15px;
     border-radius: 8px;
-    font-family: monospace;
+    margin-bottom: 20px;
+    font-weight: 500;
     text-align: center;
 }
 
-.copy-btn {
-    background: var(--color-neon-primary);
-    border: none;
-    border-radius: 8px;
-    width: 50px;
-    cursor: pointer;
-    font-size: 1.2rem;
-    color: #000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.2s;
+.message-box.success {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid #10b981;
+    color: #10b981;
 }
 
-.copy-btn:hover { transform: scale(1.05); }
+.message-box.error {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid #ef4444;
+    color: #ef4444;
+}
 
-.hint { font-size: 0.8rem; color: #666; margin-top: 15px; }
+/* MOBILE */
+@media (max-width: 600px) {
+    .form-grid {
+        grid-template-columns: 1fr; /* 1 colonne sur mobile */
+    }
+    
+    .profile-header {
+        flex-direction: column;
+        text-align: center;
+    }
+}

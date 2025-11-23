@@ -66,6 +66,7 @@ function App() {
                     <Route path="/app/garage" element={<BikeGarage />} />
                     <Route path="/app/add-bike" element={<BikeForm />} />
                     <Route path="/app/bike/:bikeId" element={<BikeDetailShell />} />
+                    <Route path="/app/edit-bike/:bikeId" element={<BikeForm />} />
 
                     {/* MODULES ADDITIONNELS */}
                     <Route path="/app/equipment" element={<EquipmentPage />} />

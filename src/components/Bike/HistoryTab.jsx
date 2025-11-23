@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { historyService } from '../../services/api';
+import { FaPen, FaCalendarDay } from 'react-icons/fa';
 import './HistoryTab.css';
 
 function HistoryTab({ bikeId }) {
     const [history, setHistory] = useState([]);
+    const [note, setNote] = useState('');
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -14,59 +16,59 @@ function HistoryTab({ bikeId }) {
         try {
             setLoading(true);
             const data = await historyService.getByBikeId(bikeId);
-            setHistory(data);
+            setHistory(data || []);
+        } catch (e) { console.error(e); } 
+        finally { setLoading(false); }
+    };
+
+    const handleAddNote = async (e) => {
+        e.preventDefault();
+        if (!note.trim()) return;
+
+        try {
+            await historyService.add({
+                bike_id: bikeId,
+                type: 'note',
+                title: 'Note manuelle',
+                description: note,
+                date: new Date().toISOString().split('T')[0]
+            });
+            setNote('');
+            loadHistory();
         } catch (e) {
-            console.error("Erreur historique:", e);
-        } finally {
-            setLoading(false);
+            alert("Erreur ajout note");
         }
     };
-
-    // Fonction utilitaire pour l'icône selon le type d'event
-    const getIcon = (type) => {
-        switch(type) {
-            case 'maintenance': return '🔧';
-            case 'part_change': return '⚙️';
-            case 'note': return '📝';
-            case 'incident': return '⚠️';
-            default: return '📅';
-        }
-    };
-
-    if (loading) return <div>Chargement de l'historique...</div>;
 
     return (
         <div className="history-tab">
-            <h3>Historique du vélo</h3>
-            
-            {history.length === 0 ? (
-                <div className="empty-history">
-                    <p>Rien à signaler pour l'instant.</p>
-                    <p>L'historique se remplit automatiquement quand tu valides un entretien ou changes une pièce.</p>
-                </div>
-            ) : (
-                <div className="timeline">
-                    {history.map((event) => (
-                        <div key={event.id} className="timeline-item">
-                            <div className="timeline-icon">
-                                {getIcon(event.type)}
+            {/* FORMULAIRE D'AJOUT DE NOTE */}
+            <form onSubmit={handleAddNote} className="history-input-group glass-panel">
+                <input 
+                    type="text" 
+                    placeholder="Ajouter une note à l'historique..." 
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                />
+                <button type="submit" className="icon-btn-small">
+                    <FaPen />
+                </button>
+            </form>
+
+            <div className="timeline">
+                {history.map((event) => (
+                    <div key={event.id} className="timeline-item">
+                        <div className="timeline-marker"></div>
+                        <div className="timeline-content glass-panel">
+                            <div className="timeline-header">
+                                <span className="event-title">{event.title}</span>
+                                <span className="event-date"><FaCalendarDay /> {event.date}</span>
                             </div>
-                            <div className="timeline-content">
-                                <div className="timeline-header">
-                                    <span className="event-title">{event.title}</span>
-                                    <span className="event-date">{event.date}</span>
-                                </div>
-                                {event.description && (
-                                    <p className="event-desc">{event.description}</p>
-                                )}
-                                {event.km && (
-                                    <span className="event-km">à {event.km} km</span>
-                                )}
-                            </div>
+                            {event.description && <p className="event-desc">{event.description}</p>}
                         </div>
-                    ))}
-                </div>
-            )}
+                    </div>
+                ))}
+            </div>
         </div>
     );
 }

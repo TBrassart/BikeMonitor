@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { authService } from '../../services/api';
+import { FaTimes } from 'react-icons/fa';
 import './ProfilePage.css';
 
 function ProfilePage() {

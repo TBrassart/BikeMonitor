@@ -288,51 +288,51 @@ export const api = {
 };
 
 // ==========================================
-// 3. COUCHE DE COMPATIBILITÉ (Pour ne pas casser les anciens fichiers)
+// 3. COUCHE DE COMPATIBILITÉ (Sécurisée)
 // ==========================================
-// Ces objets redirigent simplement vers 'api'.
-// Cela permet à tes fichiers 'BikeForm.jsx', 'PartsTab.jsx' de continuer à fonctionner sans modif.
+// On utilise des fonctions fléchées () => ... pour éviter les erreurs "is not a function"
+// si 'api' n'est pas encore totalement initialisée lors de l'import.
 
 export const bikeService = {
-    getAll: api.getBikes,
-    add: api.addBike,
-    update: api.updateBike,
-    delete: api.deleteBike,
+    getAll: () => api.getBikes(),
+    add: (data) => api.addBike(data),
+    update: (id, data) => api.updateBike(id, data),
+    delete: (id) => api.deleteBike(id),
     uploadPhoto: (file) => api.uploadImage(file, 'bikes')
 };
 
 export const maintenanceService = {
-    getByBikeId: api.getMaintenance,
-    add: api.addMaintenance,
-    update: api.updateMaintenance,
-    delete: api.deleteMaintenance
+    getByBikeId: (id) => api.getMaintenance(id),
+    add: (data) => api.addMaintenance(data),
+    update: (id, data) => api.updateMaintenance(id, data),
+    delete: (id) => api.deleteMaintenance(id)
 };
 
 export const partsService = {
-    getByBikeId: api.getParts,
-    add: api.addPart,
-    update: api.updatePart,
-    delete: api.deletePart
+    getByBikeId: (id) => api.getParts(id),
+    add: (data) => api.addPart(data),
+    update: (id, data) => api.updatePart(id, data),
+    delete: (id) => api.deletePart(id)
 };
 
 export const historyService = {
-    getByBikeId: api.getHistory,
-    add: api.addHistory
+    getByBikeId: (id) => api.getHistory(id),
+    add: (data) => api.addHistory(data)
 };
 
 export const nutritionService = {
-    getAll: api.getNutrition,
-    add: api.addNutrition,
-    update: api.updateNutrition,
-    delete: api.deleteNutrition
+    getAll: () => api.getNutrition(),
+    add: (data) => api.addNutrition(data),
+    update: (id, data) => api.updateNutrition(id, data),
+    delete: (id) => api.deleteNutrition(id)
 };
 
 export const libraryService = {
-    getAll: api.getComponentLibrary,
-    add: api.addToLibrary
+    getAll: () => api.getComponentLibrary(),
+    add: (data) => api.addToLibrary(data)
 };
 
 export const kitService = {
-    getAll: api.getKits,
-    add: api.addKit
+    getAll: () => api.getKits(),
+    add: (data) => api.addKit(data)
 };

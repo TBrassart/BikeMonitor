@@ -1,216 +1,87 @@
 /* src/components/Bike/BikeGarage.css */
 
-.garage-container {
-    padding: 20px;
-    padding-bottom: 70px;
+.bike-garage {
+    padding-bottom: 80px; /* Espace pour le scroll mobile */
 }
 
-/* ... (Styles empty-state et cta-add inchangés) ... */
-.empty-state { display: flex; flex-direction: column; align-items: center; text-align: center; padding-top: 50px; }
-.empty-state h1 { color: var(--color-neon-primary); }
-.empty-state .empty-message { color: var(--color-text-secondary); margin-bottom: 30px; }
-.cta-add { background-color: var(--color-primary); color: white; border: none; padding: 12px 25px; border-radius: 8px; font-size: 1rem; display: flex; align-items: center; gap: 8px; cursor: pointer; }
-.skeleton-card { background-color: #2a2a3e; border-radius: 8px; height: 120px; margin-bottom: 15px; animation: pulse 1.5s infinite ease-in-out; }
-@keyframes pulse { 0% { background-color: #2a2a3e; } 50% { background-color: #383850; } 100% { background-color: #2a2a3e; } }
-
-/* --- NOUVEAUX STYLES CARTES --- */
-
-.bike-list {
+.garage-header {
     display: flex;
-    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.garage-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #333;
+}
+
+.add-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0,123,255,0.3);
+    transition: transform 0.2s;
+}
+
+.add-btn:active {
+    transform: scale(0.95);
+}
+
+.bikes-grid {
+    display: grid;
+    /* Grille responsive : minimum 160px de large par carte */
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     gap: 15px;
 }
 
 .bike-card {
-    border: 1px solid #2a2a3e;
-    padding: 15px;
-    border-radius: 12px; /* Arrondi un peu plus moderne */
-    background-color: var(--color-surface);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: transform 0.2s ease;
     cursor: pointer;
-    transition: all 0.3s ease;
-    
-    /* Flex pour pousser le contenu vers le bas */
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    min-height: 140px; 
-    position: relative;
-    overflow: hidden; /* Important pour l'image de fond */
+    position: relative; /* Pour positionner le badge */
 }
 
-.bike-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 12px rgba(0, 229, 255, 0.15);
-    border-color: var(--color-neon-primary);
+.bike-card:active {
+    transform: scale(0.98);
 }
 
-/* --- STYLE AVEC PHOTO --- */
-.bike-card.has-photo {
-    border: none; /* L'image fait le bord */
-    text-shadow: 0 2px 4px rgba(0,0,0,0.9); /* Lisibilité sur image */
-}
-
-.bike-card.has-photo h3 {
-    color: white;
-    font-size: 1.3rem;
-}
-
-/* Header de la carte */
-.card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 10px;
-}
-
-.card-header h3 {
-    margin: 0;
-    color: white;
-    font-size: 1.2rem;
-}
-
-/* Badges */
-.badge-strava {
-    background: rgba(252, 76, 2, 0.2); /* Fond orange transparent */
-    color: #fc4c02;
-    padding: 5px;
-    border-radius: 50%;
+.bike-image-placeholder {
+    height: 140px;
+    width: 100%;
+    background-color: #f0f2f5;
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-.badge-alert {
-    background-color: #e74c3c;
-    color: white;
-    font-size: 0.75rem;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-weight: bold;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
-/* Corps de la carte */
-.card-body {
-    margin-top: auto; /* Pousse vers le bas */
-}
-
-/* Stats (Km, D+) */
-.bike-stats-row {
-    display: flex;
-    gap: 15px;
-    font-size: 0.9rem;
-    color: var(--color-text-secondary);
-    margin-bottom: 8px;
-    font-weight: 500;
-}
-
-.bike-stats-row span {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-/* Si photo, on met les stats en couleur néon/blanc pour ressortir */
-.bike-card.has-photo .bike-stats-row {
-    color: #00e5ff; 
-}
-
-/* Ligne Propriétaire + Type */
-.bike-meta-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 0.85rem;
-}
-
-.owner-tag {
-    background-color: rgba(255,255,255,0.1);
+    font-size: 3rem;
     color: #ccc;
-    padding: 2px 8px;
-    border-radius: 4px;
+    overflow: hidden; /* Coupe ce qui dépasse */
+    position: relative;
 }
 
-.bike-card.has-photo .owner-tag {
-    background-color: rgba(0,0,0,0.5);
-    color: white;
+/* --- CORRECTION IMAGE DISPROPORTIONNÉE --- */
+.bike-image-placeholder img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* L'image remplit le cadre sans se déformer */
+    display: block;
 }
 
-.type-info {
-    color: var(--color-text-secondary);
-}
-
-.bike-card.has-photo .type-info {
-    color: #ddd;
-}
-
-.status-summary {
-    color: var(--color-alert); /* Reste rouge/orange */
-    font-weight: bold;
-    font-size: 0.85rem;
-    margin: 5px 0 0 0;
-}
-
-/* --- Adaptation PC --- */
-/* ... (Ton media query existant pour cta-float et grille) ... */
-.cta-float {
-    /* ... (Garde tes styles existants pour le bouton flottant) ... */
-    position: fixed; bottom: 40px; right: 40px; width: 60px; height: 60px;
-    border-radius: 50%; background-color: var(--color-neon-primary);
-    color: var(--color-dark-bg); border: none; box-shadow: 0 0 15px rgba(0, 229, 255, 0.7);
-    font-size: 1.5rem; display: flex; align-items: center; justifyContent: center;
-    cursor: pointer; z-index: 1000; transition: transform 0.2s;
-}
-
-@media (min-width: 768px) {
-    .garage-container { padding: 40px; }
-    .bike-list {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); /* Cartes un peu moins larges */
-        gap: 25px;
-    }
-    .bike-card { min-height: 220px; } /* Plus haut sur PC */
-}
-
-/* Header avec filtres */
-.garage-header {
-    margin-bottom: 20px;
-}
-
-.garage-filters {
-    display: flex;
-    gap: 10px;
-    overflow-x: auto;
-    padding-bottom: 5px;
-    margin-top: 10px;
-}
-
-.filter-chip {
-    background: transparent;
-    border: 1px solid #444;
-    color: #aaa;
-    padding: 6px 16px;
-    border-radius: 20px;
-    cursor: pointer;
-    white-space: nowrap;
-    font-size: 0.9rem;
-    transition: all 0.2s;
-}
-
-.filter-chip.active {
-    background-color: var(--color-neon-primary);
-    border-color: var(--color-neon-primary);
-    color: var(--color-dark-bg);
-    font-weight: bold;
-}
-
-.type-card.active, .filter-chip.active {
-    background: var(--gradient-neon);
-    color: white;
-    border: none; /* On enlève la bordure car le fond est rempli */
-}
-
+/* Styles des badges (ami/propriétaire) */
 .owner-badge {
     position: absolute;
     top: 8px;
@@ -221,19 +92,62 @@
     height: 28px;
     border-radius: 50%;
     display: flex;
-    align_items: center;
+    align-items: center;
     justify-content: center;
     font-size: 14px;
     border: 2px solid white;
+    z-index: 10;
 }
 
 .friend-bike {
-    border-color: #e0e0e0;
-    opacity: 0.95;
+    border: 2px solid #e0e0e0; /* Distinction visuelle pour les vélos des amis */
+}
+
+.bike-info {
+    padding: 12px;
+}
+
+.bike-info h3 {
+    margin: 0 0 5px 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #333;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.bike-stats {
+    font-size: 0.85rem;
+    color: #666;
+    display: flex;
+    justify-content: space-between;
 }
 
 .owner-name {
-    font-size: 0.8em;
-    color: #666;
+    display: block;
+    margin-top: 4px;
+    font-size: 0.75rem;
+    color: #888;
     font-style: italic;
+}
+
+/* État vide */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    background: white;
+    border-radius: 12px;
+    color: #666;
+}
+
+.empty-state button {
+    margin-top: 15px;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
 }

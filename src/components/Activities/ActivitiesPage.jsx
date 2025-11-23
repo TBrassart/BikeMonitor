@@ -4,26 +4,28 @@ import {
     FaSearch, FaFilter, FaBicycle, FaRunning, FaHiking, FaSwimmer, 
     FaMountain, FaRoad, FaStopwatch, FaSnowboarding, FaDumbbell, FaSpa 
 } from 'react-icons/fa';
+
+// IMPORT DU SLIDER
+import Slider from 'rc-slider';
+import 'rc-slider/assets/index.css'; // Styles de base obligatoires
+
 import './ActivitiesPage.css';
 
 function ActivitiesPage() {
     const [rawActivities, setRawActivities] = useState([]);
     const [loading, setLoading] = useState(true);
     
-    // --- ÉTATS DES FILTRES ---
+    // --- ÉTATS ---
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedYear, setSelectedYear] = useState('Tous');
     const [selectedType, setSelectedType] = useState('Tous');
-    const [selectedTag, setSelectedTag] = useState('Tous');
     
-    // Sliders (Tableaux [Min, Max])
+    // Sliders [Min, Max]
     const [distRange, setDistRange] = useState([0, 200]);
     const [elevRange, setElevRange] = useState([0, 3000]);
     const [timeRange, setTimeRange] = useState([0, 10]); 
 
-    // Bornes Max dynamiques
     const [maxValues, setMaxValues] = useState({ dist: 200, elev: 3000, time: 10 });
-
     const [showFilters, setShowFilters] = useState(false);
 
     useEffect(() => {
@@ -37,11 +39,11 @@ function ActivitiesPage() {
             setRawActivities(activities || []);
 
             if (activities.length > 0) {
-                // Calcul des max réels
                 const maxD = Math.ceil(Math.max(...activities.map(a => a.distance > 1000 ? a.distance/1000 : a.distance)));
                 const maxE = Math.ceil(Math.max(...activities.map(a => a.total_elevation_gain)));
                 const maxT = Math.ceil(Math.max(...activities.map(a => a.moving_time / 3600)));
 
+                // On met à jour les bornes max et les positions actuelles
                 setMaxValues({ dist: maxD, elev: maxE, time: maxT });
                 setDistRange([0, maxD]);
                 setElevRange([0, maxE]);
@@ -54,102 +56,41 @@ function ActivitiesPage() {
         }
     };
 
-    // --- CATÉGORISATION & TAGS ---
-    const getTags = (act) => {
-        const tags = [];
-        const dist = act.distance > 1000 ? act.distance / 1000 : act.distance;
-        const elev = act.total_elevation_gain;
-        const type = act.type;
-
-        // Type
-        if (type === 'VirtualRide') tags.push({ label: 'Zwift 🏠', color: 'purple' });
-        if (type === 'WeightTraining' || type === 'Workout') tags.push({ label: 'Muscu 💪', color: 'red' });
-        if (type === 'Yoga' || type === 'Pilates') tags.push({ label: 'Zen 🧘', color: 'green' });
-
-        // Perf
-        if (dist > 100) tags.push({ label: 'Century 💯', color: 'gold' });
-        else if (dist > 50) tags.push({ label: 'Longue 🛣️', color: 'blue' });
-        
-        if (elev > 1000) tags.push({ label: 'Grimpeur 🐐', color: 'red' });
-        
-        // Horaire
-        if (act.start_date && new Date(act.start_date).getHours() < 7) {
-            tags.push({ label: 'Morning ☕', color: 'cyan' });
-        }
-
-        return tags;
-    };
-
-    // --- ICONE & COULEUR PAR SPORT ---
-    const getVisuals = (type) => {
-        switch(type) {
-            case 'Run': return { icon: <FaRunning />, class: 'run' };
-            case 'Hike': case 'Walk': return { icon: <FaHiking />, class: 'hike' };
-            case 'Swim': return { icon: <FaSwimmer />, class: 'swim' };
-            case 'AlpineSki': case 'Snowboard': return { icon: <FaSnowboarding />, class: 'winter' };
-            case 'WeightTraining': case 'Workout': return { icon: <FaDumbbell />, class: 'workout' };
-            case 'Yoga': case 'Pilates': return { icon: <FaSpa />, class: 'hike' }; // Vert pour le zen
-            default: return { icon: <FaBicycle />, class: 'ride' }; // Vélo par défaut (Bleu)
-        }
-    };
-
     // --- FILTRAGE ---
     const filteredActivities = useMemo(() => {
         return rawActivities.filter(act => {
             const dist = act.distance > 1000 ? act.distance / 1000 : act.distance;
             const hours = act.moving_time / 3600;
             const year = new Date(act.start_date).getFullYear().toString();
-            const tags = getTags(act);
 
-            // Recherche
             if (!act.name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
-            
-            // Selects
             if (selectedYear !== 'Tous' && year !== selectedYear) return false;
             if (selectedType !== 'Tous' && act.type !== selectedType) return false;
-            if (selectedTag !== 'Tous' && !tags.some(t => t.label.includes(selectedTag))) return false;
 
-            // Sliders (Min <= Val <= Max)
+            // Vérification des plages (Min/Max)
             if (dist < distRange[0] || dist > distRange[1]) return false;
             if (act.total_elevation_gain < elevRange[0] || act.total_elevation_gain > elevRange[1]) return false;
             if (hours < timeRange[0] || hours > timeRange[1]) return false;
 
             return true;
         });
-    }, [rawActivities, searchTerm, selectedYear, selectedType, selectedTag, distRange, elevRange, timeRange]);
+    }, [rawActivities, searchTerm, selectedYear, selectedType, distRange, elevRange, timeRange]);
 
-    // Listes pour les selects
+    // --- UTILS VISUELS ---
+    const getVisuals = (type) => {
+        switch(type) {
+            case 'Run': return { icon: <FaRunning />, class: 'run' };
+            case 'Hike': case 'Walk': return { icon: <FaHiking />, class: 'hike' };
+            case 'Swim': return { icon: <FaSwimmer />, class: 'swim' };
+            case 'WeightTraining': case 'Workout': return { icon: <FaDumbbell />, class: 'workout' };
+            case 'Yoga': case 'Pilates': return { icon: <FaSpa />, class: 'hike' };
+            case 'AlpineSki': case 'Snowboard': return { icon: <FaSnowboarding />, class: 'winter' };
+            default: return { icon: <FaBicycle />, class: 'ride' };
+        }
+    };
+
     const years = [...new Set(rawActivities.map(a => new Date(a.start_date).getFullYear()))].sort().reverse();
     const types = [...new Set(rawActivities.map(a => a.type))].sort();
-    // Pour les tags, on hardcode les principaux pour simplifier
-    const filterTags = ['Zwift', 'Muscu', 'Century', 'Longue', 'Grimpeur', 'Morning'];
-
-    // Composant Slider Double
-    const DualSlider = ({ label, icon: Icon, min, max, range, setRange, unit }) => (
-        <div className="slider-group">
-            <div className="slider-label">
-                <span style={{display:'flex', alignItems:'center', gap:'5px', color:'var(--neon-blue)'}}><Icon /> {label}</span>
-                <span>{range[0]} - {range[1]} {unit}</span>
-            </div>
-            <div className="dual-slider">
-                <div className="slider-track"></div>
-                <input 
-                    type="range" min={min} max={max} value={range[0]} 
-                    onChange={(e) => {
-                        const val = Math.min(parseInt(e.target.value), range[1] - 1);
-                        setRange([val, range[1]]);
-                    }} 
-                />
-                <input 
-                    type="range" min={min} max={max} value={range[1]} 
-                    onChange={(e) => {
-                        const val = Math.max(parseInt(e.target.value), range[0] + 1);
-                        setRange([range[0], val]);
-                    }} 
-                />
-            </div>
-        </div>
-    );
 
     return (
         <div className="activities-page">
@@ -158,94 +99,121 @@ function ActivitiesPage() {
                     <h2 className="gradient-text">Journal d'activités</h2>
                     <p className="subtitle">{filteredActivities.length} sorties trouvées</p>
                 </div>
-                <button 
-                    className={`filter-toggle-btn ${showFilters ? 'active' : ''}`} 
-                    onClick={() => setShowFilters(!showFilters)}
-                >
+                <button className={`filter-toggle-btn ${showFilters ? 'active' : ''}`} onClick={() => setShowFilters(!showFilters)}>
                     <FaFilter /> Filtres
                 </button>
             </header>
 
             <div className="search-container">
-                <input 
-                    type="text" 
-                    className="search-input"
-                    placeholder="Rechercher une sortie..." 
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
+                <input type="text" className="search-input" placeholder="Rechercher..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
                 <FaSearch className="search-icon-overlay" />
             </div>
 
             <div className={`filters-panel glass-panel ${showFilters ? 'open' : ''}`}>
                 <div className="filters-row">
-                    <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} className="neon-select">
-                        <option value="Tous">Année</option>
+                    <select value={selectedYear} onChange={e => setSelectedYear(e.target.value)} className="neon-select">
+                        <option value="Tous">Toutes les années</option>
                         {years.map(y => <option key={y} value={y}>{y}</option>)}
                     </select>
-                    <select value={selectedType} onChange={(e) => setSelectedType(e.target.value)} className="neon-select">
-                        <option value="Tous">Sport</option>
+                    <select value={selectedType} onChange={e => setSelectedType(e.target.value)} className="neon-select">
+                        <option value="Tous">Tous les sports</option>
                         {types.map(t => <option key={t} value={t}>{t}</option>)}
-                    </select>
-                    <select value={selectedTag} onChange={(e) => setSelectedTag(e.target.value)} className="neon-select">
-                        <option value="Tous">Badge</option>
-                        {filterTags.map(t => <option key={t} value={t}>{t}</option>)}
                     </select>
                 </div>
 
-                <div className="filters-row">
-                    <DualSlider label="Distance" icon={FaRoad} min={0} max={maxValues.dist} range={distRange} setRange={setDistRange} unit="km" />
-                    <DualSlider label="Dénivelé" icon={FaMountain} min={0} max={maxValues.elev} range={elevRange} setRange={setElevRange} unit="m" />
-                    <DualSlider label="Durée" icon={FaStopwatch} min={0} max={maxValues.time} range={timeRange} setRange={setTimeRange} unit="h" />
+                <div className="sliders-row">
+                    {/* SLIDER DISTANCE */}
+                    <div className="slider-group">
+                        <div className="slider-label">
+                            <span><FaRoad style={{color:'var(--neon-blue)'}}/> Distance</span>
+                            <span>{distRange[0]} - {distRange[1]} km</span>
+                        </div>
+                        <Slider 
+                            range 
+                            min={0} max={maxValues.dist} 
+                            value={distRange} 
+                            onChange={setDistRange} 
+                            trackStyle={{ backgroundColor: 'var(--neon-blue)' }}
+                            handleStyle={{ borderColor: 'var(--neon-blue)', backgroundColor: '#1e1e2d', opacity: 1 }}
+                            railStyle={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
+                        />
+                    </div>
+
+                    {/* SLIDER DÉNIVELÉ */}
+                    <div className="slider-group">
+                        <div className="slider-label">
+                            <span><FaMountain style={{color:'var(--neon-purple)'}}/> Dénivelé</span>
+                            <span>{elevRange[0]} - {elevRange[1]} m</span>
+                        </div>
+                        <Slider 
+                            range 
+                            min={0} max={maxValues.elev} 
+                            value={elevRange} 
+                            onChange={setElevRange}
+                            trackStyle={{ backgroundColor: 'var(--neon-purple)' }}
+                            handleStyle={{ borderColor: 'var(--neon-purple)', backgroundColor: '#1e1e2d', opacity: 1 }}
+                            railStyle={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
+                        />
+                    </div>
+
+                    {/* SLIDER DURÉE */}
+                    <div className="slider-group">
+                        <div className="slider-label">
+                            <span><FaStopwatch style={{color:'var(--neon-green)'}}/> Durée</span>
+                            <span>{timeRange[0]} - {timeRange[1]} h</span>
+                        </div>
+                        <Slider 
+                            range 
+                            min={0} max={maxValues.time} 
+                            value={timeRange} 
+                            onChange={setTimeRange}
+                            trackStyle={{ backgroundColor: 'var(--neon-green)' }}
+                            handleStyle={{ borderColor: 'var(--neon-green)', backgroundColor: '#1e1e2d', opacity: 1 }}
+                            railStyle={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
+                        />
+                    </div>
                 </div>
             </div>
 
             {loading ? <div className="loading">Chargement...</div> : (
                 <div className="activities-grid">
-                    {filteredActivities.map(act => {
-                        const tags = getTags(act);
-                        const visuals = getVisuals(act.type);
-                        const distKm = act.distance > 1000 ? act.distance / 1000 : act.distance;
-
-                        return (
-                            <div key={act.id} className="activity-card glass-panel">
-                                <div className="act-main">
-                                    <div className={`act-icon-box ${visuals.class}`}>
-                                        {visuals.icon}
-                                    </div>
-                                    <div className="act-info">
-                                        <div className="act-header">
-                                            <h4>{act.name}</h4>
-                                            <span className="act-date">{new Date(act.start_date).toLocaleDateString()}</span>
+                    {filteredActivities.length === 0 ? (
+                        <div className="empty-search">Aucune activité trouvée.</div>
+                    ) : (
+                        filteredActivities.map(act => {
+                            const visuals = getVisuals(act.type);
+                            const distKm = act.distance > 1000 ? act.distance / 1000 : act.distance;
+                            return (
+                                <div key={act.id} className="activity-card glass-panel">
+                                    <div className="act-main">
+                                        <div className={`act-icon-box ${visuals.class}`}>
+                                            {visuals.icon}
                                         </div>
-                                        
-                                        {tags.length > 0 && (
-                                            <div className="tags-row">
-                                                {tags.map((t, i) => (
-                                                    <span key={i} className={`tag-pill ${t.color}`}>{t.label}</span>
-                                                ))}
+                                        <div className="act-info">
+                                            <div className="act-header">
+                                                <h4>{act.name}</h4>
+                                                <span className="act-date">{new Date(act.start_date).toLocaleDateString()}</span>
                                             </div>
-                                        )}
-
-                                        <div className="act-metrics">
-                                            <div className="metric">
-                                                <span className="label">Distance</span>
-                                                <span className="value">{Number(distKm).toFixed(1)} <small>km</small></span>
-                                            </div>
-                                            <div className="metric">
-                                                <span className="label">D+</span>
-                                                <span className="value">{Math.round(act.total_elevation_gain)} <small>m</small></span>
-                                            </div>
-                                            <div className="metric">
-                                                <span className="label">Temps</span>
-                                                <span className="value">{Math.floor(act.moving_time / 3600)}h {Math.floor((act.moving_time % 3600) / 60)}</span>
+                                            <div className="act-metrics">
+                                                <div className="metric">
+                                                    <span className="label">Distance</span>
+                                                    <span className="value">{Number(distKm).toFixed(1)} <small>km</small></span>
+                                                </div>
+                                                <div className="metric">
+                                                    <span className="label">D+</span>
+                                                    <span className="value">{Math.round(act.total_elevation_gain)} <small>m</small></span>
+                                                </div>
+                                                <div className="metric">
+                                                    <span className="label">Temps</span>
+                                                    <span className="value">{Math.floor(act.moving_time / 3600)}h {Math.floor((act.moving_time % 3600) / 60)}</span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        );
-                    })}
+                            );
+                        })
+                    )}
                 </div>
             )}
         </div>

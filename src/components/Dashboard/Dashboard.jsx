@@ -58,7 +58,6 @@ function Dashboard() {
                         }
                     });
                 }
-                
             });
             
             setAlertList({ parts: partsIssues, maintenance: maintIssues });

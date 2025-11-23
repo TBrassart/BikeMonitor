@@ -15,7 +15,7 @@
     font-size: 0.9rem;
 }
 
-/* --- BARRE DE RECHERCHE NÉON --- */
+/* --- RECHERCHE --- */
 .search-container {
     position: relative;
     width: 100%;
@@ -31,14 +31,12 @@
     color: white;
     font-size: 1rem;
     transition: all 0.3s ease;
-    box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
     box-sizing: border-box;
 }
 
 .search-input:focus {
     outline: none;
     border-color: var(--neon-blue);
-    box-shadow: 0 0 15px rgba(14, 165, 233, 0.2);
     background: rgba(14, 165, 233, 0.05);
 }
 
@@ -48,11 +46,10 @@
     top: 50%;
     transform: translateY(-50%);
     color: var(--text-secondary);
-    font-size: 1.2rem;
     pointer-events: none;
 }
 
-/* --- BOUTON FILTRE --- */
+/* --- BOUTONS & FILTRES --- */
 .filter-toggle-btn {
     background: rgba(255,255,255,0.05);
     border: 1px solid var(--border-color);
@@ -61,33 +58,24 @@
     border-radius: 12px;
     cursor: pointer;
     display: flex; align-items: center; gap: 10px;
-    transition: all 0.3s ease;
-    height: 100%;
 }
 
-.filter-toggle-btn.active, .filter-toggle-btn:hover {
+.filter-toggle-btn.active {
     background: var(--gradient-primary);
     border-color: transparent;
     color: white;
 }
 
-/* --- PANNEAU DE FILTRES --- */
 .filters-panel {
     margin-bottom: 30px;
     padding: 25px;
     display: none;
     flex-direction: column;
     gap: 25px;
-    animation: slideDown 0.3s ease;
 }
 
 .filters-panel.open {
     display: flex;
-}
-
-@keyframes slideDown {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
 }
 
 .filters-row {
@@ -107,15 +95,15 @@
 }
 
 /* ========================================= */
-/* --- DUAL RANGE SLIDERS (CORRIGÉ) --- */
+/* --- SLIDERS DOUBLES (CORRECTION) --- */
 /* ========================================= */
 
 .slider-group {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 15px; /* Plus d'espace */
     position: relative;
-    padding-bottom: 10px;
+    height: 60px; /* Hauteur fixe pour éviter le chevauchement */
 }
 
 .slider-label {
@@ -126,11 +114,11 @@
 
 .dual-slider {
     position: relative;
-    height: 30px; /* Hauteur suffisante pour les pouces */
     width: 100%;
+    height: 20px; 
 }
 
-/* La barre de fond (Track) */
+/* La piste (trait gris) */
 .slider-track {
     width: 100%;
     height: 6px;
@@ -139,64 +127,64 @@
     top: 50%;
     transform: translateY(-50%);
     border-radius: 3px;
-    z-index: 1;
+    z-index: 0;
 }
 
-/* Les inputs Range (superposés) */
+/* L'input invisible mais fonctionnel */
 .dual-slider input[type="range"] {
     position: absolute;
     top: 50%;
-    transform: translateY(-50%);
-    pointer-events: none; /* CRUCIAL : permet de cliquer à travers la zone vide */
+    transform: translateY(-50%); /* Centrage parfait */
+    pointer-events: none; /* Magie: on clique à travers le vide */
+    -webkit-appearance: none; /* Reset Chrome */
+    appearance: none;         /* Reset Standard */
+    background: none;
+    width: 100%;
+    z-index: 2; /* Au dessus de la track */
+    margin: 0;
+}
+
+/* --- ROND (THUMB) - CHROME / SAFARI / EDGE --- */
+.dual-slider input[type="range"]::-webkit-slider-thumb {
+    pointer-events: auto; /* On réactive le clic sur le rond */
     -webkit-appearance: none;
     appearance: none;
-    z-index: 2;
-    height: 10px;
-    width: 100%;
-    opacity: 0; /* On cache l'input natif sauf le thumb */
-    cursor: pointer;
-    margin: 0; /* Reset marges */
-}
-
-/* --- Style du curseur (Thumb) pour Chrome/Safari/Edge --- */
-.dual-slider input[type="range"]::-webkit-slider-thumb {
-    pointer-events: auto; /* CRUCIAL : réactive le clic sur la boule */
-    -webkit-appearance: none;
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     background: var(--neon-blue);
-    box-shadow: 0 0 10px var(--neon-blue);
     border: 2px solid white;
     cursor: grab;
-    position: relative;
-    z-index: 10;
-    margin-top: -6px; /* Centrage vertical si besoin */
-    opacity: 1; /* On le rend visible */
+    box-shadow: 0 0 10px var(--neon-blue);
+    margin-top: -8px; /* Ajustement vertical car webkit est bizarre */
 }
 
-/* --- Style du curseur (Thumb) pour Firefox --- */
+/* --- ROND (THUMB) - FIREFOX --- */
 .dual-slider input[type="range"]::-moz-range-thumb {
     pointer-events: auto;
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     background: var(--neon-blue);
-    box-shadow: 0 0 10px var(--neon-blue);
     border: 2px solid white;
     cursor: grab;
-    opacity: 1;
+    box-shadow: 0 0 10px var(--neon-blue);
+    transform: translateY(2px); /* Ajustement Firefox */
 }
 
 /* Interaction */
-.dual-slider input[type="range"]::-webkit-slider-thumb:active {
+.dual-slider input[type="range"]:active::-webkit-slider-thumb {
+    cursor: grabbing;
+    transform: scale(1.2);
+}
+.dual-slider input[type="range"]:active::-moz-range-thumb {
     cursor: grabbing;
     transform: scale(1.2);
 }
 
-/* --- FIN SLIDERS --- */
+/* ========================================= */
 
-/* --- GRILLE ACTIVITÉS (Reste inchangé) --- */
+/* --- GRILLE & CARTES --- */
 .activities-grid {
     display: flex;
     flex-direction: column;
@@ -205,7 +193,7 @@
 
 .activity-card {
     padding: 20px;
-    transition: transform 0.2s, border-color 0.2s;
+    transition: transform 0.2s;
     border-left: 4px solid transparent !important;
 }
 
@@ -227,69 +215,47 @@
     border-radius: 14px;
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
 
-/* Couleurs spécifiques par type */
-.act-icon-box.ride { color: #0ea5e9; background: rgba(14, 165, 233, 0.15); border: 1px solid rgba(14, 165, 233, 0.3); }
-.act-icon-box.run { color: #f97316; background: rgba(249, 115, 22, 0.15); border: 1px solid rgba(249, 115, 22, 0.3); }
-.act-icon-box.hike { color: #10b981; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); }
-.act-icon-box.swim { color: #3b82f6; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); }
-.act-icon-box.workout { color: #d946ef; background: rgba(217, 70, 239, 0.15); border: 1px solid rgba(217, 70, 239, 0.3); }
-.act-icon-box.winter { color: #e2e8f0; background: rgba(226, 232, 240, 0.15); border: 1px solid rgba(226, 232, 240, 0.3); }
+/* Couleurs types */
+.act-icon-box.ride { color: #0ea5e9; background: rgba(14, 165, 233, 0.15); }
+.act-icon-box.run { color: #f97316; background: rgba(249, 115, 22, 0.15); }
+.act-icon-box.hike { color: #10b981; background: rgba(16, 185, 129, 0.15); }
+.act-icon-box.swim { color: #3b82f6; background: rgba(59, 130, 246, 0.15); }
+.act-icon-box.workout { color: #d946ef; background: rgba(217, 70, 239, 0.15); }
+.act-icon-box.winter { color: #e2e8f0; background: rgba(226, 232, 240, 0.15); }
 
 .act-info { flex: 1; }
 
 .act-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
     margin-bottom: 8px;
 }
 
-.act-header h4 {
-    margin: 0;
-    font-size: 1.1rem;
-    color: white;
-}
+.act-header h4 { margin: 0; font-size: 1.1rem; color: white; }
+.act-date { font-size: 0.8rem; color: var(--text-secondary); }
 
-.act-date {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-}
-
-/* --- TAGS --- */
-.tags-row {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 12px;
-    flex-wrap: wrap;
-}
-
+/* Tags */
+.tags-row { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
 .tag-pill {
-    font-size: 0.7rem;
-    padding: 4px 10px;
-    border-radius: 50px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    font-size: 0.7rem; padding: 4px 10px; border-radius: 50px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.5px;
 }
+/* Couleurs Tags (identique précédent) */
+.tag-pill.purple { background: rgba(168, 85, 247, 0.2); color: #d8b4fe; }
+.tag-pill.gold { background: rgba(234, 179, 8, 0.2); color: #fde047; }
+.tag-pill.red { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+.tag-pill.blue { background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
+.tag-pill.green { background: rgba(34, 197, 94, 0.2); color: #86efac; }
+.tag-pill.orange { background: rgba(249, 115, 22, 0.2); color: #fdba74; }
+.tag-pill.cyan { background: rgba(6, 182, 212, 0.2); color: #67e8f9; }
 
-.tag-pill.purple { background: rgba(168, 85, 247, 0.2); color: #d8b4fe; border: 1px solid rgba(168, 85, 247, 0.3); }
-.tag-pill.gold { background: rgba(234, 179, 8, 0.2); color: #fde047; border: 1px solid rgba(234, 179, 8, 0.3); }
-.tag-pill.red { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); }
-.tag-pill.blue { background: rgba(59, 130, 246, 0.2); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.3); }
-.tag-pill.green { background: rgba(34, 197, 94, 0.2); color: #86efac; border: 1px solid rgba(34, 197, 94, 0.3); }
-.tag-pill.cyan { background: rgba(6, 182, 212, 0.2); color: #67e8f9; border: 1px solid rgba(6, 182, 212, 0.3); }
-
+/* Metrics */
 .act-metrics {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    border-top: 1px solid rgba(255,255,255,0.05);
-    padding-top: 10px;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+    border-top: 1px solid rgba(255,255,255,0.05); padding-top: 10px;
 }
-
 .metric { display: flex; flex-direction: column; }
 .metric .label { font-size: 0.65rem; color: var(--text-secondary); text-transform: uppercase; }
 .metric .value { font-size: 1rem; font-weight: 700; color: white; }

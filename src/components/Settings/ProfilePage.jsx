@@ -7,6 +7,11 @@ function ProfilePage() {
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState(null);
 
+    const [avatar, setAvatar] = useState('🚲');
+    const [isSelectingAvatar, setIsSelectingAvatar] = useState(false);
+    
+    const defaultAvatars = ['🚴‍♂️', '🏔️', '⚡', '🚀', '💡', '🦁', '🐺', '🦊', '🐻', '🏁', '⚙️', '🛠️', '💧', '🌡️', '🌲', '🔥'];
+
     const [formData, setFormData] = useState({
         name: '',
         height: '',
@@ -35,6 +40,7 @@ function ProfilePage() {
                     resting_hr: profile.resting_hr || '',
                     birth_date: profile.birth_date || ''
                 });
+                setAvatar(profile.avatar || '🚲');
             }
         } catch (e) {
             console.error("Erreur profil", e);
@@ -60,7 +66,8 @@ function ProfilePage() {
                 ftp: formData.ftp ? parseInt(formData.ftp) : null,
                 max_hr: formData.max_hr ? parseInt(formData.max_hr) : null,
                 resting_hr: formData.resting_hr ? parseInt(formData.resting_hr) : null,
-                birth_date: formData.birth_date || null
+                birth_date: formData.birth_date || null,
+                avatar: avatar
             });
             setMessage({ type: 'success', text: 'Profil mis à jour ! ✅' });
         } catch (err) {
@@ -126,12 +133,17 @@ function ProfilePage() {
     return (
         <div className="profile-page">
             <div className="profile-header glass-panel">
-                <div className="profile-avatar-large">
-                    {formData.name ? formData.name.charAt(0).toUpperCase() : 'U'}
+                {/* Rendre l'avatar cliquable */}
+                <div 
+                    className="profile-avatar-large clickable"
+                    onClick={() => setIsSelectingAvatar(true)}
+                    title="Cliquer pour changer d'avatar"
+                >
+                    {avatar} {/* Affiche l'emoji sélectionné */}
                 </div>
                 <div className="profile-title">
-                    <h3>{formData.name || 'Cycliste'}</h3>
-                    <p className="subtitle">Pilote</p>
+                    <h3>{formData.name || 'Cycliste Inconnu'}</h3>
+                    <p className="subtitle">Pilote principal</p>
                 </div>
             </div>
 

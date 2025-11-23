@@ -6,21 +6,132 @@ import {
   BarElement,
   PointElement,
   LineElement,
+  RadialLinearScale, // <--- NOUVEAU POUR RADAR
   Title,
   Tooltip,
   Legend,
   Filler
 } from 'chart.js';
-import { Bar, Line } from 'react-chartjs-2';
+import { Bar, Line, Radar } from 'react-chartjs-2';
 import './ChartsSection.css';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, Filler);
+// Enregistrement des composants
+ChartJS.register(
+  CategoryScale, LinearScale, BarElement, PointElement, LineElement, 
+  RadialLinearScale, Title, Tooltip, Legend, Filler
+);
 
 const ChartsSection = ({ activities, allActivities, period, bikes }) => {
     
     if (!activities || activities.length === 0) {
-        return <div className="empty-charts">Pas assez de données sur cette période.</div>;
+        return <div className="empty-charts">Pas assez de données pour l'analyse.</div>;
     }
+
+    // --- 1. HEATMAP CALENDRIER (6 derniers mois) ---
+    const heatmapData = useMemo(() => {
+        const days = [];
+        const today = new Date();
+        // On remonte 6 mois en arrière
+        const startDate = new Date();
+        startDate.setMonth(today.getMonth() - 5);
+        startDate.setDate(1);
+
+        // Création de la map des activités par date (YYYY-MM-DD)
+        const activityMap = {};
+        allActivities.forEach(act => {
+            const d = new Date(act.start_date).toISOString().split('T')[0];
+            const dist = act.distance > 1000 ? act.distance/1000 : act.distance;
+            activityMap[d] = (activityMap[d] || 0) + dist;
+        });
+
+        // Génération de la grille
+        let current = new Date(startDate);
+        while (current <= today) {
+            const dateStr = current.toISOString().split('T')[0];
+            const km = activityMap[dateStr] || 0;
+            
+            // Intensité pour la couleur (0 à 4)
+            let intensity = 0;
+            if (km > 0) intensity = 1;
+            if (km > 30) intensity = 2;
+            if (km > 60) intensity = 3;
+            if (km > 100) intensity = 4;
+
+            days.push({ date: dateStr, intensity, km });
+            current.setDate(current.getDate() + 1);
+        }
+        return days;
+    }, [allActivities]);
+
+    // --- 2. RADAR CHART (PROFIL CYCLISTE) ---
+    const radarData = useMemo(() => {
+        // On analyse tout l'historique pour définir le profil
+        const totalKm = allActivities.reduce((acc, a) => acc + (a.distance > 1000 ? a.distance/1000 : a.distance), 0);
+        const totalElev = allActivities.reduce((acc, a) => acc + a.total_elevation_gain, 0);
+        const count = allActivities.length;
+        
+        if (count === 0) return null;
+
+        // Calculs heuristiques (Scores sur 100)
+        
+        // 1. Volume : Basé sur une moyenne de 500km/mois pour 100pts
+        // (C'est arbitraire, à ajuster selon ton niveau)
+        const monthsActive = Math.max(1, (new Date() - new Date(allActivities[allActivities.length-1].start_date)) / (1000 * 60 * 60 * 24 * 30));
+        const avgKmPerMonth = totalKm / monthsActive;
+        const scoreVolume = Math.min(100, (avgKmPerMonth / 500) * 100);
+
+        // 2. Régularité : Basé sur sorties / semaine (3 sorties = 100pts)
+        const scoreRegularity = Math.min(100, ((count / monthsActive) / 12) * 100); 
+
+        // 3. Grimpeur : Ratio D+ / Distance (1000m D+ pour 100km = "normal", 2000m = pur grimpeur)
+        const ratioClimb = (totalElev / totalKm) * 100; // m par 100km
+        const scoreClimber = Math.min(100, (ratioClimb / 2000) * 100 * 1.5);
+
+        // 4. Endurance : Max distance en une sortie (200km = 100pts)
+        const maxDist = Math.max(...allActivities.map(a => a.distance > 1000 ? a.distance/1000 : a.distance));
+        const scoreEndurance = Math.min(100, (maxDist / 200) * 100);
+
+        // 5. Sprint : Faute de capteur de puissance, on utilise la Vmax moyenne des sorties
+        // (C'est imprécis, mais ça remplit le graphe)
+        const avgSpeed = allActivities.reduce((acc, a) => acc + (a.average_speed || 25), 0) / count;
+        const scoreSprint = Math.min(100, (avgSpeed / 35) * 100); // 35km/h moy = 100pts
+
+        return {
+            labels: ['Endurance', 'Sprint', 'Grimpeur', 'Régularité', 'Volume'],
+            datasets: [{
+                label: 'Mon Profil',
+                data: [
+                    Math.round(scoreEndurance), 
+                    Math.round(scoreSprint), 
+                    Math.round(scoreClimber), 
+                    Math.round(scoreRegularity), 
+                    Math.round(scoreVolume)
+                ],
+                backgroundColor: 'rgba(14, 165, 233, 0.2)', // Bleu néon transparent
+                borderColor: '#0ea5e9',
+                borderWidth: 2,
+                pointBackgroundColor: '#fff',
+                pointBorderColor: '#0ea5e9'
+            }]
+        };
+    }, [allActivities]);
+
+    // Options Radar
+    const radarOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            r: {
+                angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                pointLabels: { color: '#fff', font: { size: 12, weight: 'bold' } },
+                ticks: { display: false, backdropColor: 'transparent' },
+                suggestedMin: 0,
+                suggestedMax: 100
+            }
+        },
+        plugins: { legend: { display: false } }
+    };
 
     // --- GRAPH 1 : ACTIVITÉS PAR VÉLO ---
     const barChartData = useMemo(() => {
@@ -163,6 +274,39 @@ const ChartsSection = ({ activities, allActivities, period, bikes }) => {
 
     return (
         <div className="charts-section">
+            {/* LIGNE 1 : HEATMAP & RADAR */}
+            <div className="charts-row-top">
+                <div className="chart-card glass-panel heatmap-card">
+                    <h3>Régularité (6 derniers mois)</h3>
+                    <div className="heatmap-grid">
+                        {heatmapData.map((day, i) => (
+                            <div 
+                                key={i} 
+                                className={`heatmap-cell intensity-${day.intensity}`}
+                                title={`${day.date} : ${Math.round(day.km)} km`}
+                            ></div>
+                        ))}
+                    </div>
+                    <div className="heatmap-legend">
+                        <span>Moins</span>
+                        <div className="legend-scale">
+                            <div className="cell intensity-0"></div>
+                            <div className="cell intensity-1"></div>
+                            <div className="cell intensity-2"></div>
+                            <div className="cell intensity-3"></div>
+                            <div className="cell intensity-4"></div>
+                        </div>
+                        <span>Plus</span>
+                    </div>
+                </div>
+
+                <div className="chart-card glass-panel radar-card">
+                    <h3>Profil Cycliste</h3>
+                    <div className="chart-wrapper radar-wrapper">
+                        {radarData && <Radar data={radarData} options={radarOptions} />}
+                    </div>
+                </div>
+            </div>
             <div className="chart-card glass-panel">
                 <h3>Activités & Matériel (km)</h3>
                 <div className="chart-wrapper">

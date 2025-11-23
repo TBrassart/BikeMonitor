@@ -131,6 +131,84 @@
     background: rgba(0,0,0,0.2);
 }
 
+/* --- NOUVELLE DISPOSITION --- */
+.charts-row-top {
+    display: grid;
+    grid-template-columns: 2fr 1fr; /* Heatmap large, Radar carré */
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+/* --- HEATMAP --- */
+.heatmap-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 25px;
+}
+
+.heatmap-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 15px;
+    justify-content: flex-start; /* Alignement gauche */
+}
+
+.heatmap-cell {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    background-color: rgba(255, 255, 255, 0.05); /* Vide */
+    transition: transform 0.1s;
+}
+
+.heatmap-cell:hover {
+    transform: scale(1.5);
+    border: 1px solid white;
+}
+
+/* Couleurs Intensité (Style GitHub Néon) */
+.intensity-0 { background-color: rgba(255, 255, 255, 0.05); }
+.intensity-1 { background-color: rgba(14, 165, 233, 0.3); } /* Bleu faible */
+.intensity-2 { background-color: rgba(14, 165, 233, 0.6); }
+.intensity-3 { background-color: var(--neon-blue); box-shadow: 0 0 5px var(--neon-blue); }
+.intensity-4 { background-color: var(--neon-purple); box-shadow: 0 0 8px var(--neon-purple); } /* Max */
+
+.heatmap-legend {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 15px;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    justify-content: flex-end;
+}
+
+.legend-scale { display: flex; gap: 3px; }
+.legend-scale .cell { width: 10px; height: 10px; border-radius: 2px; }
+
+/* --- RADAR --- */
+.radar-card {
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.radar-wrapper {
+    width: 100%;
+    height: 250px !important; /* Force la hauteur pour le radar */
+}
+
+/* RESPONSIVE */
+@media (max-width: 1000px) {
+    .charts-row-top {
+        grid-template-columns: 1fr; /* Empilement sur tablette */
+    }
+    .heatmap-cell { width: 10px; height: 10px; } /* Plus petit sur mobile */
+}
+
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 /* UTILITAIRES */

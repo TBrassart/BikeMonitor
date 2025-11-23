@@ -67,11 +67,17 @@ function ActivitiesPage() {
         if (type === 'Yoga' || type === 'Pilates') tags.push({ label: 'Zen 🧘', color: 'green' });
 
         // Performance
-        if (dist >= 100) tags.push({ label: 'Century 💯', color: 'gold' });
-        else if (dist >= 50) tags.push({ label: 'Longue 🛣️', color: 'blue' });
+        if (dist >= 2500) tags.push({ label: 'RAF 🗺️', color: 'gold' });
+        else if (dist >= 500) tags.push({ label: 'Ultra 🌟', color: 'red' });
+        else if (dist >= 200) tags.push({ label: '2️⃣0️⃣0️⃣', color: 'purple' });
+        else if (dist >= 100) tags.push({ label: 'Century 💯', color: 'blue' });
+        else if (dist >= 70) tags.push({ label: 'Longue 🛣️', color: 'green' });
         
-        if (elev >= 1000) tags.push({ label: 'Grimpeur 🐐', color: 'red' });
-        
+        if (elev >= 8848) tags.push({ label: 'Everesting 🗻', color: 'gold' });
+        else if (elev >= 6000) tags.push({ label: 'Haute Montagne 🏔️', color: 'purple' });
+        else if (elev >= 3000) tags.push({ label: 'Montagne 🐐', color: 'blue' });
+        else if (elev >= 1000) tags.push({ label: 'Valloné 🧗', color: 'green' });
+
         // Horaire
         if (act.start_date && new Date(act.start_date).getHours() < 7) {
             tags.push({ label: 'Morning ☕', color: 'cyan' });

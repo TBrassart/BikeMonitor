@@ -24,7 +24,7 @@
 
 .search-input {
     width: 100%;
-    padding: 15px 15px 15px 50px; /* Place pour l'icône */
+    padding: 15px 15px 15px 50px;
     background: rgba(0, 0, 0, 0.3);
     border: 1px solid var(--border-color);
     border-radius: 12px;
@@ -38,7 +38,7 @@
 .search-input:focus {
     outline: none;
     border-color: var(--neon-blue);
-    box-shadow: 0 0 15px rgba(14, 165, 233, 0.2), inset 0 2px 5px rgba(0,0,0,0.5);
+    box-shadow: 0 0 15px rgba(14, 165, 233, 0.2);
     background: rgba(14, 165, 233, 0.05);
 }
 
@@ -49,11 +49,7 @@
     transform: translateY(-50%);
     color: var(--text-secondary);
     font-size: 1.2rem;
-    transition: color 0.3s;
-}
-
-.search-input:focus + .search-icon-overlay {
-    color: var(--neon-blue);
+    pointer-events: none;
 }
 
 /* --- BOUTON FILTRE --- */
@@ -73,7 +69,6 @@
     background: var(--gradient-primary);
     border-color: transparent;
     color: white;
-    box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3);
 }
 
 /* --- PANNEAU DE FILTRES --- */
@@ -110,13 +105,17 @@
     border-radius: 8px;
     cursor: pointer;
 }
-.neon-select:focus { border-color: var(--neon-purple); outline: none; }
 
-/* --- DUAL RANGE SLIDERS (La partie technique) --- */
+/* ========================================= */
+/* --- DUAL RANGE SLIDERS (CORRIGÉ) --- */
+/* ========================================= */
+
 .slider-group {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
+    position: relative;
+    padding-bottom: 10px;
 }
 
 .slider-label {
@@ -127,45 +126,77 @@
 
 .dual-slider {
     position: relative;
-    height: 20px;
+    height: 30px; /* Hauteur suffisante pour les pouces */
     width: 100%;
 }
 
-/* Les inputs sont superposés */
-.dual-slider input[type="range"] {
-    position: absolute;
-    width: 100%;
-    pointer-events: none; /* Permet de cliquer à travers */
-    -webkit-appearance: none;
-    background: none;
-    top: 0;
-}
-
-/* Piste de fond */
+/* La barre de fond (Track) */
 .slider-track {
     width: 100%;
-    height: 4px;
+    height: 6px;
     background: rgba(255,255,255,0.1);
     position: absolute;
-    top: 9px;
-    border-radius: 2px;
-    z-index: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    border-radius: 3px;
+    z-index: 1;
 }
 
-/* Le curseur (Thumb) doit réactiver les événements */
+/* Les inputs Range (superposés) */
+.dual-slider input[type="range"] {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none; /* CRUCIAL : permet de cliquer à travers la zone vide */
+    -webkit-appearance: none;
+    appearance: none;
+    z-index: 2;
+    height: 10px;
+    width: 100%;
+    opacity: 0; /* On cache l'input natif sauf le thumb */
+    cursor: pointer;
+    margin: 0; /* Reset marges */
+}
+
+/* --- Style du curseur (Thumb) pour Chrome/Safari/Edge --- */
 .dual-slider input[type="range"]::-webkit-slider-thumb {
-    height: 16px;
-    width: 16px;
+    pointer-events: auto; /* CRUCIAL : réactive le clic sur la boule */
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
     background: var(--neon-blue);
-    pointer-events: auto; /* Le curseur est cliquable */
-    -webkit-appearance: none;
-    cursor: pointer;
     box-shadow: 0 0 10px var(--neon-blue);
-    margin-top: -6px; /* Centrage vertical */
+    border: 2px solid white;
+    cursor: grab;
+    position: relative;
+    z-index: 10;
+    margin-top: -6px; /* Centrage vertical si besoin */
+    opacity: 1; /* On le rend visible */
 }
 
-/* --- GRILLE ACTIVITÉS --- */
+/* --- Style du curseur (Thumb) pour Firefox --- */
+.dual-slider input[type="range"]::-moz-range-thumb {
+    pointer-events: auto;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--neon-blue);
+    box-shadow: 0 0 10px var(--neon-blue);
+    border: 2px solid white;
+    cursor: grab;
+    opacity: 1;
+}
+
+/* Interaction */
+.dual-slider input[type="range"]::-webkit-slider-thumb:active {
+    cursor: grabbing;
+    transform: scale(1.2);
+}
+
+/* --- FIN SLIDERS --- */
+
+/* --- GRILLE ACTIVITÉS (Reste inchangé) --- */
 .activities-grid {
     display: flex;
     flex-direction: column;
@@ -199,7 +230,7 @@
     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
 
-/* --- COULEURS PAR TYPE --- */
+/* Couleurs spécifiques par type */
 .act-icon-box.ride { color: #0ea5e9; background: rgba(14, 165, 233, 0.15); border: 1px solid rgba(14, 165, 233, 0.3); }
 .act-icon-box.run { color: #f97316; background: rgba(249, 115, 22, 0.15); border: 1px solid rgba(249, 115, 22, 0.3); }
 .act-icon-box.hike { color: #10b981; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); }
@@ -238,13 +269,12 @@
 .tag-pill {
     font-size: 0.7rem;
     padding: 4px 10px;
-    border-radius: 50px; /* Pillule */
+    border-radius: 50px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
-/* Couleurs Tags */
 .tag-pill.purple { background: rgba(168, 85, 247, 0.2); color: #d8b4fe; border: 1px solid rgba(168, 85, 247, 0.3); }
 .tag-pill.gold { background: rgba(234, 179, 8, 0.2); color: #fde047; border: 1px solid rgba(234, 179, 8, 0.3); }
 .tag-pill.red { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); }
@@ -252,7 +282,6 @@
 .tag-pill.green { background: rgba(34, 197, 94, 0.2); color: #86efac; border: 1px solid rgba(34, 197, 94, 0.3); }
 .tag-pill.cyan { background: rgba(6, 182, 212, 0.2); color: #67e8f9; border: 1px solid rgba(6, 182, 212, 0.3); }
 
-/* --- METRICS --- */
 .act-metrics {
     display: grid;
     grid-template-columns: repeat(3, 1fr);

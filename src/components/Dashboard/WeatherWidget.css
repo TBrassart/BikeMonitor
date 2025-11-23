@@ -1,93 +1,69 @@
 /* src/components/Dashboard/WeatherWidget.css */
 
 .weather-widget {
-    background: #1e1e2d;
-    border-radius: 12px;
     padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    margin-bottom: 20px;
-    border: 1px solid rgba(255,255,255,0.1);
-    position: relative;
-    overflow: hidden;
+    color: white;
 }
 
-/* Variantes de couleur selon le temps */
-.weather-widget.ideal { border-left: 5px solid #f1c40f; background: linear-gradient(135deg, rgba(241, 196, 15, 0.1), rgba(0,0,0,0)); }
-.weather-widget.wet { border-left: 5px solid #3498db; background: linear-gradient(135deg, rgba(52, 152, 219, 0.1), rgba(0,0,0,0)); }
-.weather-widget.bad { border-left: 5px solid #e74c3c; }
+.weather-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+}
+
+.location {
+    display: flex; align-items: center; gap: 5px; color: var(--neon-blue);
+}
 
 .weather-main {
     display: flex;
     align-items: center;
-    gap: 15px;
+    justify-content: space-between;
+    margin-bottom: 25px;
 }
 
-.weather-icon {
-    font-size: 2.5rem;
+.weather-icon-main {
+    font-size: 4rem;
+    color: #fde047; /* Jaune soleil */
+    filter: drop-shadow(0 0 10px rgba(253, 224, 71, 0.5));
 }
 
-.weather-temp {
-    font-size: 2rem;
-    font-weight: bold;
-    color: white;
-    display: flex;
-    flex-direction: column;
+.temp-box {
+    text-align: right;
+}
+
+.temp {
+    font-size: 3rem;
+    font-weight: 700;
     line-height: 1;
+    display: block;
 }
 
-.weather-label {
-    font-size: 0.9rem;
-    color: #aaa;
-    font-weight: normal;
-    margin-top: 5px;
+.cond {
+    font-size: 1rem;
+    color: var(--text-secondary);
 }
 
 .weather-details {
     display: flex;
-    gap: 20px;
-    color: #ccc;
-    font-size: 0.9rem;
+    justify-content: space-between;
+    background: rgba(255,255,255,0.05);
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 15px;
 }
 
-.detail-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
+.w-detail {
+    display: flex; align-items: center; gap: 10px; font-size: 0.9rem;
 }
 
-/* ALERTE PRESSION */
-.tire-alert {
-    background-color: rgba(52, 152, 219, 0.2);
-    border: 1px solid #3498db;
-    padding: 10px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: #3498db;
-    animation: fadeIn 0.5s ease;
-}
+.w-icon { color: var(--neon-blue); }
 
-.tire-alert strong {
-    display: block;
-    font-size: 0.9rem;
-}
-
-.tire-alert p {
-    margin: 0;
-    font-size: 0.8rem;
-    color: #ccc;
-}
-
-@media (min-width: 768px) {
-    .weather-widget {
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-    }
-    .tire-alert {
-        max-width: 300px;
-    }
+.advice-box {
+    font-size: 0.85rem;
+    color: #86efac; /* Vert clair */
+    text-align: center;
+    font-style: italic;
 }

@@ -203,11 +203,11 @@ export const api = {
             .from('bikes')
             .select(`
                 *, 
-                profiles:user_id ( name, avatar ),
-                parts ( status )
+                profiles:user_id(name,avatar), 
+                parts(id, name, status)
             `)
             .order('created_at', { ascending: false });
-        if (error) throw error;
+        if(error) throw error; 
         return data || [];
     },
     async getBike(id) {

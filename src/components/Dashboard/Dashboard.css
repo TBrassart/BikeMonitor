@@ -163,9 +163,13 @@
     color: white;
     font-size: 0.9rem;
     cursor: pointer;
-    color-scheme: dark; /* Force le menu natif en sombre */
+    /* Astuce pour dire au navigateur que c'est un thème sombre */
+    color-scheme: dark; 
 }
-.filter-select:focus { outline: none; }
+
+.filter-select:focus {
+    outline: none;
+}
 
 .rolling-toggle {
     display: flex; align-items: center; gap: 8px; cursor: pointer;
@@ -174,8 +178,9 @@
 }
 
 .filter-select option {
-    background-color: #1e1e2d; /* Couleur de fond sombre */
+    background-color: #1e1e2d;
     color: white;
+    padding: 10px;
 }
 
 .filter-select:focus { outline: none; }

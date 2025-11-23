@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaCloudSun, FaWind, FaTint, FaMapMarkerAlt, FaSun, FaCloudRain, FaSnowflake, FaBolt } from 'react-icons/fa';
+import { FaCloudSun, FaWind, FaTint, FaMapMarkerAlt, FaSun, FaCloudRain, FaSnowflake, FaBolt, FaMoon, FaCloudMoon } from 'react-icons/fa';
 import './WeatherWidget.css';
 
 function WeatherWidget() {
@@ -11,7 +11,7 @@ function WeatherWidget() {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(fetchWeather, handleError);
         } else {
-            setError("Géoloc non supportée");
+            setError("Géoloc refusée");
             setLoading(false);
         }
     }, []);
@@ -21,8 +21,8 @@ function WeatherWidget() {
             const lat = position.coords.latitude;
             const lon = position.coords.longitude;
             
-            // API Open-Meteo (Gratuite, sans clé)
-            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m`;
+            // Ajout de 'is_day' pour savoir s'il fait nuit
+            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,is_day`;
             
             const response = await fetch(url);
             const data = await response.json();
@@ -32,7 +32,8 @@ function WeatherWidget() {
                 humidity: data.current.relative_humidity_2m,
                 wind: Math.round(data.current.wind_speed_10m),
                 code: data.current.weather_code,
-                city: "Ma Position" // Open-Meteo ne donne pas la ville, on simplifie
+                isDay: data.current.is_day === 1, // 1 = Jour, 0 = Nuit
+                city: "Ma Position"
             });
         } catch (err) {
             setError("Erreur météo");
@@ -42,41 +43,53 @@ function WeatherWidget() {
     };
 
     const handleError = () => {
-        setError("Position refusée");
+        setError("Position introuvable");
         setLoading(false);
     };
 
-    // Mapping Codes WMO -> Icônes & Textes
-    const getWeatherInfo = (code) => {
-        if (code === 0) return { icon: <FaSun className="weather-icon-main sun" />, text: "Ensoleillé" };
-        if (code >= 1 && code <= 3) return { icon: <FaCloudSun className="weather-icon-main cloud" />, text: "Nuageux" };
-        if (code >= 51 && code <= 67) return { icon: <FaCloudRain className="weather-icon-main rain" />, text: "Pluvieux" };
-        if (code >= 71 && code <= 77) return { icon: <FaSnowflake className="weather-icon-main snow" />, text: "Neige" };
-        if (code >= 95) return { icon: <FaBolt className="weather-icon-main storm" />, text: "Orage" };
-        return { icon: <FaCloudSun className="weather-icon-main" />, text: "Variable" };
+    // Logique d'icône et couleur dynamique
+    const getWeatherInfo = (code, isDay) => {
+        // NUIT
+        if (!isDay) {
+            if (code === 0) return { icon: <FaMoon />, text: "Nuit claire", color: "moon" };
+            if (code <= 3) return { icon: <FaCloudMoon />, text: "Nuit voilée", color: "cloudy" };
+        }
+
+        // JOUR (ou mauvais temps la nuit aussi)
+        if (code === 0) return { icon: <FaSun />, text: "Ensoleillé", color: "sun" };
+        if (code <= 3) return { icon: <FaCloudSun />, text: "Nuageux", color: "cloudy" };
+        
+        if (code >= 51 && code <= 67) return { icon: <FaCloudRain />, text: "Pluvieux", color: "rain" };
+        if (code >= 71 && code <= 77) return { icon: <FaSnowflake />, text: "Neige", color: "snow" };
+        if (code >= 95) return { icon: <FaBolt />, text: "Orage", color: "storm" };
+        
+        return { icon: <FaCloudSun />, text: "Variable", color: "cloudy" };
     };
 
     const getAdvice = (code, temp) => {
         if (code >= 51) return "Garde-boue obligatoires ! 🌧️";
-        if (temp < 5) return "Couvre-chaussures et gants d'hiver ! 🥶";
-        if (temp > 25) return "Prends deux bidons, il fait chaud ! ☀️";
+        if (temp < 5) return "Gants d'hiver recommandés ! 🥶";
+        if (temp > 25) return "Hydratation max ! ☀️";
         return "Conditions idéales pour rouler ! 🚴";
     };
 
-    if (loading) return <div className="weather-widget glass-panel loading">Météo en cours...</div>;
-    if (error || !weather) return <div className="weather-widget glass-panel error">{error || "Météo indisponible"}</div>;
+    if (loading) return <div className="weather-widget glass-panel loading">Chargement...</div>;
+    if (error || !weather) return <div className="weather-widget glass-panel error">{error || "Météo HS"}</div>;
 
-    const info = getWeatherInfo(weather.code);
+    const info = getWeatherInfo(weather.code, weather.isDay);
 
     return (
-        <div className="weather-widget">
+        <div className={`weather-widget ${!weather.isDay ? 'night-mode' : ''}`}>
             <div className="weather-header">
                 <span className="location"><FaMapMarkerAlt /> {weather.city}</span>
                 <span className="today">Direct</span>
             </div>
 
             <div className="weather-main">
-                {info.icon}
+                {/* On applique la classe de couleur dynamique ici */}
+                <div className={`weather-icon-main ${info.color}`}>
+                    {info.icon}
+                </div>
                 <div className="temp-box">
                     <span className="temp">{weather.temp}°</span>
                     <span className="cond">{info.text}</span>

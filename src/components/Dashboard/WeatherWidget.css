@@ -1,8 +1,12 @@
-/* src/components/Dashboard/WeatherWidget.css */
-
 .weather-widget {
     padding: 20px;
     color: white;
+    transition: all 0.3s ease;
+}
+
+/* Mode Nuit (Fond légèrement plus sombre) */
+.weather-widget.night-mode {
+    background: rgba(10, 10, 20, 0.4);
 }
 
 .weather-header {
@@ -26,44 +30,31 @@
 
 .weather-icon-main {
     font-size: 4rem;
-    color: #fde047; /* Jaune soleil */
-    filter: drop-shadow(0 0 10px rgba(253, 224, 71, 0.5));
+    filter: drop-shadow(0 0 15px rgba(255,255,255,0.1));
 }
 
-.temp-box {
-    text-align: right;
-}
+/* --- COULEURS DYNAMIQUES --- */
+.weather-icon-main.sun { color: #fde047; filter: drop-shadow(0 0 15px rgba(253, 224, 71, 0.6)); }
+.weather-icon-main.moon { color: #e2e8f0; filter: drop-shadow(0 0 15px rgba(226, 232, 240, 0.4)); }
+.weather-icon-main.rain { color: #60a5fa; filter: drop-shadow(0 0 15px rgba(96, 165, 250, 0.4)); }
+.weather-icon-main.snow { color: white; filter: drop-shadow(0 0 15px white); }
+.weather-icon-main.cloudy { color: #94a3b8; }
+.weather-icon-main.storm { color: #a855f7; }
 
-.temp {
-    font-size: 3rem;
-    font-weight: 700;
-    line-height: 1;
-    display: block;
-}
-
-.cond {
-    font-size: 1rem;
-    color: var(--text-secondary);
-}
+.temp-box { text-align: right; }
+.temp { font-size: 3rem; font-weight: 700; line-height: 1; display: block; }
+.cond { font-size: 1rem; color: var(--text-secondary); }
 
 .weather-details {
-    display: flex;
-    justify-content: space-between;
+    display: flex; justify-content: space-between;
     background: rgba(255,255,255,0.05);
-    padding: 15px;
-    border-radius: 12px;
-    margin-bottom: 15px;
+    padding: 15px; border-radius: 12px; margin-bottom: 15px;
 }
 
-.w-detail {
-    display: flex; align-items: center; gap: 10px; font-size: 0.9rem;
-}
-
+.w-detail { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; }
 .w-icon { color: var(--neon-blue); }
 
 .advice-box {
-    font-size: 0.85rem;
-    color: #86efac; /* Vert clair */
-    text-align: center;
-    font-style: italic;
+    font-size: 0.85rem; color: #86efac;
+    text-align: center; font-style: italic;
 }

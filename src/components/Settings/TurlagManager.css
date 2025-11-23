@@ -130,6 +130,21 @@
     font-size: 0.9rem;
 }
 
+.role-badge.admin {
+    background: rgba(234, 179, 8, 0.15) !important;
+    color: #fde047 !important; /* Jaune vif */
+    border: 1px solid rgba(234, 179, 8, 0.4) !important;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    box-shadow: 0 0 10px rgba(234, 179, 8, 0.1);
+}
+
 /* MOBILE */
 @media (max-width: 600px) {
     .turlag-actions-header { flex-direction: column; }

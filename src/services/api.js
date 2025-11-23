@@ -142,24 +142,31 @@ export const authService = {
     async leaveTurlag(turlagId) {
         const user = await this.getCurrentUser();
         
-        // Vérifier si je suis le dernier membre
-        const { count } = await supabase
+        // 1. On compte combien de membres il reste
+        const { count, error: countError } = await supabase
             .from('turlag_members')
             .select('*', { count: 'exact', head: true })
             .eq('turlag_id', turlagId);
 
+        if (countError) throw countError;
+
+        // 2. Si je suis le dernier (ou le seul), je supprime le groupe
         if (count <= 1) {
-            // Si je suis le dernier, on supprime TOUT le groupe
-            const { error } = await supabase.from('turlags').delete().eq('id', turlagId);
-            if (error) throw error;
+            const { error: delError } = await supabase
+                .from('turlags')
+                .delete()
+                .eq('id', turlagId);
+            
+            if (delError) throw delError;
         } else {
-            // Sinon je pars juste
-            const { error } = await supabase
+            // 3. Sinon, je quitte simplement le groupe
+            const { error: leaveError } = await supabase
                 .from('turlag_members')
                 .delete()
                 .eq('turlag_id', turlagId)
                 .eq('user_id', user.id);
-            if (error) throw error;
+
+            if (leaveError) throw leaveError;
         }
     },
 

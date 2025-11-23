@@ -1,114 +1,82 @@
-/* src/components/Equipment/EquipmentPage.css */
-
-.equipment-container {
-    padding: 40px;
-    background-color: var(--color-dark-bg);
-    min-height: 100vh;
-    width: 100%;
-    box-sizing: border-box;
+.equipment-page {
+    padding-bottom: 80px;
 }
 
-/* Onglets */
-.equipment-tabs {
+/* TABS NAVIGATION */
+.equip-tabs {
     display: flex;
-    gap: 20px;
+    padding: 5px;
+    border-radius: 12px;
     margin-bottom: 30px;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-    padding-bottom: 20px;
-}
-
-.equip-tab {
-    background: transparent;
-    border: 1px solid var(--color-text-secondary);
-    color: var(--color-text-secondary);
-    padding: 10px 25px;
-    border-radius: 20px;
-    font-size: 1rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    transition: all 0.3s;
-}
-
-.equip-tab.active {
-    background-color: rgba(0, 229, 255, 0.2); /* Fond semi-transparent */
-    color: white; /* Texte BLANC */
-    border-color: var(--color-neon-primary);
-    font-weight: bold;
-    box-shadow: 0 0 15px rgba(0, 229, 255, 0.3); /* Lueur externe */
-    text-shadow: 0 0 5px rgba(0, 229, 255, 0.8); /* Lueur texte */
-}
-
-/* Grille */
-.equipment-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 25px;
-}
-
-.equipment-card {
-    cursor: pointer;
-    background-color: var(--color-surface-dark);
-    border: 1px solid #2a2a3e;
-    border-radius: 12px;
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    transition: transform 0.2s;
-    position: relative;
-}
-
-.equipment-card:hover {
-    transform: translateY(-2px);
-    border-color: var(--color-neon-primary);
-}
-
-.card-icon-equip {
-    font-size: 1.8rem;
-    background-color: #12121e;
-    padding: 15px;
-    border-radius: 12px;
-    color: white;
-    border: 1px solid #333;
-}
-
-.card-content h3 {
-    margin: 0;
-    font-size: 1.1rem;
-    color: white;
-}
-
-.brand {
-    margin: 5px 0;
-    font-size: 0.85rem;
-    color: var(--color-text-secondary);
-}
-
-.status-badge {
-    font-size: 0.85rem;
-    margin-top: 5px;
-}
-
-.tech-status {
-    color: #2ecc71;
-    display: flex;
-    align-items: center;
     gap: 5px;
 }
 
-.delete-btn {
-    position: absolute;
-    top: 15px;
-    right: 15px;
+.equip-tab {
+    flex: 1;
     background: transparent;
     border: none;
-    color: #444;
+    color: var(--text-secondary);
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 600;
     cursor: pointer;
-    transition: color 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    transition: all 0.2s;
 }
 
-.delete-btn:hover {
-    color: #ff00c8; /* Magenta */
+.equip-tab.active {
+    background: rgba(255,255,255,0.1);
+    color: white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
 }
+
+.equip-tab:hover { color: white; }
+
+/* GRILLE */
+.equipment-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.equip-card {
+    padding: 20px;
+    position: relative;
+    transition: transform 0.2s;
+}
+.equip-card:hover { transform: translateY(-3px); }
+
+.equip-header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.equip-title h4 { margin: 0; color: white; font-size: 1.1rem; }
+.brand { font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; }
+
+.season-icon { color: var(--neon-blue); font-size: 1.2rem; }
+.tech-icon { color: var(--neon-green); font-size: 1.2rem; }
+
+.equip-meta {
+    display: flex; justify-content: space-between; align-items: center;
+}
+
+.category-badge {
+    background: rgba(255,255,255,0.05);
+    padding: 4px 10px; border-radius: 20px;
+    font-size: 0.8rem; color: var(--text-secondary);
+}
+
+.owner-avatar-small {
+    width: 25px; height: 25px; border-radius: 50%;
+    background: var(--gradient-primary);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.8rem; color: white;
+}
+
+.delete-icon {
+    position: absolute; bottom: 15px; right: 15px;
+    background: transparent; border: none; color: #ef4444;
+    opacity: 0; cursor: pointer; transition: opacity 0.2s;
+}
+.equip-card:hover .delete-icon { opacity: 1; }

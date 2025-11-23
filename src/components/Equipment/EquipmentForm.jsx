@@ -1,85 +1,97 @@
-import React, { useState, useEffect } from 'react';
-import { FaSave, FaTimes } from 'react-icons/fa';
-import '../Bike/BikeForm.css'; // Réutilisation du CSS global des formulaires
+import React, { useState } from 'react';
+import { equipmentService } from '../../services/api';
+import './EquipmentForm.css';
 
-const EquipmentForm = ({ onClose, onSave, initialData }) => {
+function EquipmentForm({ typePreselect, onSuccess, onCancel }) {
+    const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         brand: '',
-        category: 'textile',
-        type: 'Maillot',
-        state: 'new'
+        type: typePreselect || 'textile',
+        category: '',
+        season: 'all',
+        condition: 'good',
+        purchase_date: ''
     });
 
-    // Remplir le formulaire si on édite
-    useEffect(() => {
-        if (initialData) {
-            setFormData(initialData);
-        }
-    }, [initialData]);
-
     const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        if(formData.name) {
-            onSave(formData); // onSave gérera l'update ou la création
-            onClose();
+        setLoading(true);
+        try {
+            await equipmentService.add(formData);
+            if (onSuccess) onSuccess();
+        } catch (err) {
+            alert("Erreur ajout");
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <div className="bike-form-container">
-            <header className="form-header">
-                <h2>{initialData ? 'Modifier' : 'Nouvel'} Équipement</h2>
-                <button onClick={onClose} className="close-btn"><FaTimes /></button>
-            </header>
+        <form className="equipment-form" onSubmit={handleSubmit}>
+            <h3>Ajouter un équipement</h3>
+            
+            <div className="form-group">
+                <label>Nom</label>
+                <input type="text" name="name" placeholder="Ex: Maillot Club" value={formData.name} onChange={handleChange} required />
+            </div>
 
-            <form onSubmit={handleSubmit} className="bike-form">
-                <section className="form-section">
-                    <h3>Détails</h3>
-                    
-                    <div className="input-group">
-                        <label>Nom de l'équipement *</label>
-                        <input name="name" type="text" value={formData.name} onChange={handleChange} placeholder="Ex: Maillot Club 2025" required />
-                    </div>
+            <div className="form-row">
+                <div className="form-group half">
+                    <label>Marque</label>
+                    <input type="text" name="brand" value={formData.brand} onChange={handleChange} />
+                </div>
+                <div className="form-group half">
+                    <label>Type</label>
+                    <select name="type" value={formData.type} onChange={handleChange}>
+                        <option value="textile">Textile</option>
+                        <option value="tech">Tech</option>
+                        <option value="accessory">Accessoire</option>
+                    </select>
+                </div>
+            </div>
 
-                    <div className="input-group">
-                        <label>Marque</label>
-                        <input name="brand" type="text" value={formData.brand} onChange={handleChange} placeholder="Ex: Castelli, Garmin..." />
-                    </div>
+            <div className="form-group">
+                <label>Catégorie</label>
+                <input type="text" name="category" list="categories" placeholder="Ex: Cuissard, Casque..." value={formData.category} onChange={handleChange} />
+                <datalist id="categories">
+                    <option value="Maillot" /><option value="Cuissard" /><option value="Veste" />
+                    <option value="Casque" /><option value="Chaussures" /><option value="GPS" />
+                </datalist>
+            </div>
 
-                    <div className="input-group">
-                        <label>Catégorie</label>
-                        <div className="type-chips">
-                            <button type="button" className={`chip ${formData.category === 'textile' ? 'active' : ''}`} onClick={() => setFormData({...formData, category: 'textile'})}>Textile</button>
-                            <button type="button" className={`chip ${formData.category === 'tech' ? 'active' : ''}`} onClick={() => setFormData({...formData, category: 'tech'})}>Tech</button>
-                        </div>
-                    </div>
-                </section>
+            {formData.type === 'textile' && (
+                <div className="form-group">
+                    <label>Saison</label>
+                    <select name="season" value={formData.season} onChange={handleChange}>
+                        <option value="all">Toutes saisons</option>
+                        <option value="summer">Été ☀️</option>
+                        <option value="winter">Hiver ❄️</option>
+                        <option value="mid-season">Mi-saison 🍂</option>
+                    </select>
+                </div>
+            )}
 
-                <section className="form-section">
-                    <h3>État</h3>
-                    <div className="input-group">
-                        <label>État actuel</label>
-                        <select name="state" value={formData.state} onChange={handleChange}>
-                            <option value="new">Neuf</option>
-                            <option value="good">Bon état</option>
-                            <option value="worn">Usé (Entrainement)</option>
-                        </select>
-                    </div>
-                </section>
+            <div className="form-group">
+                <label>État</label>
+                <select name="condition" value={formData.condition} onChange={handleChange}>
+                    <option value="new">Neuf (Top)</option>
+                    <option value="good">Bon état</option>
+                    <option value="worn">Usé (Entraînement)</option>
+                    <option value="retired">HS / Archivé</option>
+                </select>
+            </div>
 
             <div className="form-actions">
-                <button type="submit" className="save-btn">
-                    <FaSave /> {initialData ? 'Mettre à jour' : 'Ajouter'}
-                </button>
+                <button type="button" onClick={onCancel}>Annuler</button>
+                <button type="submit" className="primary-btn" disabled={loading}>Ajouter</button>
             </div>
         </form>
-    </div>
     );
-};
+}
+
 export default EquipmentForm;

@@ -390,7 +390,35 @@ export const api = {
         const { data, error } = await supabase.from('kits').insert([{ ...item, user_id: user.id }]).select();
         if (error) throw error;
         return data;
-    }
+    },
+    // --- ÉQUIPEMENTS (NOUVEAU) ---
+    async getEquipment() {
+        // On récupère l'équipement et le profil associé pour afficher l'avatar du propriétaire
+        const { data, error } = await supabase
+            .from('equipment')
+            .select(`*, profiles(id, name, avatar)`)
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        return data || [];
+    },
+    async addEquipment(item) {
+        const profile = await authService.getMyProfile();
+        // On lie l'équipement au profil de l'utilisateur courant
+        const { data, error } = await supabase
+            .from('equipment')
+            .insert([{ ...item, profile_id: profile.id }])
+            .select();
+        if (error) throw error;
+        return data;
+    },
+    async updateEquipment(id, updates) {
+        const { error } = await supabase.from('equipment').update(updates).eq('id', id);
+        if (error) throw error;
+    },
+    async deleteEquipment(id) {
+        const { error } = await supabase.from('equipment').delete().eq('id', id);
+        if (error) throw error;
+    },
 };
 
 // ==========================================
@@ -431,4 +459,11 @@ export const libraryService = { getAll: () => api.getComponentLibrary() };
 export const kitService = {
     getAll: () => api.getKits(),
     add: (data) => api.addKit(data)
+};
+
+export const equipmentService = {
+    getAll: () => api.getEquipment(),
+    add: (d) => api.addEquipment(d),
+    update: (id, d) => api.updateEquipment(id, d),
+    delete: (id) => api.deleteEquipment(id)
 };

@@ -1,142 +1,148 @@
 import React, { useState, useEffect } from 'react';
-import { FaPlus, FaTshirt, FaMicrochip, FaTrash, FaBatteryFull, FaBatteryQuarter, FaCheckCircle } from 'react-icons/fa';
-import { bikeService } from '../../services/api';
+import { equipmentService } from '../../services/api';
+import { FaTshirt, FaMicrochip, FaTools, FaPlus, FaSnowflake, FaSun, FaLeaf, FaTrash, FaBatteryThreeQuarters } from 'react-icons/fa';
 import EquipmentForm from './EquipmentForm';
 import './EquipmentPage.css';
 
-const EquipmentPage = () => {
+function EquipmentPage() {
     const [items, setItems] = useState([]);
-    const [filter, setFilter] = useState('textile');
-    const [isFormOpen, setIsFormOpen] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
-    const [editingItem, setEditingItem] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState('textile'); // 'textile', 'tech', 'accessory'
+    const [showForm, setShowForm] = useState(false);
 
     useEffect(() => {
         loadData();
     }, []);
 
     const loadData = async () => {
-        setIsLoading(true);
         try {
-            const data = await bikeService.getEquipment();
-            setItems(data);
+            setLoading(true);
+            const data = await equipmentService.getAll();
+            setItems(data || []);
         } catch (e) {
             console.error(e);
         } finally {
-            setIsLoading(false);
+            setLoading(false);
         }
-    };
-
-    const handleSaveItem = async (itemData) => {
-        if (editingItem) {
-            // Mode ÉDITION (Simulé : on supprime l'ancien et on met le nouveau, ou on update via API)
-            // Pour simplifier avec l'API mock, on fait une mise à jour locale
-            setItems(prev => prev.map(i => i.id === itemData.id ? itemData : i));
-            // Dans la vraie vie : await bikeService.updateEquipment(itemData);
-        } else {
-            // Mode CRÉATION
-            const added = await bikeService.addEquipment(itemData);
-            setItems(prev => [...prev, added]);
-        }
-        setEditingItem(null); // Fermer le mode édition
-    };
-
-    const openEdit = (item) => {
-        setEditingItem(item);
-        setIsFormOpen(true);
-    };
-
-    // Modification de la fermeture
-    const handleCloseForm = () => {
-        setIsFormOpen(false);
-        setEditingItem(null);
-    }
-
-    if (isFormOpen) {
-        return <EquipmentForm onClose={handleCloseForm} onSave={handleSaveItem} initialData={editingItem} />;
-    }
-
-    const handleAddItem = async (newItem) => {
-        const added = await bikeService.addEquipment(newItem);
-        setItems(prev => [...prev, added]);
     };
 
     const handleDelete = async (id) => {
-        if(window.confirm("Supprimer cet équipement ?")) {
-            await bikeService.deleteEquipment(id);
-            setItems(prev => prev.filter(i => i.id !== id));
+        if (window.confirm("Supprimer cet équipement ?")) {
+            await equipmentService.delete(id);
+            loadData();
         }
     };
 
-    const filteredItems = items.filter(item => item.category === filter);
+    // Filtre par onglet
+    const filteredItems = items.filter(item => item.type === activeTab);
 
-    const getStateColor = (state) => {
-        if (state === 'new') return '#2ecc71'; // Vert
-        if (state === 'good') return '#3498db'; // Bleu
-        if (state === 'worn') return '#f39c12'; // Orange
-        return '#ccc';
+    // Helpers visuels
+    const getConditionColor = (cond) => {
+        if (cond === 'new') return 'var(--neon-green)';     // Vert
+        if (cond === 'good') return '#facc15';              // Jaune
+        if (cond === 'worn') return '#fb923c';              // Orange
+        if (cond === 'retired') return '#ef4444';           // Rouge
+        return 'white';
     };
 
-    if (isFormOpen) {
-        return <EquipmentForm onClose={() => setIsFormOpen(false)} onSave={handleAddItem} />;
-    }
+    const getSeasonIcon = (season) => {
+        if (season === 'winter') return <FaSnowflake title="Hiver" />;
+        if (season === 'summer') return <FaSun title="Été" />;
+        if (season === 'mid-season') return <FaLeaf title="Mi-saison" />;
+        return null;
+    };
 
     return (
-        <div className="equipment-container">
+        <div className="equipment-page">
             <header className="page-header">
-                <h1>Mon Matériel</h1>
-                <button className="cta-add-standard" onClick={() => setIsFormOpen(true)}>
-                    <FaPlus /> Ajouter équipement
+                <div>
+                    <h2 className="gradient-text">Vestiaire</h2>
+                    <p className="subtitle">Gère tes tenues et ton matos</p>
+                </div>
+                <button className="add-btn" onClick={() => setShowForm(true)}>
+                    <FaPlus />
                 </button>
             </header>
 
-            {/* Navigation Onglets */}
-            <div className="equipment-tabs">
+            {/* TABS DE NAVIGATION */}
+            <div className="equip-tabs glass-panel">
                 <button 
-                    className={`equip-tab ${filter === 'textile' ? 'active' : ''}`}
-                    onClick={() => setFilter('textile')}
+                    className={`equip-tab ${activeTab === 'textile' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('textile')}
                 >
                     <FaTshirt /> Textile
                 </button>
                 <button 
-                    className={`equip-tab ${filter === 'tech' ? 'active' : ''}`}
-                    onClick={() => setFilter('tech')}
+                    className={`equip-tab ${activeTab === 'tech' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('tech')}
                 >
-                    <FaMicrochip /> Tech & Accessoires
+                    <FaMicrochip /> Tech
+                </button>
+                <button 
+                    className={`equip-tab ${activeTab === 'accessory' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('accessory')}
+                >
+                    <FaTools /> Atelier
                 </button>
             </div>
 
-            <div className="equipment-grid">
-                {filteredItems.map(item => (
-                    <div key={item.id} className="equipment-card" onClick={() => openEdit(item)}>
-                        <div className="card-icon-equip">
-                            {item.category === 'textile' ? <FaTshirt /> : <FaMicrochip />}
-                        </div>
-                        
-                        <div className="card-content">
-                            <h3>{item.name}</h3>
-                            <p className="brand">{item.brand} • {item.type}</p>
-                            
-                            <div className="status-badge">
-                                {item.category === 'textile' ? (
-                                    <span style={{ color: getStateColor(item.state) }}>
-                                        <FaCheckCircle /> État : {item.state === 'new' ? 'Neuf' : item.state === 'good' ? 'Bon' : 'Usé'}
-                                    </span>
-                                ) : (
-                                    <span className="tech-status">
-                                        <FaBatteryFull /> Batterie OK
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-
-                        <button className="delete-btn" onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }}>
-                            <FaTrash />
-                        </button>
+            {/* FORMULAIRE (MODAL) */}
+            {showForm && (
+                <div className="modal-overlay">
+                    <div className="glass-panel modal-content">
+                        <EquipmentForm 
+                            typePreselect={activeTab}
+                            onSuccess={() => { setShowForm(false); loadData(); }} 
+                            onCancel={() => setShowForm(false)} 
+                        />
                     </div>
-                ))}
-            </div>
+                </div>
+            )}
+
+            {/* GRILLE D'ITEMS */}
+            {loading ? <div className="loading">Chargement du matos...</div> : (
+                <div className="equipment-grid">
+                    {filteredItems.length === 0 ? (
+                        <div className="empty-state glass-panel">
+                            <p>Rien ici pour l'instant.</p>
+                        </div>
+                    ) : (
+                        filteredItems.map(item => (
+                            <div 
+                                key={item.id} 
+                                className="equip-card glass-panel"
+                                style={{ borderLeft: `4px solid ${getConditionColor(item.condition)}` }}
+                            >
+                                <div className="equip-header">
+                                    <div className="equip-title">
+                                        <h4>{item.name}</h4>
+                                        <span className="brand">{item.brand}</span>
+                                    </div>
+                                    <div className="equip-icons">
+                                        {item.type === 'textile' && <span className="season-icon">{getSeasonIcon(item.season)}</span>}
+                                        {item.type === 'tech' && <FaBatteryThreeQuarters className="tech-icon" />}
+                                    </div>
+                                </div>
+
+                                <div className="equip-meta">
+                                    <span className="category-badge">{item.category}</span>
+                                    {item.profiles?.avatar && (
+                                        <div className="owner-avatar-small" title={item.profiles.name}>
+                                            {item.profiles.avatar}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <button onClick={() => handleDelete(item.id)} className="delete-icon">
+                                    <FaTrash />
+                                </button>
+                            </div>
+                        ))
+                    )}
+                </div>
+            )}
         </div>
     );
-};
+}
+
 export default EquipmentPage;

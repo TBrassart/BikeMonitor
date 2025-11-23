@@ -6,6 +6,10 @@
   color-scheme: dark;
   color: rgba(255, 255, 255, 0.87);
   background-color: #12121e;
+  --primary-color: #2563eb;
+  --text-color: #1f2937;
+  --card-bg: #ffffff;
+  --background-color: #f0f2f5;
 }
 
 /* --- LE FIX CRITIQUE EST ICI --- */
@@ -16,11 +20,9 @@
 
 body {
   margin: 0;
-  padding: 0;
-  width: 100%;
-  min-height: 100vh;
-  display: block;
-  overflow-x: hidden; /* Sécurité anti-scroll horizontal */
+  background-color: var(--background-color);
+  color: var(--text-color);
+  -webkit-font-smoothing: antialiased;
 }
 
 #root {

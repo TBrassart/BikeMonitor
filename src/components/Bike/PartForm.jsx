@@ -1,198 +1,116 @@
-import React, { useState, useEffect } from 'react';
-import { FaSave, FaTimes, FaRoad, FaCalendarAlt, FaCog, FaMagic } from 'react-icons/fa'; 
-import { bikeService } from '../../services/api'; 
-import './PartForm.css'; 
+import React, { useState } from 'react';
+import { partsService } from '../../services/api';
+import './PartForm.css';
 
-const partCategories = ['Chaîne', 'Cassette', 'Pneu', 'Plaquettes', 'Autre'];
+function PartForm({ bikeId, onSuccess, onCancel }) {
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
-const PartForm = ({ bikeId, onClose, onSave, initialData }) => {
     const [formData, setFormData] = useState({
         name: '',
-        category: '',
-        installationDate: new Date().toISOString().split('T')[0], 
-        kmInstallation: 0,
-        lifeTargetKm: 2000, 
-        price: 0,
+        category: 'transmission', // Valeur par défaut
+        installation_date: new Date().toISOString().split('T')[0], // Aujourd'hui par défaut
+        km_current: '0',
+        life_target_km: '5000'
     });
-    
-    const [isSaving, setIsSaving] = useState(false);
-    const [isCalculating, setIsCalculating] = useState(false); 
-
-    // 1. Initialisation
-    useEffect(() => {
-        if (initialData) {
-            // ... (Logique de mapping catégorie inchangée) ...
-            const incomingCat = initialData.category ? initialData.category.toLowerCase() : '';
-            let mappedCategory = 'Autre';
-            if (incomingCat.includes('chain') || incomingCat.includes('chaîne')) mappedCategory = 'Chaîne';
-            else if (incomingCat.includes('tire') || incomingCat.includes('pneu')) mappedCategory = 'Pneu';
-            else if (incomingCat.includes('cassette')) mappedCategory = 'Cassette';
-            else if (incomingCat.includes('brake') || incomingCat.includes('plaquette')) mappedCategory = 'Plaquettes';
-            else if (partCategories.includes(initialData.category)) mappedCategory = initialData.category;
-
-            setFormData(prev => ({
-                ...prev,
-                name: `${initialData.brand} ${initialData.model}`, 
-                category: mappedCategory,
-                lifeTargetKm: initialData.lifespan_km || 2000
-            }));
-        }
-        // On lance le calcul initial
-        updateKmFromDate(new Date().toISOString().split('T')[0]);
-    }, [initialData]);
-
-    // 2. FONCTION DE CALCUL (Corrigée avec logs)
-    const updateKmFromDate = async (dateVal) => {
-        if (!dateVal || !bikeId) return;
-        
-        setIsCalculating(true);
-        try {
-            console.log(`🧮 Calcul KM pour date: ${dateVal} sur vélo ${bikeId}`);
-            const kmAtDate = await bikeService.getBikeKmAtDate(bikeId, dateVal);
-            console.log(`👉 Résultat API: ${kmAtDate} km`);
-            
-            // On ne met à jour que si on trouve un résultat positif, 
-            // ou si c'est 0 mais qu'on veut vraiment le remettre à zéro.
-            // Ici on écrase systématiquement pour refléter la réalité de la base.
-            setFormData(prev => ({
-                ...prev,
-                kmInstallation: kmAtDate
-            }));
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setIsCalculating(false);
-        }
-    };
-
-    const handleDateChange = (e) => {
-        const newDate = e.target.value;
-        setFormData(prev => ({ ...prev, installationDate: newDate }));
-        updateKmFromDate(newDate);
-    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
     };
-
-    const isFormValid = formData.name && formData.category && formData.lifeTargetKm > 0;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!isFormValid) return;
+        setLoading(true);
+        setError(null);
 
-        setIsSaving(true);
         try {
-            await onSave(bikeId, formData); 
-            onClose();
-        } catch (error) {
-            alert("Erreur lors de l'enregistrement.");
+            // Préparation du payload
+            const payload = {
+                bike_id: bikeId,
+                name: formData.name,
+                category: formData.category,
+                installation_date: formData.installation_date,
+                km_current: parseInt(formData.km_current) || 0,
+                life_target_km: parseInt(formData.life_target_km) || 0,
+                status: 'ok',
+                wear_percentage: 0 // On initialise à 0
+            };
+
+            await partsService.add(payload);
+
+            if (onSuccess) onSuccess();
+        } catch (err) {
+            console.error("Erreur ajout pièce:", err);
+            setError("Impossible d'ajouter la pièce.");
         } finally {
-            setIsSaving(false);
+            setLoading(false);
         }
     };
 
     return (
-        <div className="maintenance-form-container">
-            <header className="form-header">
-                <h2>Installer une nouvelle pièce</h2>
-                <button onClick={onClose} className="close-btn" disabled={isSaving}>
-                    <FaTimes />
-                </button>
-            </header>
+        <form className="part-form" onSubmit={handleSubmit}>
+            <h4>Ajouter une nouvelle pièce</h4>
+            
+            {error && <div className="form-error">{error}</div>}
 
-            <form onSubmit={handleSubmit} className="maintenance-form">
-                <section className="form-section">
-                    <h3>Détails de la pièce *</h3>
+            <div className="form-group">
+                <label>Nom de la pièce</label>
+                <input 
+                    type="text" 
+                    name="name"
+                    placeholder="Ex: Chaîne Shimano Ultegra"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required 
+                />
+            </div>
+
+            <div className="form-group">
+                <label>Catégorie</label>
+                <select name="category" value={formData.category} onChange={handleChange}>
+                    <option value="transmission">Transmission (Chaîne, Cassette)</option>
+                    <option value="pneus">Pneus / Chambres</option>
+                    <option value="freinage">Freinage (Plaquettes, Disques)</option>
+                    <option value="peripheriques">Périphériques (Guidoline, Câbles)</option>
+                    <option value="autre">Autre</option>
+                </select>
+            </div>
+
+            <div className="form-row">
+                <div className="form-group half">
+                    <label>Installée le</label>
                     <input 
-                        name="name" 
-                        type="text" 
-                        value={formData.name} 
-                        onChange={handleChange} 
-                        placeholder="Ex: Chaîne Shimano HG601" 
-                        required 
-                    />
-                    
-                    <label htmlFor="category"><FaCog /> Catégorie *</label>
-                    <select id="category" name="category" value={formData.category} onChange={handleChange} required>
-                        <option value="">Sélectionner une catégorie</option>
-                        {partCategories.map(cat => (
-                            <option key={cat} value={cat}>{cat}</option>
-                        ))}
-                    </select>
-                    <div className="input-group">
-                        <label>Prix d'achat (€)</label>
-                        <input 
-                            name="price" 
-                            type="number" 
-                            step="0.01" 
-                            value={formData.price || ''} 
-                            onChange={handleChange} 
-                            placeholder="Ex: 45.99" 
-                        />
-                    </div>
-                </section>
-                
-                <section className="form-section">
-                    <h3>Historique</h3>
-                    
-                    <label htmlFor="installationDate"><FaCalendarAlt /> Date d'installation</label>
-                    <input 
-                        id="installationDate" 
-                        name="installationDate" 
                         type="date" 
-                        value={formData.installationDate} 
-                        onChange={handleDateChange} 
+                        name="installation_date"
+                        value={formData.installation_date}
+                        onChange={handleChange}
                     />
-
-                    <label htmlFor="kmInstallation" style={{display:'flex', justifyContent:'space-between'}}>
-                        <span><FaRoad /> Km vélo à cette date</span>
-                        {isCalculating && <span style={{color: '#00e5ff', fontSize:'0.8rem'}}>Calcul...</span>}
-                    </label>
-                    
-                    <div style={{position: 'relative'}}>
-                        <input 
-                            id="kmInstallation" 
-                            name="kmInstallation" 
-                            type="number" 
-                            value={formData.kmInstallation} 
-                            onChange={handleChange} 
-                            // CORRECTION ICI : J'ai retiré le readOnly !
-                            style={{
-                                backgroundColor: '#12121e', 
-                                color: 'white', 
-                                borderColor: isCalculating ? '#00e5ff' : '#444'
-                            }}
-                        />
-                        <FaMagic 
-                            style={{position: 'absolute', right: '10px', top: '12px', color: isCalculating ? '#00e5ff' : '#666', cursor:'help'}} 
-                            title="Calculé automatiquement (modifiable)"
-                        />
-                    </div>
-                    <p style={{fontSize: '0.75rem', color: '#666', marginTop: '5px'}}>
-                        Historique détecté : {formData.kmInstallation} km. Vous pouvez corriger manuellement.
-                    </p>
-                    
-                    <label htmlFor="lifeTargetKm">Durée de vie ciblée (km) *</label>
-                     <input 
-                        id="lifeTargetKm" 
-                        name="lifeTargetKm" 
-                        type="number" 
-                        value={formData.lifeTargetKm} 
-                        onChange={handleChange} 
-                        required
-                    />
-                </section>
-
-                <div className="form-actions">
-                    <button type="submit" className="save-btn" disabled={!isFormValid || isSaving}>
-                        {isSaving ? 'Installation...' : <><FaSave /> Installer la pièce</>}
-                    </button>
                 </div>
-            </form>
-        </div>
+                <div className="form-group half">
+                    <label>Durée de vie estimée (km)</label>
+                    <input 
+                        type="number" 
+                        name="life_target_km"
+                        value={formData.life_target_km}
+                        onChange={handleChange}
+                    />
+                </div>
+            </div>
+
+            <div className="form-buttons">
+                <button type="button" onClick={onCancel} disabled={loading} className="cancel-btn">
+                    Annuler
+                </button>
+                <button type="submit" disabled={loading} className="submit-btn">
+                    {loading ? 'Ajout...' : 'Ajouter la pièce'}
+                </button>
+            </div>
+        </form>
     );
-};
+}
 
 export default PartForm;

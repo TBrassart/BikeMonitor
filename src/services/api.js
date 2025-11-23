@@ -141,6 +141,26 @@ export const api = {
         const { data } = supabase.storage.from(bucket).getPublicUrl(fileName);
         return data.publicUrl;
     },
+
+    // --- CALCULS INTELLIGENTS ---
+    async getBikeKmAtDate(bikeId, date) {
+        // On récupère toutes les activités de ce vélo avant la date indiquée
+        const { data, error } = await supabase
+            .from('activities')
+            .select('distance')
+            .eq('bike_id', bikeId)
+            .lte('start_date', date); // lte = Less Than or Equal (<=)
+
+        if (error) {
+            console.warn("Erreur calcul historique:", error);
+            return 0;
+        }
+        
+        // On fait la somme (distance est supposée être en km dans la BDD)
+        const total = data.reduce((acc, act) => acc + (act.distance || 0), 0);
+        return Math.round(total);
+    },
+
     // --- STATS ---
     async getStats() {
         const bikes = await api.getBikes();
@@ -250,11 +270,12 @@ export const api = {
 
 export const bikeService = {
     getAll: () => api.getBikes(),
-    getById: (id) => api.getBike(id), // <-- Indispensable pour le détail
+    getById: (id) => api.getBike(id),
     add: (data) => api.addBike(data),
     update: (id, data) => api.updateBike(id, data),
     delete: (id) => api.deleteBike(id),
-    uploadPhoto: (file) => api.uploadImage(file, 'bikes')
+    uploadPhoto: (file) => api.uploadImage(file, 'bikes'),
+    getKmAtDate: (id, date) => api.getBikeKmAtDate(id, date) 
 };
 
 export const maintenanceService = {
@@ -268,7 +289,8 @@ export const partsService = {
     getByBikeId: (id) => api.getParts(id),
     add: (data) => api.addPart(data),
     update: (id, data) => api.updatePart(id, data),
-    delete: (id) => api.deletePart(id)
+    delete: (id) => api.deletePart(id),
+    getBikeKmAtDate: (id, date) => api.getBikeKmAtDate(id, date)
 };
 
 export const historyService = {

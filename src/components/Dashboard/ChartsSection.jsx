@@ -46,7 +46,7 @@ const ChartsSection = () => {
   }, []);
 
   if (loading) return <div className="charts-loading">Chargement des graphiques...</div>;
-  if (bikes.length === 0) return null;
+  if (!bikes || bikes.length === 0) return null;
 
   // --- PRÉPARATION DES DONNÉES ---
 
@@ -84,10 +84,11 @@ const ChartsSection = () => {
     }
   };
 
-  // 2. Graphique Doughnut : Répartition par Propriétaire
+  // 2. Graphique Doughnut : Répartition par Propriétaire (Turlag)
   const ownerStats = {};
   bikes.forEach(bike => {
-    const ownerName = bike.profiles?.name || 'Inconnu';
+    // Sécurité si profiles est null
+    const ownerName = bike.profiles?.name || 'Moi';
     if (!ownerStats[ownerName]) ownerStats[ownerName] = 0;
     ownerStats[ownerName] += 1; 
   });
@@ -124,16 +125,21 @@ const ChartsSection = () => {
     <div className="charts-section">
       <h3>Statistiques de l'écurie 📊</h3>
       <div className="charts-container">
+        
+        {/* Graphique Barres */}
         <div className="chart-card">
           <div className="chart-wrapper">
             <Bar options={barOptions} data={barData} />
           </div>
         </div>
+
+        {/* Graphique Doughnut */}
         <div className="chart-card">
           <div className="chart-wrapper">
             <Doughnut options={doughnutOptions} data={doughnutData} />
           </div>
         </div>
+
       </div>
     </div>
   );

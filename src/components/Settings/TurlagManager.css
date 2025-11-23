@@ -4,46 +4,65 @@
 
 /* ACTIONS HEADER (Gros boutons carrés) */
 .turlag-actions-header {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Deux colonnes strictes */
     gap: 20px;
     margin-bottom: 30px;
 }
 
 .action-card {
-    flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    padding: 30px;
     cursor: pointer;
     transition: all 0.3s ease;
-    border-left: 4px solid transparent !important;
+    background: rgba(30, 41, 59, 0.8) !important; /* Fond plus opaque */
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    position: relative;
+    overflow: hidden;
 }
 
 .action-card:hover {
-    transform: translateY(-3px);
+    transform: translateY(-5px);
+    background: rgba(30, 41, 59, 1) !important; /* Opaque au survol */
 }
 
-.action-card.create:hover { border-left-color: var(--neon-green) !important; }
-.action-card.join:hover { border-left-color: var(--neon-purple) !important; }
+.action-card.create { border-bottom: 4px solid var(--neon-green) !important; }
+.action-card.join { border-bottom: 4px solid var(--neon-purple) !important; }
+
+.action-card.create:hover { box-shadow: 0 10px 30px rgba(16, 185, 129, 0.2); }
+.action-card.join:hover { box-shadow: 0 10px 30px rgba(217, 70, 239, 0.2); }
 
 .icon-circle {
-    width: 50px; height: 50px;
+    width: 60px; height: 60px;
     border-radius: 50%;
     background: rgba(255,255,255,0.05);
     display: flex; align-items: center; justify-content: center;
-    font-size: 1.5rem;
-    margin-bottom: 10px;
-    color: white;
+    font-size: 1.8rem;
+    margin-bottom: 15px;
+    transition: transform 0.3s;
 }
 
-.action-card.create .icon-circle { color: var(--neon-green); }
-.action-card.join .icon-circle { color: var(--neon-purple); }
+.action-card:hover .icon-circle {
+    transform: scale(1.1);
+}
+
+.action-card.create .icon-circle { color: var(--neon-green); border: 2px solid rgba(16, 185, 129, 0.3); }
+.action-card.join .icon-circle { color: var(--neon-purple); border: 2px solid rgba(217, 70, 239, 0.3); }
 
 .back-btn {
     margin-bottom: 20px;
     display: flex; align-items: center; gap: 8px;
+}
+
+.action-card span {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: white;
+    letter-spacing: 0.5px;
 }
 
 /* LISTE DES ÉQUIPES */

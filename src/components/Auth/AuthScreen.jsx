@@ -2,93 +2,128 @@ import React, { useState, useEffect } from 'react';
 import { authService } from '../../services/api';
 import './AuthScreen.css';
 
-// NOTE : On ne doit PLUS importer ProfileSelection ici.
-// Le but est d'aller directement au Dashboard une fois connecté.
-
 function AuthScreen({ onLogin }) {
     const [loading, setLoading] = useState(true);
+    const [isRegistering, setIsRegistering] = useState(false); // Bascule Login/Register
+    
     const [email, setEmail] = useState('');
-    const [sent, setSent] = useState(false);
+    const [password, setPassword] = useState('');
+    
     const [error, setError] = useState(null);
+    const [message, setMessage] = useState(null);
 
+    // Vérification de session au chargement
     useEffect(() => {
         checkUser();
     }, []);
 
     const checkUser = async () => {
         try {
-            // 1. On vérifie si l'utilisateur est authentifié (Supabase Auth)
             const user = await authService.getCurrentUser();
-            
             if (user) {
-                // 2. On s'assure qu'il a un profil dans la nouvelle table 'profiles'
-                // Si c'est sa première fois, createInitialProfile va le créer auto.
+                // Si connecté, on s'assure que le profil existe et on lance l'app
                 const profile = await authService.createInitialProfile(user);
-                
-                // 3. On connecte l'utilisateur immédiatement (SKIP de la sélection de profil)
                 onLogin(profile);
             }
         } catch (e) {
-            console.error("Erreur vérification utilisateur:", e);
+            console.error("Session check error", e);
         } finally {
             setLoading(false);
         }
     };
 
-    const handleLogin = async (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         setError(null);
+        setMessage(null);
+
         try {
-            const { error } = await authService.signInWithEmail(email);
-            if (error) throw error;
-            setSent(true);
+            if (isRegistering) {
+                // --- INSCRIPTION ---
+                const { user } = await authService.signUp(email, password);
+                if (user) {
+                    // Parfois Supabase demande une confirmation email, parfois non (selon config)
+                    // Si l'user est créé et connecté, on crée son profil
+                    await authService.createInitialProfile(user);
+                    onLogin(); 
+                } else {
+                    setMessage("Compte créé ! Vérifie tes emails pour confirmer.");
+                    setIsRegistering(false); // On repasse en mode connexion
+                }
+            } else {
+                // --- CONNEXION ---
+                const { user } = await authService.signInWithEmail(email, password);
+                if (user) {
+                    await authService.createInitialProfile(user);
+                    onLogin();
+                }
+            }
         } catch (e) {
-            setError(e.message);
+            setError(e.message || "Une erreur est survenue");
         } finally {
             setLoading(false);
         }
     };
 
-    if (loading) {
-        return <div className="auth-loading">Chargement...</div>;
-    }
-
-    if (sent) {
-        return (
-            <div className="auth-screen">
-                <div className="auth-card">
-                    <h2>Vérifie tes emails ! 📧</h2>
-                    <p>Un lien magique a été envoyé à <strong>{email}</strong>.</p>
-                    <p>Clique dessus pour te connecter instantanément.</p>
-                    <button onClick={() => setSent(false)} className="secondary-btn">
-                        Réessayer
-                    </button>
-                </div>
-            </div>
-        );
-    }
+    if (loading) return <div className="auth-loading">Chargement...</div>;
 
     return (
         <div className="auth-screen">
             <div className="auth-card">
                 <h1>BikeMonitor 🚲</h1>
-                <p>Gère ton écurie, tes pièces et tes sorties.</p>
+                <p>
+                    {isRegistering 
+                        ? "Crée ton écurie et rejoins ton Turlag." 
+                        : "Gère ton écurie, tes pièces et tes sorties."}
+                </p>
                 
-                <form onSubmit={handleLogin}>
-                    <input 
-                        type="email" 
-                        placeholder="ton@email.com" 
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required 
-                    />
-                    <button type="submit" disabled={loading}>
-                        {loading ? 'Envoi...' : 'Recevoir mon lien magique'}
+                {message && <div className="success-msg">{message}</div>}
+                {error && <div className="error-msg">{error}</div>}
+
+                <form onSubmit={handleSubmit}>
+                    <div className="form-group">
+                        <label>Email</label>
+                        <input 
+                            type="email" 
+                            placeholder="ton@email.com" 
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required 
+                        />
+                    </div>
+                    
+                    <div className="form-group">
+                        <label>Mot de passe</label>
+                        <input 
+                            type="password" 
+                            placeholder="••••••••" 
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required 
+                            minLength={6}
+                        />
+                    </div>
+
+                    <button type="submit" disabled={loading} className="primary-btn">
+                        {loading ? 'Chargement...' : (isRegistering ? "S'inscrire" : "Se connecter")}
                     </button>
                 </form>
-                
-                {error && <div className="error-msg">{error}</div>}
+
+                <div className="auth-footer">
+                    <button 
+                        className="link-btn" 
+                        onClick={() => {
+                            setIsRegistering(!isRegistering);
+                            setError(null);
+                            setMessage(null);
+                        }}
+                    >
+                        {isRegistering 
+                            ? "Déjà un compte ? Se connecter" 
+                            : "Pas encore de compte ? S'inscrire"}
+                    </button>
+                </div>
             </div>
         </div>
     );

@@ -7,8 +7,24 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // --- NOUVELLE AUTHENTIFICATION (Turlag) ---
 export const authService = {
-    async signInWithEmail(email) {
-        return await supabase.auth.signInWithOtp({ email });
+    // INSCRIPTION (Email + Password)
+    async signUp(email, password) {
+        const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+        });
+        if (error) throw error;
+        return data;
+    },
+
+    // CONNEXION (Email + Password)
+    async signInWithEmail(email, password) {
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+        });
+        if (error) throw error;
+        return data;
     },
 
     async signOut() {
@@ -20,6 +36,7 @@ export const authService = {
         return user;
     },
 
+    // Récupération du profil (Compatible Turlag)
     async getUserProfile() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return null;
@@ -30,19 +47,14 @@ export const authService = {
             .eq('user_id', user.id)
             .single();
 
+        // Ignorer l'erreur si le profil n'existe pas encore (cas de l'inscription)
         if (error && error.code !== 'PGRST116') {
             console.error("Erreur récupération profil:", error);
         }
         return data;
     },
 
-    // Ajout pour compatibilité temporaire (évite le crash getProfiles)
-    async getProfiles() {
-        // Renvoie le profil courant dans un tableau pour tromper l'ancien composant
-        const profile = await this.getUserProfile();
-        return profile ? [profile] : [];
-    },
-
+    // Création du profil initial (si inexistant)
     async createInitialProfile(user) {
         if (!user) return null;
         const existing = await this.getUserProfile();
@@ -62,56 +74,38 @@ export const authService = {
         return data;
     },
 
+    // ... le reste (updateProfile, Turlags...) reste identique
     async updateProfile(id, updates) {
-        const { data, error } = await supabase
-            .from('profiles')
-            .update(updates)
-            .eq('id', id)
-            .select();
+        // ... code existant ...
+        const { data, error } = await supabase.from('profiles').update(updates).eq('id', id).select();
         if (error) throw error;
         return data?.[0];
     },
-
-    // --- TURLAGS ---
+    
+    // Gardez les méthodes getMyTurlags, createTurlag, joinTurlag, leaveTurlag telles quelles
     async getMyTurlags() {
         const { data, error } = await supabase.from('turlags').select('*').order('created_at');
         if (error) throw error;
         return data || [];
     },
-
     async createTurlag(name, description = "") {
         const { data: { user } } = await supabase.auth.getUser();
-        const { data: turlag, error: turlagError } = await supabase
-            .from('turlags')
-            .insert([{ name, description, created_by: user.id }])
-            .select().single();
+        const { data: turlag, error: turlagError } = await supabase.from('turlags').insert([{ name, description, created_by: user.id }]).select().single();
         if (turlagError) throw turlagError;
-
-        const { error: memberError } = await supabase
-            .from('turlag_members')
-            .insert([{ turlag_id: turlag.id, user_id: user.id, role: 'admin' }]);
+        const { error: memberError } = await supabase.from('turlag_members').insert([{ turlag_id: turlag.id, user_id: user.id, role: 'admin' }]);
         if (memberError) throw memberError;
-
         return turlag;
     },
-
     async joinTurlag(turlagId) {
         const { data: { user } } = await supabase.auth.getUser();
-        const { error } = await supabase
-            .from('turlag_members')
-            .insert([{ turlag_id: turlagId, user_id: user.id, role: 'member' }]);
-        if (error) {
-            if (error.code === '23505') throw new Error("Déjà membre.");
-            throw error;
-        }
+        const { error } = await supabase.from('turlag_members').insert([{ turlag_id: turlagId, user_id: user.id, role: 'member' }]);
+        if (error && error.code === '23505') throw new Error("Déjà membre.");
+        if (error) throw error;
         return true;
     },
-
     async leaveTurlag(turlagId) {
         const { data: { user } } = await supabase.auth.getUser();
-        const { error } = await supabase
-            .from('turlag_members')
-            .delete().eq('turlag_id', turlagId).eq('user_id', user.id);
+        const { error } = await supabase.from('turlag_members').delete().eq('turlag_id', turlagId).eq('user_id', user.id);
         if (error) throw error;
     }
 };

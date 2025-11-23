@@ -61,3 +61,13 @@
     font-weight: 600;
     font-size: 1rem;
 }
+
+.note-input {
+    flex: 1;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid var(--border-color);
+    color: white;
+    padding: 10px;
+    border-radius: 8px;
+}
+.note-input:focus { outline: none; border-color: var(--neon-blue); }

@@ -1,204 +1,138 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { FaSave, FaTimes, FaWeightHanging, FaRulerVertical, FaTag, FaCalendarDay, FaSignature, FaRoad, FaMountain, FaLeaf, FaCity, FaCamera } from 'react-icons/fa';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom'; // Ajout de useParams
 import { bikeService } from '../../services/api';
-import './BikeForm.css'; 
+import { FaSave, FaTimes, FaBicycle } from 'react-icons/fa';
+import './BikeForm.css';
 
-// Ajout de la prop 'initialData'
-const BikeForm = ({ onClose, onSave, currentUser, initialData }) => {
+function BikeForm() {
+    const navigate = useNavigate();
+    const { bikeId } = useParams(); // Récupère l'ID si on est en mode édition
+    const isEditMode = Boolean(bikeId);
+
+    const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
-        type: 'Route',
-        owner: currentUser?.name || '',
         brand: '',
-        model_year: '',
-        size: '',
-        weight: ''
+        model_year: new Date().getFullYear(),
+        type: 'Route',
+        total_km: 0,
+        weight: '',
+        size: ''
     });
-    
-    const [photoFile, setPhotoFile] = useState(null);
-    // Si on édite, on affiche la photo existante par défaut
-    const [photoPreview, setPhotoPreview] = useState(null);
-    
-    const fileInputRef = useRef(null);
-    const [isSaving, setIsSaving] = useState(false);
 
-    // EFFET : Pré-remplissage si modification
+    // CHARGEMENT DES DONNÉES (Si édition)
     useEffect(() => {
-        if (initialData) {
-            setFormData({
-                name: initialData.name || '',
-                type: initialData.type || 'Route',
-                owner: initialData.owner || '',
-                brand: initialData.brand || '',
-                model_year: initialData.model_year || '',
-                size: initialData.size || '',
-                weight: initialData.weight || ''
-            });
-            if (initialData.photo_url) {
-                setPhotoPreview(initialData.photo_url);
-            }
+        if (isEditMode) {
+            loadBikeData();
         }
-    }, [initialData]);
+    }, [bikeId]);
+
+    const loadBikeData = async () => {
+        try {
+            setLoading(true);
+            const data = await bikeService.getById(bikeId);
+            if (data) {
+                setFormData({
+                    name: data.name || '',
+                    brand: data.brand || '',
+                    model_year: data.model_year || '',
+                    type: data.type || 'Route',
+                    total_km: data.total_km || 0,
+                    weight: data.weight || '',
+                    size: data.size || ''
+                });
+            }
+        } catch (e) {
+            console.error("Erreur chargement vélo:", e);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleFileChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setPhotoFile(file);
-            setPhotoPreview(URL.createObjectURL(file));
-        }
-    };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!formData.name || !formData.type) return;
-
-        setIsSaving(true);
+        setLoading(true);
         try {
-            const cleanData = {
-                ...formData,
-                weight: formData.weight ? parseFloat(formData.weight) : null,
-                model_year: formData.model_year ? parseInt(formData.model_year) : null
-            };
-            
-            // onSave renvoie le vélo mis à jour ou créé
-            const savedBike = await onSave(cleanData);
-
-            // Gestion de l'upload image (si nouvelle image sélectionnée)
-            if (photoFile && savedBike?.id) {
-                try {
-                    const publicUrl = await bikeService.uploadBikePhoto(savedBike.id, photoFile);
-                    // Petite mise à jour silencieuse de l'URL
-                    await bikeService.updateBike(savedBike.id, { photo_url: publicUrl });
-                } catch (uploadError) {
-                    console.error("Erreur upload image", uploadError);
-                }
+            if (isEditMode) {
+                await bikeService.update(bikeId, formData);
+            } else {
+                await bikeService.add(formData);
             }
-
-            onClose();
+            navigate('/app/garage'); // Retour au garage après succès
         } catch (error) {
             console.error(error);
-            alert("Erreur lors de la sauvegarde.");
+            alert("Erreur lors de l'enregistrement.");
         } finally {
-            setIsSaving(false);
+            setLoading(false);
         }
     };
 
-    const bikeTypes = [
-        { id: 'Route', label: 'Route', icon: <FaRoad /> },
-        { id: 'VTT', label: 'VTT', icon: <FaMountain /> },
-        { id: 'Gravel', label: 'Gravel', icon: <FaLeaf /> },
-        { id: 'Ville', label: 'Ville', icon: <FaCity /> }
-    ];
-
     return (
-        <div className="bike-form-container">
-            <header className="form-header">
-                {/* Titre dynamique */}
-                <h2>{initialData ? 'Modifier le vélo' : 'Nouveau Vélo'}</h2>
-                <button onClick={onClose} className="close-btn"><FaTimes /></button>
-            </header>
+        <div className="bike-form-page">
+            <form className="bike-form glass-panel" onSubmit={handleSubmit}>
+                <div className="form-header">
+                    <h3>{isEditMode ? 'Modifier le vélo' : 'Ajouter un vélo'}</h3>
+                    <FaBicycle className="header-icon" />
+                </div>
 
-            <form onSubmit={handleSubmit} className="bike-form">
-                
-                {/* ZONE PHOTO */}
-                <div className="photo-upload-section">
-                    <input 
-                        type="file" 
-                        ref={fileInputRef} 
-                        style={{display: 'none'}} 
-                        accept="image/*"
-                        onChange={handleFileChange}
-                    />
-                    <div className="photo-dropzone" onClick={() => fileInputRef.current.click()}>
-                        {photoPreview ? (
-                            <img src={photoPreview} alt="Aperçu" />
-                        ) : (
-                            <>
-                                <FaCamera className="photo-placeholder" />
-                                <span className="photo-label">Ajouter photo</span>
-                            </>
-                        )}
+                <div className="form-grid">
+                    <div className="form-group full-width">
+                        <label>Nom du vélo (Surnom)</label>
+                        <input 
+                            type="text" name="name" 
+                            value={formData.name} onChange={handleChange} 
+                            placeholder="Ex: Le Grimpeur" required 
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label>Marque</label>
+                        <input type="text" name="brand" value={formData.brand} onChange={handleChange} placeholder="Giant, Trek..." />
+                    </div>
+
+                    <div className="form-group">
+                        <label>Année</label>
+                        <input type="number" name="model_year" value={formData.model_year} onChange={handleChange} />
+                    </div>
+
+                    <div className="form-group">
+                        <label>Type</label>
+                        <select name="type" value={formData.type} onChange={handleChange}>
+                            <option value="Route">Route</option>
+                            <option value="VTT">VTT</option>
+                            <option value="Gravel">Gravel</option>
+                            <option value="Ville">Ville</option>
+                        </select>
+                    </div>
+
+                    <div className="form-group">
+                        <label>Kilométrage initial</label>
+                        <input type="number" name="total_km" value={formData.total_km} onChange={handleChange} />
+                    </div>
+
+                    <div className="form-group">
+                        <label>Poids (kg)</label>
+                        <input type="number" step="0.1" name="weight" value={formData.weight} onChange={handleChange} />
                     </div>
                 </div>
 
-                {/* SECTION GAUCHE */}
-                <section className="form-section">
-                    <h3>Informations</h3>
-                    <div className="input-group">
-                        <label>Nom du vélo *</label>
-                        <div className="input-wrapper">
-                            <FaSignature className="input-icon" />
-                            <input name="name" value={formData.name} onChange={handleChange} required />
-                        </div>
-                    </div>
-                    <div className="input-group">
-                        <label>Type</label>
-                        <div className="type-grid">
-                            {bikeTypes.map(type => (
-                                <div 
-                                    key={type.id} 
-                                    className={`type-card ${formData.type === type.id ? 'active' : ''}`}
-                                    onClick={() => setFormData({...formData, type: type.id})}
-                                >
-                                    <span style={{fontSize: '1.5rem'}}>{type.icon}</span>
-                                    <span>{type.label}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </section>
-
-                {/* SECTION DROITE */}
-                <section className="form-section">
-                    <h3>Caractéristiques</h3>
-                    <div className="input-group">
-                        <label>Marque</label>
-                        <div className="input-wrapper">
-                            <FaTag className="input-icon" />
-                            <input name="brand" value={formData.brand} onChange={handleChange} placeholder="Specialized" />
-                        </div>
-                    </div>
-                    <div className="details-grid">
-                        <div className="input-group">
-                            <label>Année</label>
-                            <div className="input-wrapper">
-                                <FaCalendarDay className="input-icon" />
-                                <input name="model_year" type="number" value={formData.model_year} onChange={handleChange} placeholder="2024" />
-                            </div>
-                        </div>
-                        <div className="input-group">
-                            <label>Taille</label>
-                            <div className="input-wrapper">
-                                <FaRulerVertical className="input-icon" />
-                                <input name="size" value={formData.size} onChange={handleChange} placeholder="56 / L" />
-                            </div>
-                        </div>
-                    </div>
-                    <div className="input-group">
-                        <label>Poids (kg)</label>
-                        <div className="input-wrapper">
-                            <FaWeightHanging className="input-icon" />
-                            <input name="weight" type="number" step="0.1" value={formData.weight} onChange={handleChange} placeholder="7.5" />
-                        </div>
-                    </div>
-                </section>
-
                 <div className="form-actions">
-                    <button type="button" className="close-btn" style={{borderRadius: '8px', width: 'auto', padding: '0 20px', marginRight:'auto'}} onClick={onClose}>
-                        Annuler
+                    {/* Bouton Annuler qui fonctionne (retour en arrière) */}
+                    <button type="button" onClick={() => navigate(-1)} className="secondary-btn">
+                        <FaTimes /> Annuler
                     </button>
-                    <button type="submit" className="save-btn" disabled={isSaving}>
-                        {isSaving ? '...' : <><FaSave /> {initialData ? 'Mettre à jour' : 'Créer'}</>}
+                    <button type="submit" className="primary-btn" disabled={loading}>
+                        <FaSave /> {loading ? '...' : 'Enregistrer'}
                     </button>
                 </div>
             </form>
         </div>
     );
-};
+}
 
 export default BikeForm;

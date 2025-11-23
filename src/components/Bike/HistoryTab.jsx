@@ -1,30 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { historyService } from '../../services/api';
-import { FaPen, FaCalendarDay } from 'react-icons/fa';
+import { FaPen, FaCalendarDay, FaPlus } from 'react-icons/fa';
 import './HistoryTab.css';
 
 function HistoryTab({ bikeId }) {
     const [history, setHistory] = useState([]);
     const [note, setNote] = useState('');
-    const [loading, setLoading] = useState(true);
+    const [adding, setAdding] = useState(false);
 
     useEffect(() => {
         loadHistory();
     }, [bikeId]);
 
     const loadHistory = async () => {
-        try {
-            setLoading(true);
-            const data = await historyService.getByBikeId(bikeId);
-            setHistory(data || []);
-        } catch (e) { console.error(e); } 
-        finally { setLoading(false); }
+        const data = await historyService.getByBikeId(bikeId);
+        setHistory(data || []);
     };
 
     const handleAddNote = async (e) => {
-        e.preventDefault();
+        e.preventDefault(); // Empêche le rechargement de la page
         if (!note.trim()) return;
 
+        setAdding(true);
         try {
             await historyService.add({
                 bike_id: bikeId,
@@ -33,27 +30,32 @@ function HistoryTab({ bikeId }) {
                 description: note,
                 date: new Date().toISOString().split('T')[0]
             });
-            setNote('');
-            loadHistory();
+            setNote(''); // Vide le champ
+            loadHistory(); // Recharge la liste
         } catch (e) {
-            alert("Erreur ajout note");
+            console.error(e);
+        } finally {
+            setAdding(false);
         }
     };
 
     return (
         <div className="history-tab">
-            {/* FORMULAIRE D'AJOUT DE NOTE */}
-            <form onSubmit={handleAddNote} className="history-input-group glass-panel">
-                <input 
-                    type="text" 
-                    placeholder="Ajouter une note à l'historique..." 
-                    value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                />
-                <button type="submit" className="icon-btn-small">
-                    <FaPen />
-                </button>
-            </form>
+            {/* FORMULAIRE MANUEL SÉCURISÉ */}
+            <div className="glass-panel" style={{padding: '15px', marginBottom: '20px'}}>
+                <form onSubmit={handleAddNote} style={{display: 'flex', gap: '10px'}}>
+                    <input 
+                        type="text" 
+                        className="note-input"
+                        placeholder="Ajouter une note (ex: Sortie sous la pluie)..." 
+                        value={note}
+                        onChange={(e) => setNote(e.target.value)}
+                    />
+                    <button type="submit" className="add-mini-btn" disabled={adding}>
+                        {adding ? '...' : <FaPlus />}
+                    </button>
+                </form>
+            </div>
 
             <div className="timeline">
                 {history.map((event) => (
@@ -62,9 +64,10 @@ function HistoryTab({ bikeId }) {
                         <div className="timeline-content glass-panel">
                             <div className="timeline-header">
                                 <span className="event-title">{event.title}</span>
-                                <span className="event-date"><FaCalendarDay /> {event.date}</span>
+                                <span className="event-date">{event.date}</span>
                             </div>
                             {event.description && <p className="event-desc">{event.description}</p>}
+                            {event.km && <span className="event-km">à {event.km} km</span>}
                         </div>
                     </div>
                 ))}

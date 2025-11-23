@@ -188,3 +188,44 @@
     background: transparent; border: none; color: #ef4444; opacity: 0.5; cursor: pointer;
 }
 .trash-icon:hover { opacity: 1; }
+
+.check-btn {
+    background: var(--gradient-success); /* Vert */
+    color: white;
+    border: none;
+    width: 35px; height: 35px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    margin-right: 10px;
+}
+
+.validation-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 5px;
+}
+
+.validation-box input {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border-color);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 6px;
+}
+
+.confirm-btn {
+    background: var(--neon-green);
+    color: black;
+    border: none;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.cancel-link {
+    background: transparent; border: none; color: #999; cursor: pointer; font-size: 0.9rem;
+}

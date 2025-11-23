@@ -1,19 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { partsService, bikeService } from '../../services/api'; // Import bikeService aussi
+import { partsService, bikeService } from '../../services/api';
 import './PartForm.css';
 
 function PartForm({ bikeId, onSuccess, onCancel }) {
     const [loading, setLoading] = useState(false);
-    const [calculating, setCalculating] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         category: 'transmission',
         installation_date: new Date().toISOString().split('T')[0],
-        km_current: 0, // Ce champ sera calculé auto
+        km_current: 0,
         life_target_km: 5000
     });
 
-    // --- CALCUL AUTOMATIQUE ---
+    // CALCUL AUTOMATIQUE
     useEffect(() => {
         if (formData.installation_date && bikeId) {
             calculateUsage();
@@ -21,24 +20,22 @@ function PartForm({ bikeId, onSuccess, onCancel }) {
     }, [formData.installation_date, bikeId]);
 
     const calculateUsage = async () => {
-        setCalculating(true);
+        console.log("Calcul en cours pour date:", formData.installation_date);
         try {
-            // 1. On récupère le kilométrage actuel du vélo
+            // 1. Km total actuel
             const bike = await bikeService.getById(bikeId);
-            const currentBikeKm = bike.total_km || 0;
+            const currentTotal = bike.total_km || 0;
 
-            // 2. On récupère le kilométrage du vélo A LA DATE d'installation
+            // 2. Km du vélo à la date d'install
             const kmAtInstall = await partsService.getBikeKmAtDate(bikeId, formData.installation_date);
+            console.log(`Total: ${currentTotal}, AtInstall: ${kmAtInstall}`);
 
-            // 3. La différence = ce que la pièce a roulé
-            // Note : Si kmAtInstall > current (impossible sauf bug), on met 0
-            const usage = Math.max(0, currentBikeKm - kmAtInstall);
+            // 3. Différence = usage de la pièce
+            const usage = Math.max(0, currentTotal - kmAtInstall);
             
             setFormData(prev => ({ ...prev, km_current: usage }));
         } catch (e) {
-            console.error("Erreur calcul auto:", e);
-        } finally {
-            setCalculating(false);
+            console.error("Erreur calcul", e);
         }
     };
 
@@ -59,7 +56,7 @@ function PartForm({ bikeId, onSuccess, onCancel }) {
             });
             if (onSuccess) onSuccess();
         } catch (e) {
-            alert("Erreur ajout pièce");
+            alert("Erreur ajout");
         } finally {
             setLoading(false);
         }
@@ -67,15 +64,15 @@ function PartForm({ bikeId, onSuccess, onCancel }) {
 
     return (
         <form className="part-form" onSubmit={handleSubmit}>
-            <h4>Ajouter une pièce</h4>
-            
+            <h4>Nouvelle Pièce</h4>
+            {/* ... Les champs sont les mêmes qu'avant, assurez-vous juste que les inputs ont bien onChange={handleChange} ... */}
+            {/* Pour abréger, je remets juste les champs clés */}
             <div className="form-group">
                 <label>Nom</label>
-                <input type="text" name="name" value={formData.name} onChange={handleChange} required placeholder="Ex: Chaîne neuve" />
+                <input type="text" name="name" value={formData.name} onChange={handleChange} required />
             </div>
-
             <div className="form-group">
-                <label>Catégorie</label>
+                <label>Type</label>
                 <select name="category" value={formData.category} onChange={handleChange}>
                     <option value="transmission">Transmission</option>
                     <option value="pneus">Pneus</option>
@@ -83,35 +80,23 @@ function PartForm({ bikeId, onSuccess, onCancel }) {
                     <option value="autre">Autre</option>
                 </select>
             </div>
-
             <div className="form-row">
                 <div className="form-group half">
-                    <label>Date d'installation</label>
+                    <label>Installée le</label>
                     <input type="date" name="installation_date" value={formData.installation_date} onChange={handleChange} />
                 </div>
-                
                 <div className="form-group half">
-                    <label>Usure calculée (km)</label>
-                    <input 
-                        type="number" 
-                        name="km_current" 
-                        value={formData.km_current} 
-                        onChange={handleChange} 
-                        readOnly // On empêche la modif manuelle pour forcer le calcul
-                        style={{opacity: 0.7, cursor: 'not-allowed'}}
-                    />
-                    {calculating && <small style={{color: 'var(--neon-blue)'}}>Calcul...</small>}
+                    <label>Km parcourus (Auto)</label>
+                    <input type="number" name="km_current" value={formData.km_current} readOnly style={{opacity:0.7}} />
                 </div>
             </div>
-
             <div className="form-group">
-                <label>Durée de vie estimée</label>
+                <label>Durée de vie (km)</label>
                 <input type="number" name="life_target_km" value={formData.life_target_km} onChange={handleChange} />
             </div>
-
             <div className="form-buttons">
                 <button type="button" onClick={onCancel} className="cancel-btn">Annuler</button>
-                <button type="submit" disabled={loading || calculating} className="submit-btn">Ajouter</button>
+                <button type="submit" className="submit-btn" disabled={loading}>Ajouter</button>
             </div>
         </form>
     );

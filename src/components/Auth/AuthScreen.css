@@ -15,37 +15,50 @@
 .bg-glow {
     position: absolute;
     border-radius: 50%;
-    filter: blur(100px); /* Flou plus important */
-    opacity: 0.6; /* Opacité augmentée pour la visibilité */
+    /* On réduit le flou pour concentrer la couleur */
+    filter: blur(60px); 
+    /* On augmente l'opacité */
+    opacity: 0.8; 
     z-index: 0;
     pointer-events: none;
+    /* Mode de fusion pour faire ressortir les couleurs sur le fond noir */
+    mix-blend-mode: screen; 
 }
 
 .glow-1 {
-    width: 500px; height: 500px;
-    background: radial-gradient(circle, var(--neon-purple) 0%, transparent 70%);
-    top: -15%; left: -10%;
+    width: 600px; height: 600px;
+    /* On force la couleur sans transparence immédiate */
+    background: radial-gradient(circle, #d946ef 0%, rgba(217, 70, 239, 0.1) 60%, transparent 100%);
+    top: -20%; 
+    left: -15%;
     animation: float 8s ease-in-out infinite;
 }
 
 .glow-2 {
-    width: 600px; height: 600px;
-    background: radial-gradient(circle, var(--neon-blue) 0%, transparent 70%);
-    bottom: -20%; right: -10%;
+    width: 700px; height: 700px;
+    background: radial-gradient(circle, #0ea5e9 0%, rgba(14, 165, 233, 0.1) 60%, transparent 100%);
+    bottom: -25%; 
+    right: -15%;
     animation: float 10s ease-in-out infinite reverse;
 }
 
-/* Ajout d'une 3ème lumière pour plus de vie */
+/* La 3ème lumière (Vert/Cyan) */
 .bg-glow::after {
-    content: ''; position: absolute; width: 300px; height: 300px;
-    background: var(--neon-green); opacity: 0.3;
-    filter: blur(80px); bottom: 20%; left: 20%;
+    content: ''; 
+    position: absolute; 
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, #10b981 0%, transparent 70%);
+    opacity: 0.5;
+    filter: blur(80px); 
+    bottom: 20%; 
+    left: 10%;
     animation: float 12s ease-in-out infinite 2s;
 }
 
 @keyframes float {
     0% { transform: translate(0, 0) scale(1); }
-    50% { transform: translate(50px, 30px) scale(1.1); }
+    33% { transform: translate(50px, -30px) scale(1.1); }
+    66% { transform: translate(-20px, 20px) scale(0.95); }
     100% { transform: translate(0, 0) scale(1); }
 }
 

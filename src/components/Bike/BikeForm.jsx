@@ -1,15 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom'; // Ajout de useParams
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { bikeService } from '../../services/api';
-import { FaSave, FaTimes, FaBicycle } from 'react-icons/fa';
+import { FaSave, FaTimes, FaBicycle, FaCamera } from 'react-icons/fa';
 import './BikeForm.css';
 
 function BikeForm() {
     const navigate = useNavigate();
-    const { bikeId } = useParams(); // Récupère l'ID si on est en mode édition
+    const { bikeId } = useParams();
     const isEditMode = Boolean(bikeId);
+    const fileInputRef = useRef(null);
 
     const [loading, setLoading] = useState(false);
+    const [preview, setPreview] = useState(null);
+    const [photoFile, setPhotoFile] = useState(null);
+
     const [formData, setFormData] = useState({
         name: '',
         brand: '',
@@ -20,7 +24,6 @@ function BikeForm() {
         size: ''
     });
 
-    // CHARGEMENT DES DONNÉES (Si édition)
     useEffect(() => {
         if (isEditMode) {
             loadBikeData();
@@ -41,9 +44,10 @@ function BikeForm() {
                     weight: data.weight || '',
                     size: data.size || ''
                 });
+                if (data.photo_url) setPreview(data.photo_url);
             }
         } catch (e) {
-            console.error("Erreur chargement vélo:", e);
+            console.error(e);
         } finally {
             setLoading(false);
         }
@@ -54,16 +58,36 @@ function BikeForm() {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setPhotoFile(file);
+            setPreview(URL.createObjectURL(file));
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         try {
+            let bikeData = { ...formData };
+            let idToUse = bikeId;
+
+            // 1. Création ou Mise à jour des données texte
             if (isEditMode) {
-                await bikeService.update(bikeId, formData);
+                await bikeService.update(bikeId, bikeData);
             } else {
-                await bikeService.add(formData);
+                const newBike = await bikeService.add(bikeData);
+                idToUse = newBike[0]?.id; // Récupérer l'ID du nouveau vélo
             }
-            navigate('/app/garage'); // Retour au garage après succès
+
+            // 2. Upload de la photo si modifiée
+            if (photoFile && idToUse) {
+                const url = await bikeService.uploadPhoto(photoFile);
+                await bikeService.update(idToUse, { photo_url: url });
+            }
+
+            navigate('/app/garage');
         } catch (error) {
             console.error(error);
             alert("Erreur lors de l'enregistrement.");
@@ -77,27 +101,36 @@ function BikeForm() {
             <form className="bike-form glass-panel" onSubmit={handleSubmit}>
                 <div className="form-header">
                     <h3>{isEditMode ? 'Modifier le vélo' : 'Ajouter un vélo'}</h3>
-                    <FaBicycle className="header-icon" />
+                </div>
+
+                {/* ZONE PHOTO */}
+                <div className="photo-upload-section" onClick={() => fileInputRef.current.click()}>
+                    {preview ? (
+                        <img src={preview} alt="Aperçu" className="photo-preview" />
+                    ) : (
+                        <div className="photo-placeholder">
+                            <FaCamera className="camera-icon" />
+                            <span>Ajouter une photo</span>
+                        </div>
+                    )}
+                    <input 
+                        type="file" 
+                        ref={fileInputRef} 
+                        onChange={handleFileChange} 
+                        style={{display:'none'}} 
+                        accept="image/*"
+                    />
                 </div>
 
                 <div className="form-grid">
                     <div className="form-group full-width">
-                        <label>Nom du vélo (Surnom)</label>
-                        <input 
-                            type="text" name="name" 
-                            value={formData.name} onChange={handleChange} 
-                            placeholder="Ex: Le Grimpeur" required 
-                        />
+                        <label>Nom du vélo</label>
+                        <input type="text" name="name" value={formData.name} onChange={handleChange} required />
                     </div>
 
                     <div className="form-group">
                         <label>Marque</label>
-                        <input type="text" name="brand" value={formData.brand} onChange={handleChange} placeholder="Giant, Trek..." />
-                    </div>
-
-                    <div className="form-group">
-                        <label>Année</label>
-                        <input type="number" name="model_year" value={formData.model_year} onChange={handleChange} />
+                        <input type="text" name="brand" value={formData.brand} onChange={handleChange} />
                     </div>
 
                     <div className="form-group">
@@ -110,9 +143,17 @@ function BikeForm() {
                         </select>
                     </div>
 
+                    {/* CHAMP READ-ONLY POUR LE KM */}
                     <div className="form-group">
-                        <label>Kilométrage initial</label>
-                        <input type="number" name="total_km" value={formData.total_km} onChange={handleChange} />
+                        <label>Kilométrage (Calculé)</label>
+                        <input 
+                            type="number" 
+                            name="total_km" 
+                            value={formData.total_km} 
+                            readOnly 
+                            className="input-readonly"
+                            title="Le kilométrage est mis à jour via Strava ou l'historique"
+                        />
                     </div>
 
                     <div className="form-group">
@@ -122,11 +163,10 @@ function BikeForm() {
                 </div>
 
                 <div className="form-actions">
-                    {/* Bouton Annuler qui fonctionne (retour en arrière) */}
-                    <button type="button" onClick={() => navigate(-1)} className="secondary-btn">
+                    <button type="button" onClick={() => navigate(-1)} className="secondary-btn cancel-btn">
                         <FaTimes /> Annuler
                     </button>
-                    <button type="submit" className="primary-btn" disabled={loading}>
+                    <button type="submit" className="primary-btn save-btn" disabled={loading}>
                         <FaSave /> {loading ? '...' : 'Enregistrer'}
                     </button>
                 </div>

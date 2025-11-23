@@ -1,73 +1,74 @@
-.history-input-group {
+.history-form-panel {
+    padding: 15px;
+    margin-bottom: 30px;
+}
+
+.note-form .input-row {
     display: flex;
-    padding: 10px;
-    margin-bottom: 25px;
     gap: 10px;
-    align-items: center;
 }
 
-.history-input-group input {
-    flex: 1;
-    background: transparent;
-    border: none;
+.date-input {
+    width: 140px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border-color);
     color: white;
-    font-size: 1rem;
-}
-.history-input-group input:focus { outline: none; }
-
-.icon-btn-small {
-    background: var(--gradient-primary);
-    border: none; color: white;
-    width: 30px; height: 30px;
-    border-radius: 50%;
-    cursor: pointer;
+    border-radius: 8px;
+    padding: 10px;
 }
 
+.text-input {
+    flex: 1;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border-color);
+    color: white;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+/* Timeline enrichie */
 .timeline {
     border-left: 2px solid rgba(255,255,255,0.1);
-    padding-left: 20px;
-    margin-left: 10px;
-}
-
-.timeline-item {
-    position: relative;
-    margin-bottom: 20px;
+    padding-left: 30px;
+    margin-left: 15px;
 }
 
 .timeline-marker {
     position: absolute;
-    left: -26px;
+    left: -46px; /* Ajusté pour centrer l'icône */
     top: 15px;
-    width: 10px; height: 10px;
-    background: var(--neon-blue);
+    width: 30px; height: 30px;
     border-radius: 50%;
-    box-shadow: 0 0 10px var(--neon-blue);
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(0,0,0,0.7);
+    font-size: 0.9rem;
+    z-index: 1;
 }
 
 .timeline-content {
     padding: 15px;
+    margin-bottom: 20px;
 }
 
-.timeline-header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 5px;
-    color: var(--text-secondary);
-    font-size: 0.85rem;
+.event-type-badge {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 1px;
 }
 
 .event-title {
+    margin: 5px 0;
     color: white;
-    font-weight: 600;
-    font-size: 1rem;
+    font-size: 1.1rem;
 }
 
-.note-input {
-    flex: 1;
-    background: rgba(0,0,0,0.2);
-    border: 1px solid var(--border-color);
-    color: white;
-    padding: 10px;
-    border-radius: 8px;
+.event-km {
+    display: inline-block;
+    margin-top: 8px;
+    background: rgba(255,255,255,0.1);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
 }
-.note-input:focus { outline: none; border-color: var(--neon-blue); }

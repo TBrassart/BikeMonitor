@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { historyService } from '../../services/api';
-import { FaPen, FaCalendarDay, FaPlus } from 'react-icons/fa';
+import { FaPen, FaCalendarDay, FaPlus, FaWrench, FaCogs, FaStickyNote, FaExclamationTriangle } from 'react-icons/fa';
 import './HistoryTab.css';
 
 function HistoryTab({ bikeId }) {
     const [history, setHistory] = useState([]);
-    const [note, setNote] = useState('');
+    const [noteData, setNoteData] = useState({ text: '', date: new Date().toISOString().split('T')[0] });
     const [adding, setAdding] = useState(false);
 
     useEffect(() => {
@@ -18,8 +18,8 @@ function HistoryTab({ bikeId }) {
     };
 
     const handleAddNote = async (e) => {
-        e.preventDefault(); // Empêche le rechargement de la page
-        if (!note.trim()) return;
+        e.preventDefault();
+        if (!noteData.text.trim()) return;
 
         setAdding(true);
         try {
@@ -27,11 +27,11 @@ function HistoryTab({ bikeId }) {
                 bike_id: bikeId,
                 type: 'note',
                 title: 'Note manuelle',
-                description: note,
-                date: new Date().toISOString().split('T')[0]
+                description: noteData.text,
+                date: noteData.date
             });
-            setNote(''); // Vide le champ
-            loadHistory(); // Recharge la liste
+            setNoteData({ text: '', date: new Date().toISOString().split('T')[0] });
+            loadHistory();
         } catch (e) {
             console.error(e);
         } finally {
@@ -39,38 +39,64 @@ function HistoryTab({ bikeId }) {
         }
     };
 
+    // --- LOGIQUE VISUELLE DISTINCTIVE ---
+    const getEventStyle = (type) => {
+        switch(type) {
+            case 'maintenance': return { icon: <FaWrench />, color: '#f59e0b', label: 'Entretien' }; // Orange
+            case 'part_change': return { icon: <FaCogs />, color: '#3b82f6', label: 'Pièce' }; // Bleu
+            case 'incident': return { icon: <FaExclamationTriangle />, color: '#ef4444', label: 'Incident' }; // Rouge
+            default: return { icon: <FaStickyNote />, color: '#94a3b8', label: 'Note' }; // Gris
+        }
+    };
+
     return (
         <div className="history-tab">
-            {/* FORMULAIRE MANUEL SÉCURISÉ */}
-            <div className="glass-panel" style={{padding: '15px', marginBottom: '20px'}}>
-                <form onSubmit={handleAddNote} style={{display: 'flex', gap: '10px'}}>
-                    <input 
-                        type="text" 
-                        className="note-input"
-                        placeholder="Ajouter une note (ex: Sortie sous la pluie)..." 
-                        value={note}
-                        onChange={(e) => setNote(e.target.value)}
-                    />
-                    <button type="submit" className="add-mini-btn" disabled={adding}>
-                        {adding ? '...' : <FaPlus />}
-                    </button>
+            {/* FORMULAIRE AVEC DATE */}
+            <div className="glass-panel history-form-panel">
+                <form onSubmit={handleAddNote} className="note-form">
+                    <div className="input-row">
+                        <input 
+                            type="date" 
+                            className="date-input"
+                            value={noteData.date}
+                            onChange={(e) => setNoteData({...noteData, date: e.target.value})}
+                        />
+                        <input 
+                            type="text" 
+                            className="text-input"
+                            placeholder="Ajouter une note..." 
+                            value={noteData.text}
+                            onChange={(e) => setNoteData({...noteData, text: e.target.value})}
+                        />
+                        <button type="submit" className="add-mini-btn" disabled={adding}>
+                            {adding ? '...' : <FaPlus />}
+                        </button>
+                    </div>
                 </form>
             </div>
 
             <div className="timeline">
-                {history.map((event) => (
-                    <div key={event.id} className="timeline-item">
-                        <div className="timeline-marker"></div>
-                        <div className="timeline-content glass-panel">
-                            <div className="timeline-header">
-                                <span className="event-title">{event.title}</span>
-                                <span className="event-date">{event.date}</span>
+                {history.map((event) => {
+                    const style = getEventStyle(event.type);
+                    return (
+                        <div key={event.id} className="timeline-item">
+                            {/* Marqueur coloré selon le type */}
+                            <div className="timeline-marker" style={{backgroundColor: style.color, boxShadow: `0 0 10px ${style.color}`}}>
+                                {style.icon}
                             </div>
-                            {event.description && <p className="event-desc">{event.description}</p>}
-                            {event.km && <span className="event-km">à {event.km} km</span>}
+                            
+                            <div className="timeline-content glass-panel" style={{borderLeft: `3px solid ${style.color}`}}>
+                                <div className="timeline-header">
+                                    <span className="event-type-badge" style={{color: style.color}}>{style.label}</span>
+                                    <span className="event-date"><FaCalendarDay /> {event.date}</span>
+                                </div>
+                                <h4 className="event-title">{event.title}</h4>
+                                {event.description && <p className="event-desc">{event.description}</p>}
+                                {event.km && <span className="event-km">à {event.km} km</span>}
+                            </div>
                         </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
         </div>
     );

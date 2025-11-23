@@ -104,7 +104,11 @@ export const api = {
     async getBikes() {
         const { data, error } = await supabase
             .from('bikes')
-            .select(`*, profiles:user_id ( name, avatar )`)
+            .select(`
+                *, 
+                profiles:user_id ( name, avatar ),
+                parts ( status )
+            `)
             .order('created_at', { ascending: false });
         if (error) throw error;
         return data || [];

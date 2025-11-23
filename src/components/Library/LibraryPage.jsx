@@ -1,157 +1,72 @@
 import React, { useState, useEffect } from 'react';
-import { FaSearch, FaPlus, FaDatabase, FaCogs, FaPen, FaFilter } from 'react-icons/fa';
-import { bikeService } from '../../services/api';
-import LibraryForm from './LibraryForm';
+import { libraryService } from '../../services/api';
+import { FaPlus, FaCogs } from 'react-icons/fa';
+import LibraryForm from './LibraryForm'; // Assure-toi d'avoir ce formulaire ou commente-le
 import './LibraryPage.css';
 
-const LibraryPage = () => {
-    const [libraryItems, setLibraryItems] = useState([]);
-    const [searchTerm, setSearchTerm] = useState('');
-    // 1. NOUVEL ÉTAT POUR LE FILTRE
-    const [selectedCategory, setSelectedCategory] = useState('all');
-    
-    const [isFormOpen, setIsFormOpen] = useState(false);
-    const [editingItem, setEditingItem] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
-    
-    const isAdmin = true; 
-
-    // Liste des filtres disponibles
-    const categories = [
-        { id: 'all', label: 'Tout' },
-        { id: 'chain', label: 'Chaînes' },
-        { id: 'cassette', label: 'Cassettes' },
-        { id: 'tire', label: 'Pneus' },
-        { id: 'brake_pads', label: 'Plaquettes' },
-        { id: 'other', label: 'Autres' }
-    ];
+function LibraryPage() {
+    const [components, setComponents] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [showForm, setShowForm] = useState(false);
 
     useEffect(() => {
         loadLibrary();
     }, []);
 
     const loadLibrary = async () => {
-        setIsLoading(true);
-        const data = await bikeService.getLibrary();
-        setLibraryItems(data || []);
-        setIsLoading(false);
-    };
-
-    const handleSaveItem = async (itemData) => {
-        if (editingItem) {
-            const updated = await bikeService.updateLibraryItem(editingItem.id, itemData);
-            setLibraryItems(prev => prev.map(i => i.id === editingItem.id ? updated : i));
-            setEditingItem(null);
-        } else {
-            const added = await bikeService.addToLibrary(itemData);
-            setLibraryItems(prev => [...prev, added]);
+        try {
+            setLoading(true);
+            const data = await libraryService.getAll();
+            setComponents(data || []);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoading(false);
         }
     };
 
-    const handleEditClick = (item) => {
-        setEditingItem(item); 
-        setIsFormOpen(true);
-    };
-
-    const handleCloseForm = () => {
-        setIsFormOpen(false);
-        setEditingItem(null);
-    };
-
-    // 2. LOGIQUE DE FILTRAGE MISE À JOUR
-    const filteredItems = libraryItems.filter(item => {
-        // Filtre par texte
-        const matchesSearch = 
-            item.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.brand.toLowerCase().includes(searchTerm.toLowerCase());
-        
-        // Filtre par catégorie
-        const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
-
-        return matchesSearch && matchesCategory;
-    });
-
-    if (isFormOpen) {
-        return (
-            <LibraryForm 
-                onClose={handleCloseForm} 
-                onSave={handleSaveItem} 
-                initialData={editingItem} 
-            />
-        );
-    }
-
     return (
-        <div className="library-container">
+        <div className="library-page">
             <header className="page-header">
-                <h1><FaDatabase /> Bibliothèque</h1>
-                {isAdmin && (
-                    <button className="cta-add-standard" onClick={() => setIsFormOpen(true)}>
-                        <FaPlus /> Nouveau Modèle
-                    </button>
-                )}
+                <h2>Bibliothèque de composants</h2>
+                <button className="add-btn" onClick={() => setShowForm(!showForm)}>
+                    <FaPlus />
+                </button>
             </header>
 
-            <div className="search-bar-container">
-                <FaSearch className="search-icon" />
-                <input 
-                    type="text" 
-                    placeholder="Rechercher un composant..." 
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="search-input"
-                />
-            </div>
+            {showForm && (
+                <div className="glass-panel form-panel">
+                    {/* Placeholder pour le formulaire si tu ne l'as pas encore refait */}
+                    <LibraryForm onSuccess={() => { setShowForm(false); loadLibrary(); }} onCancel={() => setShowForm(false)} />
+                </div>
+            )}
 
-            {/* 3. BARRE DE FILTRES HORIZONTALE */}
-            <div className="filters-bar">
-                <FaFilter className="filter-icon" style={{marginRight: '10px', color: '#666'}}/>
-                {categories.map(cat => (
-                    <button
-                        key={cat.id}
-                        className={`filter-chip ${selectedCategory === cat.id ? 'active' : ''}`}
-                        onClick={() => setSelectedCategory(cat.id)}
-                    >
-                        {cat.label}
-                    </button>
-                ))}
-            </div>
-
-            <div className="library-grid">
-                {filteredItems.map(item => (
-                    <div key={item.id} className="library-card" style={{position: 'relative'}}>
-                        <div className="lib-icon"><FaCogs /></div>
-                        <div className="lib-content">
-                            <h3>{item.brand} {item.model}</h3>
-                            <span className="lib-tag">{item.category}</span>
-                            <p className="lib-specs">Durée : <strong>{item.lifespan_km} km</strong></p>
+            {loading ? (
+                <p>Chargement du catalogue...</p>
+            ) : (
+                <div className="library-grid">
+                    {components.length === 0 ? (
+                        <div className="empty-state glass-panel">
+                            <p>La bibliothèque est vide.</p>
                         </div>
-
-                        {isAdmin && (
-                            <button 
-                                onClick={() => handleEditClick(item)}
-                                title="Modifier ce modèle"
-                                style={{
-                                    position: 'absolute', top: '15px', right: '15px', 
-                                    background: 'rgba(255,255,255,0.1)', border: 'none', 
-                                    color: '#ccc', cursor: 'pointer', padding: '8px', 
-                                    borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                }}
-                            >
-                                <FaPen size={12} />
-                            </button>
-                        )}
-                    </div>
-                ))}
-                
-                {filteredItems.length === 0 && !isLoading && (
-                    <p style={{gridColumn: '1/-1', textAlign: 'center', color: '#666', marginTop: '20px'}}>
-                        Aucun composant ne correspond à votre recherche.
-                    </p>
-                )}
-            </div>
+                    ) : (
+                        components.map(comp => (
+                            <div key={comp.id} className="library-card glass-panel">
+                                <div className="card-icon">
+                                    <FaCogs />
+                                </div>
+                                <div className="card-content">
+                                    <h4>{comp.brand} {comp.model}</h4>
+                                    <span className="category-tag">{comp.category}</span>
+                                    <p className="lifespan">Durée estimée : {comp.lifespan_km} km</p>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+            )}
         </div>
     );
-};
+}
 
 export default LibraryPage;

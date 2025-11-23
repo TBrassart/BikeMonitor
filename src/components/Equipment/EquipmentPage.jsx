@@ -82,7 +82,7 @@ function EquipmentPage() {
                     className={`equip-tab ${activeTab === 'accessory' ? 'active' : ''}`}
                     onClick={() => setActiveTab('accessory')}
                 >
-                    <FaTools /> Atelier
+                    <FaTools /> Atelier & Equipement
                 </button>
             </div>
 

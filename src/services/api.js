@@ -453,6 +453,90 @@ export const api = {
 
         return { users, bikes, parts, totalKm: Math.round(totalKm) };
     },
+
+    // --- LOGS ---
+    async logAction(action, details, level = 'info') {
+        try {
+            const user = await authService.getCurrentUser();
+            const profile = await authService.getMyProfile();
+            await supabase.from('app_logs').insert([{
+                user_id: user?.id,
+                user_name: profile?.name || 'Inconnu',
+                action,
+                details,
+                level
+            }]);
+        } catch (e) {
+            console.warn("Impossible de logger", e); // On ne veut pas bloquer l'app si le log échoue
+        }
+    },
+
+    async getLogs() {
+        const { data, error } = await supabase
+            .from('app_logs')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(100); // Les 100 derniers
+        if (error) throw error;
+        return data;
+    },
+
+    // --- ADMIN : SUPPRESSION ---
+    async deleteUserProfile(userId) {
+        // On supprime le profil. Le CASCADE SQL fera le reste (Vélos, Parts, etc.)
+        // Note: L'utilisateur reste dans Supabase Auth mais son compte est "vide"
+        const { error } = await supabase.from('profiles').delete().eq('user_id', userId);
+        if (error) throw error;
+    },
+
+    // --- SETTINGS & TOOLS ---
+    async getMaintenanceMode() {
+        const { data } = await supabase.from('app_settings').select('value').eq('key', 'maintenance_mode').single();
+        return data?.value === true; // Renvoie true ou false
+    },
+
+    async setMaintenanceMode(status) {
+        await supabase.from('app_settings').update({ value: status }).eq('key', 'maintenance_mode');
+    },
+
+    // CLEAN-UP PHOTOS (Logique Avancée)
+    async cleanupUnusedPhotos() {
+        // 1. Lister toutes les photos utilisées en base
+        const { data: bikes } = await supabase.from('bikes').select('photo_url');
+        const usedFiles = new Set(bikes
+            .filter(b => b.photo_url)
+            .map(b => b.photo_url.split('/').pop()) // On garde juste le nom du fichier
+        );
+
+        // 2. Lister tous les fichiers du bucket Storage
+        const { data: files, error } = await supabase.storage.from('bikes').list();
+        if (error) throw error;
+
+        // 3. Trouver les orphelins
+        const filesToDelete = files
+            .filter(f => !usedFiles.has(f.name))
+            .map(f => f.name);
+
+        if (filesToDelete.length === 0) return 0;
+
+        // 4. Supprimer
+        const { error: delError } = await supabase.storage.from('bikes').remove(filesToDelete);
+        if (delError) throw delError;
+
+        return filesToDelete.length;
+    },
+
+    // EXPORT DATA
+    async getFullLibrary() {
+        const { data } = await supabase.from('component_library').select('*');
+        return data;
+    },
+
+    async getFullLogs() {
+        // On récupère TOUT pour l'export (pas de limite 100)
+        const { data } = await supabase.from('app_logs').select('*').order('created_at', { ascending: false });
+        return data;
+    },
 };
 
 // ==========================================
@@ -505,5 +589,13 @@ export const equipmentService = {
 export const adminService = {
     getAllUsers: () => api.getAllProfiles(),
     updateRole: (uid, role) => api.updateUserRole(uid, role),
-    getStats: () => api.getAppStats()
+    deleteUser: (uid) => api.deleteUserProfile(uid),
+    getStats: () => api.getAppStats(),
+    getLogs: () => api.getLogs(),
+    log: (a, d, l) => api.logAction(a, d, l),
+    getMaintenance: () => api.getMaintenanceMode(),
+    setMaintenance: (s) => api.setMaintenanceMode(s),
+    cleanupPhotos: () => api.cleanupUnusedPhotos(),
+    exportLibrary: () => api.getFullLibrary(),
+    exportLogs: () => api.getFullLogs()
 };

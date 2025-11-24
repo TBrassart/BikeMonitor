@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { authService } from './services/api';
+import { authService, adminService } from './services/api';
 
 // Pages & Composants
 import AuthScreen from './components/Auth/AuthScreen';
@@ -31,6 +31,7 @@ import './App.css';
 function App() {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [isMaintenance, setIsMaintenance] = useState(false);
 
     useEffect(() => {
         checkSession();
@@ -40,17 +41,37 @@ function App() {
         try {
             const currentUser = await authService.getCurrentUser();
             setUser(currentUser);
-        } catch (e) {
-            console.error("Erreur session", e);
-        } finally {
-            setLoading(false);
-        }
+
+            // CHECK MAINTENANCE
+            const maint = await adminService.getMaintenance();
+            
+            if (maint) {
+                // Si maintenance active, on vérifie si l'user est admin
+                const profile = await authService.getMyProfile();
+                if (profile?.app_role !== 'admin') {
+                    setIsMaintenance(true);
+                }
+            }
+        } catch (e) { /*...*/ } 
+        finally { setLoading(false); }
     };
 
     if (loading) return <div className="app-loading">Chargement...</div>;
 
     if (!user) {
         return <AuthScreen onLogin={checkSession} />;
+    }
+
+    if (isMaintenance) {
+        return (
+            <div style={{height:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'#0f0f13', color:'white', textAlign:'center'}}>
+                <h1 style={{fontSize:'3rem', marginBottom:'20px'}}>🚧 Maintenance</h1>
+                <p>L'application est en cours de mise à jour.</p>
+                <p>Revenez dans quelques instants.</p>
+                {/* Petit bouton caché pour les admins qui voudraient se reconnecter pour débloquer */}
+                <button onClick={() => window.location.reload()} style={{marginTop:'50px', background:'transparent', border:'1px solid #333', color:'#555', padding:'5px 10px', borderRadius:'5px'}}>Rafraîchir</button>
+            </div>
+        );
     }
 
     return (

@@ -3,18 +3,16 @@ import { adminService, authService } from '../../services/api';
 import { 
     FaUsers, FaDatabase, FaChartLine, FaUserShield, FaTrash, 
     FaListAlt, FaLock, FaTools, FaFileCsv, FaFileCode, 
-    FaEnvelopeOpenText, FaBroom, FaPowerOff, FaSearch, FaExclamationCircle 
+    FaEnvelopeOpenText, FaBroom, FaPowerOff, FaSearch 
 } from 'react-icons/fa';
 import './AdminPage.css';
 
 function AdminPage() {
-    // --- SÉCURITÉ 2FA (PIN) ---
     const [isLocked, setIsLocked] = useState(true);
     const [pin, setPin] = useState('');
-    const ADMIN_PIN = "1234"; // À changer pour la prod si nécessaire
+    const ADMIN_PIN = "1234";
 
-    // --- ÉTATS ---
-    const [activeTab, setActiveTab] = useState('users'); // 'users', 'logs', 'system'
+    const [activeTab, setActiveTab] = useState('users'); 
     const [stats, setStats] = useState(null);
     const [users, setUsers] = useState([]);
     const [logs, setLogs] = useState([]);
@@ -24,7 +22,6 @@ function AdminPage() {
     const [isAdmin, setIsAdmin] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
 
-    // 1. VÉRIFICATION DES DROITS AU CHARGEMENT
     useEffect(() => {
         checkRights();
     }, []);
@@ -34,20 +31,17 @@ function AdminPage() {
             const profile = await authService.getMyProfile();
             if (profile && profile.app_role === 'admin') {
                 setIsAdmin(true);
-                // On charge juste l'état maintenance pour l'affichage initial
                 const maint = await adminService.getMaintenance();
                 setMaintenanceMode(maint);
                 setLoading(false);
             } else {
-                setLoading(false); // Pas admin, on affichera l'écran "Accès Interdit"
+                setLoading(false);
             }
         } catch (e) {
-            console.error(e);
             setLoading(false);
         }
     };
 
-    // 2. DÉVERROUILLAGE ET CHARGEMENT DES DONNÉES
     const unlockAndLoad = async () => {
         setLoading(true);
         try {
@@ -59,10 +53,9 @@ function AdminPage() {
             setStats(statsData);
             setUsers(usersData);
             setLogs(logsData);
-            setIsLocked(false); // Déverrouillage réussi
+            setIsLocked(false);
         } catch (e) {
-            console.error("Erreur chargement admin", e);
-            alert("Erreur de chargement des données.");
+            alert("Erreur chargement données.");
         } finally {
             setLoading(false);
         }
@@ -78,53 +71,22 @@ function AdminPage() {
         }
     };
 
-    // --- ACTIONS UTILISATEURS ---
-
-    const handleRoleChange = async (user, currentRole) => {
-        const newRole = currentRole === 'user' ? 'moderator' : 'user';
-        if (window.confirm(`Passer ${user.name} en ${newRole} ?`)) {
-            try {
-                await adminService.updateRole(user.user_id, newRole);
-                adminService.log('ADMIN_ROLE', `A changé le rôle de ${user.name} en ${newRole}`, 'warning');
-                
-                // Mise à jour locale pour éviter de tout recharger
-                setUsers(prev => prev.map(u => u.id === user.id ? { ...u, app_role: newRole } : u));
-            } catch (e) { alert("Erreur modification rôle"); }
-        }
-    };
-
-    const handleEjectUser = async (user) => {
-        const confirmName = prompt(`ATTENTION : Action irréversible.\nPour supprimer ${user.name} et TOUTES ses données (vélos, stats...), tapez "DELETE" :`);
-        if (confirmName === "DELETE") {
-            try {
-                await adminService.deleteUser(user.user_id);
-                adminService.log('ADMIN_EJECT', `A supprimé définitivement l'utilisateur ${user.name}`, 'danger');
-                alert("Utilisateur éjecté.");
-                // Mise à jour locale
-                setUsers(prev => prev.filter(u => u.id !== user.id));
-            } catch (e) {
-                alert("Erreur lors de l'éjection.");
-            }
-        }
-    };
-
-    // --- ACTIONS SYSTÈME ---
-
+    // ACTIONS
     const handleMaintenanceToggle = async () => {
         const newState = !maintenanceMode;
-        if (window.confirm(`Basculer le mode Maintenance sur ${newState ? 'ON' : 'OFF'} ?\n(Les utilisateurs non-admin seront bloqués)`)) {
+        if (window.confirm(`Basculer la maintenance sur ${newState ? 'ON' : 'OFF'} ?`)) {
             await adminService.setMaintenance(newState);
             setMaintenanceMode(newState);
-            adminService.log('MAINTENANCE', `Mode maintenance passé à ${newState}`, 'danger');
+            adminService.log('MAINTENANCE', `Mode maintenance : ${newState}`, 'danger');
         }
     };
 
     const handleCleanup = async () => {
-        if (window.confirm("Scanner et supprimer les photos orphelines du stockage ?")) {
+        if (window.confirm("Nettoyer les photos inutiles ?")) {
             setLoading(true);
             try {
                 const count = await adminService.cleanupPhotos();
-                alert(`${count} fichiers inutiles supprimés.`);
+                alert(`${count} photos supprimées.`);
                 adminService.log('CLEANUP', `${count} photos supprimées`, 'warning');
             } catch(e) { alert("Erreur nettoyage"); }
             setLoading(false);
@@ -135,174 +97,156 @@ function AdminPage() {
         const emails = users.map(u => u.email).filter(e => e).join(', ');
         if (emails) {
             navigator.clipboard.writeText(emails);
-            alert(`${users.length} emails copiés dans le presse-papier !`);
-        } else {
-            alert("Aucun email trouvé.");
+            alert(`${users.length} emails copiés !`);
+        } else alert("Aucun email.");
+    };
+
+    const handleRoleChange = async (user, currentRole) => {
+        const newRole = currentRole === 'user' ? 'moderator' : 'user';
+        if (window.confirm(`Changer le rôle de ${user.name} ?`)) {
+            await adminService.updateRole(user.user_id, newRole);
+            // Refresh local simple
+            setUsers(users.map(u => u.id === user.id ? {...u, app_role: newRole} : u));
         }
     };
 
-    // --- EXPORTS ---
+    const handleEjectUser = async (user) => {
+        if (prompt(`Taper DELETE pour supprimer ${user.name}`) === "DELETE") {
+            await adminService.deleteUser(user.user_id);
+            setUsers(users.filter(u => u.id !== user.id));
+        }
+    };
+
     const exportData = async (type, format) => {
-        let data;
-        try {
-            if (type === 'library') data = await adminService.exportLibrary();
-            if (type === 'logs') data = await adminService.exportLogs();
-
-            if (!data || data.length === 0) {
-                alert("Aucune donnée à exporter.");
-                return;
-            }
-
-            if (format === 'json') {
-                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                downloadFile(blob, `${type}_export_${new Date().toISOString().split('T')[0]}.json`);
-            } else {
-                // CSV simple (aplatit le premier niveau d'objet)
-                const headers = Object.keys(data[0]).join(',');
-                const rows = data.map(row => 
-                    Object.values(row).map(v => 
-                        typeof v === 'object' ? JSON.stringify(v).replace(/"/g, "'") : `"${v}"`
-                    ).join(',')
-                );
-                const csvContent = [headers, ...rows].join('\n');
-                const blob = new Blob([csvContent], { type: 'text/csv' });
-                downloadFile(blob, `${type}_export_${new Date().toISOString().split('T')[0]}.csv`);
-            }
-        } catch (e) {
-            console.error("Erreur export", e);
-            alert("Erreur lors de l'export.");
-        }
-    };
-
-    const downloadFile = (blob, filename) => {
+        const data = type === 'library' ? await adminService.exportLibrary() : await adminService.exportLogs();
+        if (!data?.length) return alert("Rien à exporter");
+        
+        const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = filename;
+        a.download = `export_${type}.json`;
         a.click();
-        window.URL.revokeObjectURL(url);
     };
 
-    // --- VUES ET RENDER ---
+    if (!loading && !isAdmin) return <div className="admin-denied"><h1>⛔ Accès Interdit</h1></div>;
 
-    if (!loading && !isAdmin) {
-        return (
-            <div className="admin-denied">
-                <h1>⛔ Accès Interdit</h1>
-                <p>Cette zone est réservée au staff technique.</p>
-            </div>
-        );
-    }
-
-    // ÉCRAN DE VERROUILLAGE (PIN)
+    // --- LOCK SCREEN CENTRÉ ET STYLÉ ---
     if (isLocked && isAdmin && !loading) {
         return (
-            <div className="admin-lock-screen glass-panel">
-                <FaLock className="lock-icon" />
-                <h2>Zone Sécurisée</h2>
-                <p style={{color:'#aaa', marginBottom:'20px'}}>Veuillez confirmer votre identité.</p>
-                <form onSubmit={handlePinSubmit}>
-                    <input 
-                        type="password" 
-                        value={pin} 
-                        onChange={e => setPin(e.target.value)} 
-                        placeholder="Code PIN" 
-                        autoFocus 
-                        maxLength={4}
-                        className="pin-input"
-                    />
-                    <button type="submit" className="primary-btn" style={{width:'100%'}}>Déverrouiller</button>
-                </form>
+            <div className="admin-lock-screen">
+                <div className="lock-content glass-panel">
+                    <FaLock className="lock-icon" />
+                    <h2>Zone Sécurisée</h2>
+                    <form onSubmit={handlePinSubmit}>
+                        <input 
+                            type="password" 
+                            value={pin} 
+                            onChange={e => setPin(e.target.value)} 
+                            placeholder="PIN" 
+                            autoFocus 
+                            maxLength={4}
+                            className="pin-input"
+                        />
+                        <button type="submit" className="primary-btn" style={{width:'100%'}}>Déverrouiller</button>
+                    </form>
+                </div>
             </div>
         );
     }
 
-    if (loading) return <div className="loading">Chargement du QG...</div>;
+    if (loading) return <div className="loading">Chargement...</div>;
 
-    // Filtrage utilisateurs pour la recherche
-    const filteredUsers = users.filter(u => 
-        (u.name && u.name.toLowerCase().includes(searchTerm.toLowerCase())) || 
-        (u.email && u.email.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
+    const filteredUsers = users.filter(u => u.name?.toLowerCase().includes(searchTerm.toLowerCase()));
 
     return (
         <div className="admin-page">
             <header className="admin-header">
                 <div style={{display:'flex', alignItems:'center', gap:'15px'}}>
                     <h2 className="gradient-text">Administration</h2>
-                    {maintenanceMode && <span className="maint-badge">⚠ MAINTENANCE ACTIVE</span>}
+                    {maintenanceMode && <span className="maint-badge">MAINTENANCE ACTIVE</span>}
                 </div>
                 <div className="admin-tabs">
-                    <button className={activeTab === 'users' ? 'active' : ''} onClick={() => setActiveTab('users')}>
-                        <FaUsers /> Pilotes
-                    </button>
-                    <button className={activeTab === 'logs' ? 'active' : ''} onClick={() => setActiveTab('logs')}>
-                        <FaListAlt /> Logs
-                    </button>
-                    <button className={activeTab === 'system' ? 'active' : ''} onClick={() => setActiveTab('system')}>
-                        <FaTools /> Système
-                    </button>
+                    <button className={activeTab === 'users' ? 'active' : ''} onClick={() => setActiveTab('users')}><FaUsers /> Pilotes</button>
+                    <button className={activeTab === 'logs' ? 'active' : ''} onClick={() => setActiveTab('logs')}><FaListAlt /> Logs</button>
+                    <button className={activeTab === 'system' ? 'active' : ''} onClick={() => setActiveTab('system')}><FaTools /> Système</button>
                 </div>
             </header>
 
-            {/* KPI GLOBAL */}
-            {stats && (
-                <div className="admin-kpi-grid">
-                    <div className="kpi-card glass-panel">
-                        <FaUsers className="kpi-icon" style={{color: '#3b82f6'}} />
-                        <div><span className="value">{stats.users}</span><span className="label">Pilotes</span></div>
+            {/* KPI */}
+            <div className="admin-kpi-grid">
+                <div className="kpi-card"><FaUsers className="kpi-icon" style={{color: '#3b82f6'}} /><div><span className="value">{stats?.users || 0}</span><span className="label">Pilotes</span></div></div>
+                <div className="kpi-card"><FaDatabase className="kpi-icon" style={{color: '#10b981'}} /><div><span className="value">{stats?.bikes || 0}</span><span className="label">Vélos</span></div></div>
+                <div className="kpi-card"><FaChartLine className="kpi-icon" style={{color: '#f59e0b'}} /><div><span className="value">{stats?.totalKm || 0}</span><span className="label">Km</span></div></div>
+            </div>
+
+            {/* TAB SYSTEME */}
+            {activeTab === 'system' && (
+                <div className="system-grid">
+                    {/* MAINTENANCE - BOUTON ROUGE */}
+                    <div className={`system-card ${maintenanceMode ? 'danger-zone' : ''}`}>
+                        <h3><FaPowerOff /> Maintenance</h3>
+                        <p>Bloque l'accès au site pour les utilisateurs.</p>
+                        <button onClick={handleMaintenanceToggle} className={`admin-danger-btn ${maintenanceMode ? 'active' : ''}`}>
+                            {maintenanceMode ? 'DÉSACTIVER' : 'ACTIVER'}
+                        </button>
                     </div>
-                    <div className="kpi-card glass-panel">
-                        <FaDatabase className="kpi-icon" style={{color: '#10b981'}} />
-                        <div><span className="value">{stats.bikes}</span><span className="label">Vélos</span></div>
+
+                    {/* CLEANUP - BOUTON STANDARD */}
+                    <div className="system-card">
+                        <h3><FaBroom /> Nettoyage</h3>
+                        <p>Supprime les photos inutilisées du stockage.</p>
+                        <button onClick={handleCleanup} className="admin-std-btn">Lancer le scan</button>
                     </div>
-                    <div className="kpi-card glass-panel">
-                        <FaChartLine className="kpi-icon" style={{color: '#f59e0b'}} />
-                        <div><span className="value">{parseInt(stats.totalKm).toLocaleString()}</span><span className="label">Km Cumulés</span></div>
+
+                    {/* NEWSLETTER - BOUTON STANDARD */}
+                    <div className="system-card">
+                        <h3><FaEnvelopeOpenText /> Emails</h3>
+                        <p>Récupérer la liste des contacts.</p>
+                        <button onClick={handleNewsletter} className="admin-std-btn">Copier la liste</button>
+                    </div>
+
+                    {/* EXPORTS */}
+                    <div className="system-card">
+                        <h3>Exports</h3>
+                        <div className="export-row">
+                            <span>Bibliothèque</span>
+                            <div>
+                                <button onClick={() => exportData('library', 'json')} className="icon-action"><FaFileCode /></button>
+                            </div>
+                        </div>
+                        <div className="export-row">
+                            <span>Logs</span>
+                            <div>
+                                <button onClick={() => exportData('logs', 'json')} className="icon-action"><FaFileCode /></button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
 
-            {/* --- ONGLET UTILISATEURS --- */}
+            {/* TAB USERS */}
             {activeTab === 'users' && (
-                <div className="admin-section glass-panel">
+                <div className="admin-section">
                     <div className="section-header">
-                        <h3>Gestion Utilisateurs ({filteredUsers.length})</h3>
-                        <div className="search-box">
-                            <FaSearch />
-                            <input type="text" placeholder="Chercher..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
-                        </div>
+                        <h3>Utilisateurs</h3>
+                        <div className="search-box"><FaSearch /><input value={searchTerm} onChange={e=>setSearchTerm(e.target.value)} placeholder="Chercher..." /></div>
                     </div>
                     <div className="users-table-container">
                         <table className="users-table">
-                            <thead>
-                                <tr>
-                                    <th>Avatar</th>
-                                    <th>Nom</th>
-                                    <th>Rôle</th>
-                                    <th>Inscrit le</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
+                            <thead><tr><th>Avatar</th><th>Nom</th><th>Rôle</th><th>Inscrit le</th><th>Actions</th></tr></thead>
                             <tbody>
-                                {filteredUsers.map(user => (
-                                    <tr key={user.id}>
-                                        <td><span className="user-avatar">{user.avatar || '👤'}</span></td>
+                                {filteredUsers.map(u => (
+                                    <tr key={u.id}>
+                                        <td><span className="user-avatar">{u.avatar}</span></td>
+                                        <td>{u.name}<div style={{fontSize:'0.7rem', color:'#888'}}>{u.email}</div></td>
+                                        <td><span className={`role-badge ${u.app_role}`}>{u.app_role}</span></td>
+                                        <td>{new Date(u.created_at).toLocaleDateString()}</td>
                                         <td>
-                                            <div style={{fontWeight:'bold'}}>{user.name}</div>
-                                            <div style={{fontSize:'0.8rem', color:'#888'}}>{user.email}</div>
-                                        </td>
-                                        <td><span className={`role-badge ${user.app_role}`}>{user.app_role}</span></td>
-                                        <td>{new Date(user.created_at).toLocaleDateString()}</td>
-                                        <td>
-                                            {user.app_role !== 'admin' && (
+                                            {u.app_role !== 'admin' && (
                                                 <div className="actions-row">
-                                                    <button className="action-icon" onClick={() => handleRoleChange(user, user.app_role)} title="Changer Rôle">
-                                                        <FaUserShield color={user.app_role === 'moderator' ? '#10b981' : '#6b7280'} />
-                                                    </button>
-                                                    <button className="action-icon delete" onClick={() => handleEjectUser(user)} title="Éjecter">
-                                                        <FaTrash />
-                                                    </button>
+                                                    <button className="action-icon" onClick={() => handleRoleChange(u, u.app_role)}><FaUserShield /></button>
+                                                    <button className="action-icon delete" onClick={() => handleEjectUser(u)}><FaTrash /></button>
                                                 </div>
                                             )}
                                         </td>
@@ -314,72 +258,19 @@ function AdminPage() {
                 </div>
             )}
 
-            {/* --- ONGLET LOGS --- */}
+            {/* TAB LOGS */}
             {activeTab === 'logs' && (
-                <div className="admin-section glass-panel">
-                    <div className="section-header">
-                        <h3>Journal d'activité (100 derniers)</h3>
-                        <div className="export-mini-actions">
-                             <button onClick={() => exportData('logs', 'csv')} title="Export CSV"><FaFileCsv /></button>
-                        </div>
-                    </div>
+                <div className="admin-section">
+                    <h3>Logs Système</h3>
                     <div className="logs-list">
-                        {logs.map(log => (
-                            <div key={log.id} className={`log-item ${log.level}`}>
-                                <span className="log-date">{new Date(log.created_at).toLocaleString()}</span>
-                                <span className="log-user"><strong>{log.user_name}</strong></span>
-                                <span className="log-action">{log.action}</span>
-                                <span className="log-details">{log.details}</span>
+                        {logs.map(l => (
+                            <div key={l.id} className={`log-item ${l.level}`}>
+                                <span className="log-date">{new Date(l.created_at).toLocaleDateString()}</span>
+                                <span className="log-user">{l.user_name}</span>
+                                <span className="log-action">{l.action}</span>
+                                <span className="log-details">{l.details}</span>
                             </div>
                         ))}
-                        {logs.length === 0 && <p style={{padding:'20px', color:'#888'}}>Aucun log enregistré.</p>}
-                    </div>
-                </div>
-            )}
-
-            {/* --- ONGLET SYSTÈME --- */}
-            {activeTab === 'system' && (
-                <div className="system-grid">
-                    {/* MAINTENANCE */}
-                    <div className={`system-card glass-panel ${maintenanceMode ? 'danger-zone' : ''}`}>
-                        <h3><FaPowerOff /> Mode Maintenance</h3>
-                        <p>Bloque l'accès à l'application pour tous les utilisateurs non-admin.</p>
-                        <button onClick={handleMaintenanceToggle} className={`toggle-maint-btn ${maintenanceMode ? 'active' : ''}`}>
-                            {maintenanceMode ? 'DÉSACTIVER LA MAINTENANCE' : 'ACTIVER LA MAINTENANCE'}
-                        </button>
-                    </div>
-
-                    {/* CLEANUP */}
-                    <div className="system-card glass-panel">
-                        <h3><FaBroom /> Nettoyage Stockage</h3>
-                        <p>Supprime les photos qui ne sont plus liées à aucun vélo.</p>
-                        <button onClick={handleCleanup} className="secondary-btn full-width">Lancer le nettoyage</button>
-                    </div>
-
-                    {/* NEWSLETTER */}
-                    <div className="system-card glass-panel">
-                        <h3><FaEnvelopeOpenText /> Newsletter</h3>
-                        <p>Copier la liste des emails de tous les utilisateurs.</p>
-                        <button onClick={handleNewsletter} className="secondary-btn full-width">Copier les emails</button>
-                    </div>
-
-                    {/* EXPORTS */}
-                    <div className="system-card glass-panel">
-                        <h3>Exports Données</h3>
-                        <div className="export-row">
-                            <span>Bibliothèque :</span>
-                            <div>
-                                <button onClick={() => exportData('library', 'csv')} className="icon-action"><FaFileCsv /></button>
-                                <button onClick={() => exportData('library', 'json')} className="icon-action"><FaFileCode /></button>
-                            </div>
-                        </div>
-                        <div className="export-row">
-                            <span>Logs Système :</span>
-                            <div>
-                                <button onClick={() => exportData('logs', 'csv')} className="icon-action"><FaFileCsv /></button>
-                                <button onClick={() => exportData('logs', 'json')} className="icon-action"><FaFileCode /></button>
-                            </div>
-                        </div>
                     </div>
                 </div>
             )}

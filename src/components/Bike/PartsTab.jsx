@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { partsService, historyService } from '../../services/api';
+import { partsService, historyService, bikeService } from '../../services/api';
 import { specsService } from '../../services/specsService';
 import { FaPlus, FaCogs, FaCompactDisc, FaCircle, FaWrench, FaTrash, FaSyncAlt, FaCloudDownloadAlt } from 'react-icons/fa';
 import PartForm from './PartForm';

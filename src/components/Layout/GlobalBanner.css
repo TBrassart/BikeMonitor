@@ -1,93 +1,113 @@
+/* src/components/Layout/GlobalBanner.css */
+
 .global-banner {
-    position: sticky; 
+    /* CHANGEMENT MAJEUR : Sticky au lieu de Fixed */
+    position: sticky;
     top: 0;
-    width: 100%;
-    height: 40px;
-    z-index: 40;
+    width: 100%; /* Prend la largeur du parent (main-content) */
+    height: 45px; /* Un peu plus haut pour la lisibilité */
+    z-index: 40; /* En dessous de la sidebar (50) au cas où */
     
     display: flex;
     align-items: center;
     overflow: hidden;
-    white-space: nowrap;
     
-    backdrop-filter: blur(10px);
+    /* Style Visuel */
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
     border-bottom: 1px solid rgba(255,255,255,0.1);
-    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    backdrop-filter: blur(10px);
     
+    /* Marge pour ne pas coller au contenu */
     margin-bottom: 20px;
-    border-radius: 0 0 12px 12px; 
+    border-radius: 0 0 12px 12px; /* Arrondi uniquement en bas */
 }
 
-.global-banner.type-info {
-    background: linear-gradient(90deg, rgba(14, 165, 233, 0.1), rgba(14, 165, 233, 0.05));
+/* --- COULEURS & ANIMATION DE FOND --- */
+
+.type-info {
+    background: linear-gradient(90deg, rgba(14, 165, 233, 0.15), rgba(15, 23, 42, 0.9), rgba(14, 165, 233, 0.15));
+    background-size: 200% 100%;
+    animation: gradientFlow 10s ease infinite;
     border-bottom-color: var(--neon-blue);
 }
-.global-banner.type-warning {
-    background: linear-gradient(90deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.05));
+
+.type-warning {
+    background: linear-gradient(90deg, rgba(245, 158, 11, 0.15), rgba(69, 26, 3, 0.9), rgba(245, 158, 11, 0.15));
+    background-size: 200% 100%;
+    animation: gradientFlow 10s ease infinite;
     border-bottom-color: #f59e0b;
 }
-.global-banner.type-maint {
-    background: linear-gradient(90deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05));
+
+.type-maint {
+    background: repeating-linear-gradient(
+        45deg,
+        rgba(69, 10, 10, 0.9),
+        rgba(69, 10, 10, 0.9) 10px,
+        rgba(127, 29, 29, 0.9) 10px,
+        rgba(127, 29, 29, 0.9) 20px
+    );
     border-bottom-color: #ef4444;
 }
-.global-banner.type-feature {
-    background: linear-gradient(90deg, rgba(217, 70, 239, 0.1), rgba(217, 70, 239, 0.05));
+
+.type-feature {
+    background: linear-gradient(90deg, rgba(217, 70, 239, 0.15), rgba(74, 4, 78, 0.9), rgba(217, 70, 239, 0.15));
+    background-size: 200% 100%;
+    animation: gradientFlow 8s ease infinite;
     border-bottom-color: var(--neon-purple);
 }
 
-/* Animation de défilement */
-.banner-track {
-    display: flex;
-    gap: 50px; /* Espace entre la fin du message et la répétition */
-    animation: marquee 20s linear infinite;
-    width: max-content;
-    padding-left: 100vw; /* Commence hors écran */
+@keyframes gradientFlow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
-/* Si on veut que ça passe en boucle quand on survole on peut mettre animation-play-state: paused; */
+/* --- TEXTE DÉFILANT --- */
+.banner-track {
+    display: flex;
+    width: fit-content;
+    animation: scrollText 25s linear infinite; /* Vitesse ajustée */
+    padding-left: 100%; /* Commence hors écran à droite */
+}
+
 .global-banner:hover .banner-track {
     animation-play-state: paused;
 }
 
-@keyframes marquee {
+@keyframes scrollText {
     0% { transform: translateX(0); }
     100% { transform: translateX(-100%); }
 }
 
-.banner-content {
+.banner-item {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 12px;
+    padding-right: 80px; /* Espace entre la fin du message et la répétition */
+    white-space: nowrap;
 }
 
 .banner-badge {
-    display: flex;
-    align-items: center;
-    gap: 6px;
     font-weight: 800;
-    font-size: 0.8rem;
-    padding: 2px 8px;
+    font-size: 0.7rem;
+    padding: 3px 8px;
     border-radius: 4px;
     letter-spacing: 1px;
+    color: #000;
+    box-shadow: 0 0 8px currentColor;
+    text-transform: uppercase;
 }
 
 /* Couleurs des badges */
-.type-info .banner-badge { background: var(--neon-blue); color: #000; box-shadow: 0 0 10px var(--neon-blue); }
-.type-warning .banner-badge { background: #f59e0b; color: #000; box-shadow: 0 0 10px #f59e0b; }
-.type-maint .banner-badge { background: #ef4444; color: white; box-shadow: 0 0 10px #ef4444; }
-.type-feature .banner-badge { background: var(--neon-purple); color: white; box-shadow: 0 0 10px var(--neon-purple); }
+.type-info .banner-badge { background: #0ea5e9; }
+.type-warning .banner-badge { background: #f59e0b; }
+.type-maint .banner-badge { background: #ef4444; color: white; }
+.type-feature .banner-badge { background: #d946ef; color: white; }
 
 .banner-text {
-    font-weight: 500;
-    font-size: 0.95rem;
+    font-weight: 600;
+    font-size: 1rem;
     color: white;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-}
-
-/* Ajustement si Sidebar présente sur PC */
-@media (min-width: 769px) {
-    .global-banner {
-        left: 260px; /* Largeur de la sidebar pour ne pas passer dessus */
-        width: calc(100% - 260px);
-    }
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    letter-spacing: 0.5px;
 }

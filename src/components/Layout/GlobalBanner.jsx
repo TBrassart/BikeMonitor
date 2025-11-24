@@ -9,7 +9,6 @@ function GlobalBanner() {
 
     useEffect(() => {
         checkBanner();
-        // On revérifie chaque minute au cas où l'heure de début arrive pendant la navigation
         const interval = setInterval(checkBanner, 60000);
         return () => clearInterval(interval);
     }, []);
@@ -26,7 +25,6 @@ function GlobalBanner() {
             const start = new Date(settings.startAt);
             const end = new Date(settings.endAt);
 
-            // Est-ce qu'on est dans le créneau ?
             if (now >= start && now <= end) {
                 setConfig(settings);
                 setIsVisible(true);
@@ -34,13 +32,12 @@ function GlobalBanner() {
                 setIsVisible(false);
             }
         } catch (e) {
-            console.error("Erreur bannière", e);
+            console.error(e);
         }
     };
 
     if (!isVisible || !config) return null;
 
-    // Choix de l'icône et du style selon le type
     const getVisuals = (type) => {
         switch(type) {
             case 'warning': return { icon: <FaExclamationTriangle />, label: 'ATTENTION', class: 'type-warning' };
@@ -51,23 +48,21 @@ function GlobalBanner() {
     };
 
     const visuals = getVisuals(config.type);
+    
+    // On répète le message plusieurs fois pour être sûr qu'il remplisse un écran large
+    const items = [1, 2, 3, 4]; 
 
     return (
-        <div className={`global-banner glass-panel ${visuals.class}`}>
+        <div className={`global-banner ${visuals.class}`}>
             <div className="banner-track">
-                <div className="banner-content">
-                    <span className="banner-badge">
-                        {visuals.icon} {visuals.label}
-                    </span>
-                    <span className="banner-text">{config.message}</span>
-                </div>
-                {/* Dupliqué pour l'effet de boucle infinie fluide si le texte est court */}
-                <div className="banner-content">
-                    <span className="banner-badge">
-                        {visuals.icon} {visuals.label}
-                    </span>
-                    <span className="banner-text">{config.message}</span>
-                </div>
+                {items.map((i) => (
+                    <div key={i} className="banner-item">
+                        <span className="banner-badge">
+                            {visuals.icon} {visuals.label}
+                        </span>
+                        <span className="banner-text">{config.message}</span>
+                    </div>
+                ))}
             </div>
         </div>
     );

@@ -77,36 +77,33 @@ function App() {
 
     return (
         <div className="app-container">
-            
+            {/* Sidebar reste fixe à gauche */}
             <SideBar />
-            <main className="main-content">
 
+            <main className="main-content">
+                {/* LA BANNIÈRE EST MAINTENANT ICI (DANS LE FLUX) */}
                 <GlobalBanner />
-                
+
                 <Routes>
                     <Route path="/" element={<Navigate to="/app/dashboard" />} />
                     <Route path="/strava-callback" element={<StravaCallback />} />
 
-                    {/* PRINCIPAL */}
                     <Route path="/app/dashboard" element={<Dashboard />} />
                     <Route path="/app/activities" element={<ActivitiesPage />} />
 
-                    {/* VÉLOS */}
                     <Route path="/app/garage" element={<BikeGarage />} />
                     <Route path="/app/add-bike" element={<BikeForm />} />
                     <Route path="/app/bike/:bikeId" element={<BikeDetailShell />} />
                     <Route path="/app/edit-bike/:bikeId" element={<BikeForm />} />
 
-                    {/* MODULES ADDITIONNELS */}
                     <Route path="/app/equipment" element={<EquipmentPage />} />
                     <Route path="/app/nutrition" element={<NutritionPage />} />
                     <Route path="/app/kits" element={<KitsPage />} />
                     <Route path="/app/library" element={<LibraryPage />} />
 
-                    {/* ADMIN & SOCIAL */}
                     <Route path="/app/turlag" element={
                         <div className="page-container">
-                            <h2 style={{marginBottom:'20px', color:'white'}}>Mon Turlag</h2>
+                            <h2 className="gradient-text" style={{marginBottom:'20px'}}>Mon Turlag</h2>
                             <TurlagManager />
                         </div>
                     } />
@@ -118,6 +115,7 @@ function App() {
                     <Route path="*" element={<Navigate to="/app/dashboard" />} />
                 </Routes>
             </main>
+            
             <BottomNav />
         </div>
     );

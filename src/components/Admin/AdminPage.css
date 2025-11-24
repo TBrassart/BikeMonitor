@@ -75,7 +75,7 @@
 
 /* --- ONGLETS LOGS --- */
 .logs-list { display: flex; flex-direction: column; gap: 8px; max-height: 600px; overflow-y: auto; }
-.log-item { display: grid; grid-template-columns: 150px 150px 150px 1fr; padding: 12px 15px; border-radius: 8px; background: rgba(0,0,0,0.2); align-items: center; gap: 15px; font-size: 0.9rem; }
+.log-item { display: grid; grid-template-columns: 180px 150px 150px 1fr; padding: 12px 15px; border-radius: 8px; background: rgba(0,0,0,0.2); align-items: center; gap: 15px; font-size: 0.9rem; }
 .log-item.warning { border-left: 4px solid #f59e0b; }
 .log-item.danger { border-left: 4px solid #ef4444; }
 .log-item.info { border-left: 4px solid #3b82f6; }

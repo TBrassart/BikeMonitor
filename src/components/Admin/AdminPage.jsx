@@ -277,7 +277,7 @@ function AdminPage() {
                     <div className="logs-list">
                         {logs.map(l => (
                             <div key={l.id} className={`log-item ${l.level}`}>
-                                <span className="log-date">{new Date(l.created_at).toLocaleDateString()}</span>
+                                <span className="log-date">{new Date(l.created_at).toLocaleString('fr-FR')}</span>
                                 <span className="log-user">{l.user_name}</span>
                                 <span className="log-action">{l.action}</span>
                                 <span className="log-details">{l.details}</span>

@@ -2,34 +2,41 @@ export default async function handler(req, res) {
     const { brand, year, model } = req.query;
 
     if (!brand || !year || !model) {
-        return res.status(400).json({ error: 'Paramètres manquants (brand, year, model)' });
+        return res.status(400).json({ error: 'Paramètres manquants' });
     }
+
+    // --- FONCTION DE NETTOYAGE ROBUSTE ---
+    const toSlug = (str) => {
+        return str
+            .toLowerCase() // Minuscules
+            .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Enlève les accents (É -> e)
+            .replace(/[^a-z0-9\s-]/g, "") // Enlève les caractères spéciaux (/, +, etc)
+            .trim()
+            .replace(/\s+/g, '-'); // Remplace les espaces par des tirets
+    };
 
     try {
         // 1. On récupère la Home Page pour trouver le BUILD_ID
-        // On se fait passer pour un vrai navigateur (User-Agent) pour éviter les blocages basiques
         const homeResponse = await fetch('https://99spokes.com/fr-FR', {
             headers: { 'User-Agent': 'Mozilla/5.0 (compatible; BikeMonitor/1.0)' }
         });
         const homeHtml = await homeResponse.text();
 
-        // 2. On extrait le buildId via Regex (Next.js le met dans __NEXT_DATA__)
-        // On cherche la chaine : "buildId":"xyz..."
         const buildIdMatch = homeHtml.match(/"buildId":"([^"]+)"/);
         
         if (!buildIdMatch || !buildIdMatch[1]) {
-            return res.status(500).json({ error: 'Impossible de récupérer le BUILD_ID 99spokes' });
+            return res.status(500).json({ error: 'Impossible de récupérer le BUILD_ID' });
         }
         
         const buildId = buildIdMatch[1];
         
-        // 3. On construit l'URL magique JSON
-        const safeBrand = brand.toLowerCase().replace(/\s+/g, '-');
-        const safeModel = model.toLowerCase().replace(/\s+/g, '-');
+        // 3. On construit l'URL avec notre fonction de nettoyage
+        const safeBrand = toSlug(brand);
+        const safeModel = toSlug(model);
         
         const apiUrl = `https://99spokes.com/_next/data/${buildId}/fr-FR/bikes/${safeBrand}/${year}/${safeModel}.json?makerId=${safeBrand}&year=${year}&modelId=${safeModel}`;
 
-        console.log("Fetching 99spokes API:", apiUrl);
+        console.log("Fetching:", apiUrl);
 
         // 4. On récupère les specs
         const specsResponse = await fetch(apiUrl, {
@@ -42,12 +49,12 @@ export default async function handler(req, res) {
 
         const data = await specsResponse.json();
 
-        // 5. On nettoie et mappe les données pour notre app
-        // La structure de 99spokes est complexe, on essaie d'attraper les composants
+        // ... (Le reste du parsing reste identique à ce que je t'ai donné avant) ...
+        // Je te remets le bloc de parsing pour être sûr que le fichier est complet
+
         const rawComponents = data.pageProps?.bike?.components || {};
         const cleanParts = [];
 
-        // Mapping de catégories 99spokes -> BikeMonitor
         const categoryMap = {
             'chain': 'transmission',
             'cassette': 'transmission',
@@ -58,27 +65,21 @@ export default async function handler(req, res) {
             'tyres': 'pneus'
         };
 
-        // Parcours des sections (Frame, Drivetrain, Brakes...)
         Object.keys(rawComponents).forEach(section => {
             const items = rawComponents[section];
-            // Parfois c'est un tableau, parfois un objet
             if (typeof items === 'object') {
                 Object.keys(items).forEach(key => {
-                    // key est le type de pièce (ex: "chain")
-                    const partName = items[key]; // La valeur (ex: "Shimano 105")
-                    
-                    // On essaie de deviner la catégorie
+                    const partName = items[key];
                     let myCat = 'autre';
                     for (const [detect, cat] of Object.entries(categoryMap)) {
                         if (key.toLowerCase().includes(detect)) myCat = cat;
                     }
 
-                    // On ignore les cadres, fourches, etc pour l'instant (focus pièces d'usure)
                     if (myCat !== 'autre' && partName) {
                          cleanParts.push({
                             name: Array.isArray(partName) ? partName.join(' ') : partName,
                             category: myCat,
-                            life_target_km: getLifeKm(myCat) // Fonction helper
+                            life_target_km: getLifeKm(myCat)
                         });
                     }
                 });
@@ -93,10 +94,9 @@ export default async function handler(req, res) {
     }
 }
 
-// Durée de vie par défaut selon la catégorie
 function getLifeKm(cat) {
-    if (cat === 'transmission') return 5000; // Chaîne
+    if (cat === 'transmission') return 5000;
     if (cat === 'pneus') return 4000;
-    if (cat === 'freinage') return 10000; // Plaquettes/Disques
+    if (cat === 'freinage') return 10000;
     return 2000;
 }

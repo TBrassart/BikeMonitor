@@ -1,17 +1,6 @@
 export default async function handler(req, res) {
     const { brand, year, model } = req.query;
 
-    // --- SÉCURITÉ ANTI-CRASH ---
-    if (!brand || brand === 'undefined' || brand === 'null') {
-        return res.status(400).json({ error: 'Marque manquante' });
-    }
-    if (!model || model === 'undefined' || model === 'null') {
-        return res.status(400).json({ error: 'Modèle manquant' });
-    }
-    if (!year || year === 'undefined' || isNaN(year)) {
-        return res.status(400).json({ error: 'Année manquante ou invalide' });
-    }
-
     const toSlug = (str) => {
         if (!str) return '';
         return str.toLowerCase()
@@ -20,50 +9,63 @@ export default async function handler(req, res) {
             .trim().replace(/\s+/g, '-');
     };
 
+    if (!brand || !year || !model) {
+        return res.status(400).json({ error: 'Paramètres manquants' });
+    }
+
+    let apiUrl = ""; // On la déclare ici pour l'avoir dans le catch
+
     try {
         const safeBrand = toSlug(brand);
         const safeModel = toSlug(model);
-
-        console.log(`🔍 99spokes: ${safeBrand} ${safeModel} (${year})`);
 
         // 1. Home Page pour le BUILD_ID
         const homeResponse = await fetch('https://99spokes.com/fr-FR', {
             headers: { 'User-Agent': 'Mozilla/5.0 (compatible; BikeMonitor/1.0)' }
         });
         
-        if (!homeResponse.ok) throw new Error(`Home unreachable: ${homeResponse.status}`);
-        
         const homeHtml = await homeResponse.text();
         const buildIdMatch = homeHtml.match(/"buildId":"([^"]+)"/);
         
         if (!buildIdMatch || !buildIdMatch[1]) {
-            return res.status(500).json({ error: 'Build ID introuvable (Site mis à jour ?)' });
+            return res.status(500).json({ error: 'Build ID introuvable' });
         }
         
         const buildId = buildIdMatch[1];
         
-        // 2. URL JSON
-        const apiUrl = `https://99spokes.com/_next/data/${buildId}/fr-FR/bikes/${safeBrand}/${year}/${safeModel}.json?makerId=${safeBrand}&year=${year}&modelId=${safeModel}`;
+        // 2. Construction URL
+        apiUrl = `https://99spokes.com/_next/data/${buildId}/fr-FR/bikes/${safeBrand}/${year}/${safeModel}.json?makerId=${safeBrand}&year=${year}&modelId=${safeModel}`;
 
+        console.log("Target URL:", apiUrl);
+
+        // 3. Fetch Specs
         const specsResponse = await fetch(apiUrl, {
             headers: { 'User-Agent': 'Mozilla/5.0 (compatible; BikeMonitor/1.0)' }
         });
 
+        // SI 404 : On renvoie l'URL tentée pour que tu puisses débugger
         if (specsResponse.status === 404) {
-            return res.status(404).json({ error: `Vélo introuvable : ${brand} ${model} ${year}` });
+            return res.status(404).json({ 
+                error: `Vélo introuvable (${specsResponse.status})`,
+                debugUrl: apiUrl, // <--- C'EST ICI QUE ÇA SE PASSE
+                slugs: { brand: safeBrand, model: safeModel, year }
+            });
         }
+
+        if (!specsResponse.ok) throw new Error(`Status ${specsResponse.status}`);
 
         const data = await specsResponse.json();
 
-        // 3. Parsing
+        // 4. Parsing (inchangé)
         const rawComponents = data.pageProps?.bike?.components || {};
         const cleanParts = [];
-
+        
         const categoryMap = {
             'chain': 'transmission', 'cassette': 'transmission',
             'rearDerailleur': 'transmission', 'shifters': 'transmission',
-            'brakes': 'freinage', 'tires': 'pneus', 'tyres': 'pneus',
-            'wheels': 'autre'
+            'brakes': 'freinage', 'brakeLevers': 'freinage', 'rotors': 'freinage',
+            'tires': 'pneus', 'tyres': 'pneus', 'wheels': 'autre',
+            'handlebar': 'peripheriques', 'saddle': 'peripheriques'
         };
 
         Object.keys(rawComponents).forEach(section => {
@@ -78,20 +80,21 @@ export default async function handler(req, res) {
                     if (myCat !== 'autre' && partName) {
                          const finalName = Array.isArray(partName) ? partName.join(' ') : partName;
                          cleanParts.push({
-                            name: finalName,
-                            category: myCat,
-                            life_target_km: getLifeKm(myCat)
+                            name: finalName, category: myCat, life_target_km: getLifeKm(myCat)
                         });
                     }
                 });
             }
         });
 
-        return res.status(200).json(cleanParts);
+        // On renvoie aussi l'URL en cas de succès pour vérifier
+        return res.status(200).json({ parts: cleanParts, debugUrl: apiUrl });
 
     } catch (error) {
-        console.error("🔥 API CRASH:", error);
-        return res.status(500).json({ error: error.message });
+        return res.status(500).json({ 
+            error: error.message,
+            debugUrl: apiUrl 
+        });
     }
 }
 

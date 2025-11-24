@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { partsService, historyService } from '../../services/api';
-import { FaPlus, FaCogs, FaCompactDisc, FaCircle, FaWrench, FaTrash, FaSyncAlt } from 'react-icons/fa';
+import { specsService } from '../../services/specsService';
+import { FaPlus, FaCogs, FaCompactDisc, FaCircle, FaWrench, FaTrash, FaSyncAlt, FaCloudDownloadAlt } from 'react-icons/fa';
 import PartForm from './PartForm';
 import './PartsTab.css';
 
@@ -8,6 +9,8 @@ function PartsTab({ bikeId }) {
     const [parts, setParts] = useState([]);
     const [showForm, setShowForm] = useState(false);
     const [loading, setLoading] = useState(true);
+
+    const [importing, setImporting] = useState(false);
 
     useEffect(() => {
         loadParts();
@@ -20,6 +23,56 @@ function PartsTab({ bikeId }) {
             setParts(data.filter(p => p.status !== 'archived'));
         } catch (e) { console.error(e); } 
         finally { setLoading(false); }
+    };
+
+    const handleAutoImport = async () => {
+        setImporting(true);
+        try {
+            // 1. On récupère les infos du vélo (Marque, Modèle, Année)
+            const bike = await bikeService.getById(bikeId);
+            
+            if (!bike.brand || !bike.model || !bike.model_year) {
+                alert("Il manque la Marque, le Modèle ou l'Année dans la fiche vélo pour faire une recherche.");
+                setImporting(false);
+                return;
+            }
+
+            // 2. On appelle notre service (Simulation pour l'instant)
+            const foundParts = await specsService.fetchSpecs(bike.brand, bike.model_year, bike.model);
+
+            if (!foundParts || foundParts.length === 0) {
+                alert("Aucune fiche technique trouvée pour ce modèle.");
+                setImporting(false);
+                return;
+            }
+
+            // 3. On demande confirmation
+            const confirm = window.confirm(`${foundParts.length} pièces trouvées. Voulez-vous les ajouter à votre inventaire ?`);
+            
+            if (confirm) {
+                // 4. On ajoute chaque pièce
+                const today = new Date().toISOString().split('T')[0];
+                for (const part of foundParts) {
+                    await partsService.add({
+                        bike_id: bikeId,
+                        name: part.name,
+                        category: part.category,
+                        life_target_km: part.life_target_km,
+                        installation_date: today,
+                        km_current: 0, // On suppose qu'elles sont neuves ou on commence le suivi ici
+                        status: 'ok'
+                    });
+                }
+                loadParts(); // Rafraîchir la liste
+                alert("Pièces importées avec succès ! 🚀");
+            }
+
+        } catch (e) {
+            console.error(e);
+            alert("Erreur lors de l'import.");
+        } finally {
+            setImporting(false);
+        }
     };
 
     // --- ACTION REMPLACER PIÈCE (CORRIGÉE) ---
@@ -86,9 +139,22 @@ function PartsTab({ bikeId }) {
         <div className="parts-tab">
             <div className="tab-actions-row">
                 <h3 className="gradient-text">Composants</h3>
-                <button onClick={() => setShowForm(!showForm)} className="add-mini-btn">
-                    <FaPlus />
-                </button>
+
+                
+                <div className="actions-group" style={{display:'flex', gap:'10px'}}>
+                    <button 
+                        onClick={handleAutoImport} 
+                        className="import-btn" 
+                        disabled={importing}
+                        title="Importer depuis 99spokes (Beta)"
+                    >
+                        {importing ? '...' : <><FaCloudDownloadAlt /> Auto-Detect</>}
+                    </button>
+
+                    <button onClick={() => setShowForm(!showForm)} className="add-mini-btn">
+                        <FaPlus />
+                    </button>
+                </div>
             </div>
 
             {showForm && (

@@ -132,7 +132,19 @@ function BikeForm() {
                         <label>Marque</label>
                         <input type="text" name="brand" value={formData.brand} onChange={handleChange} />
                     </div>
-
+                    
+                    <div className="form-group">
+                        <label>Modèle commercial</label>
+                        <input 
+                            type="text" 
+                            name="model" 
+                            value={formData.model} 
+                            onChange={handleChange} 
+                            placeholder="Ex: Attain GTC Race" 
+                        />
+                        <small style={{color:'var(--text-secondary)', fontSize:'0.7rem'}}>Sert à trouver les pièces d'origine</small>
+                    </div>
+                    
                     <div className="form-group">
                         <label>Type</label>
                         <select name="type" value={formData.type} onChange={handleChange}>

@@ -234,6 +234,62 @@ function AdminPage() {
                             </div>
                         </div>
                     </div>
+
+                    {/* BANNIÈRE GLOBALE */}
+                    <div className="system-card glass-panel">
+                        <h3><FaBullhorn /> Annonce Globale</h3>
+                        <p>Afficher un bandeau défilant pour tous les utilisateurs.</p>
+                        
+                        <form onSubmit={async (e) => {
+                            e.preventDefault();
+                            const fd = new FormData(e.target);
+                            const settings = {
+                                message: fd.get('message'),
+                                startAt: fd.get('startAt'),
+                                endAt: fd.get('endAt'),
+                                type: fd.get('type')
+                            };
+                            try {
+                                await adminService.setBanner(settings);
+                                alert("Bannière programmée !");
+                            } catch(err) { alert("Erreur"); }
+                        }}>
+                            <div style={{display:'flex', flexDirection:'column', gap:'15px'}}>
+                                <input name="message" type="text" placeholder="Message (ex: Maintenance ce soir...)" required style={{width:'100%', padding:'10px', background:'rgba(0,0,0,0.3)', border:'1px solid #444', color:'white', borderRadius:'8px'}} />
+                                
+                                <div style={{display:'flex', gap:'10px'}}>
+                                    <div style={{flex:1}}>
+                                        <label style={{fontSize:'0.8rem', color:'#888'}}>Début</label>
+                                        <input name="startAt" type="datetime-local" required style={{width:'100%', padding:'10px', background:'rgba(0,0,0,0.3)', border:'1px solid #444', color:'white', borderRadius:'8px'}} />
+                                    </div>
+                                    <div style={{flex:1}}>
+                                        <label style={{fontSize:'0.8rem', color:'#888'}}>Fin</label>
+                                        <input name="endAt" type="datetime-local" required style={{width:'100%', padding:'10px', background:'rgba(0,0,0,0.3)', border:'1px solid #444', color:'white', borderRadius:'8px'}} />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label style={{fontSize:'0.8rem', color:'#888'}}>Type d'annonce</label>
+                                    <div style={{display:'flex', gap:'10px', marginTop:'5px'}}>
+                                        <label style={{cursor:'pointer', display:'flex', alignItems:'center', gap:'5px', color:'var(--neon-blue)'}}>
+                                            <input type="radio" name="type" value="info" defaultChecked /> Info
+                                        </label>
+                                        <label style={{cursor:'pointer', display:'flex', alignItems:'center', gap:'5px', color:'#f59e0b'}}>
+                                            <input type="radio" name="type" value="warning" /> Attention
+                                        </label>
+                                        <label style={{cursor:'pointer', display:'flex', alignItems:'center', gap:'5px', color:'#ef4444'}}>
+                                            <input type="radio" name="type" value="maintenance" /> Maintenance
+                                        </label>
+                                        <label style={{cursor:'pointer', display:'flex', alignItems:'center', gap:'5px', color:'var(--neon-purple)'}}>
+                                            <input type="radio" name="type" value="feature" /> Nouveauté
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <button type="submit" className="admin-std-btn">Programmer l'annonce</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             )}
 

@@ -454,6 +454,20 @@ export const api = {
         return { users, bikes, parts, totalKm: Math.round(totalKm) };
     },
 
+    // BANNIÈRE GLOBALE
+    async getBannerSettings() {
+        const { data } = await supabase.from('app_settings').select('value').eq('key', 'global_banner').single();
+        return data?.value || null;
+    },
+
+    async setBannerSettings(settings) {
+        // settings = { message, startAt, endAt, type }
+        const { error } = await supabase
+            .from('app_settings')
+            .upsert({ key: 'global_banner', value: settings });
+        if (error) throw error;
+    },
+
     // --- LOGS ---
     async logAction(action, details, level = 'info') {
         try {
@@ -619,4 +633,6 @@ export const adminService = {
     exportLibrary: () => api.getFullLibrary(),
     exportLogs: () => api.getFullLogs(),
     verifyPin: (p) => api.checkAdminPin(p),
+    getBanner: () => api.getBannerSettings(),
+    setBanner: (s) => api.setBannerSettings(s),
 };

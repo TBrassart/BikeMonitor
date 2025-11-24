@@ -25,6 +25,7 @@ import SettingsPage from './components/Settings/SettingsPage';
 import StravaCallback from './components/Settings/StravaCallback';
 
 import AdminPage from './components/Admin/AdminPage';
+import GlobalBanner from './components/Layout/GlobalBanner';
 
 import './App.css';
 
@@ -76,6 +77,9 @@ function App() {
 
     return (
         <div className="app-container">
+            {/* LA BANNIÈRE EST ICI */}
+            <GlobalBanner />
+            
             <SideBar />
             <main className="main-content">
                 <Routes>

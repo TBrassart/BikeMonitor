@@ -1,0 +1,90 @@
+.global-banner {
+    position: fixed;
+    top: 0;
+    left: 0; /* Si sidebar présente, on ajustera dans App.css ou ici via media query */
+    right: 0;
+    height: 40px;
+    z-index: 2000; /* Au-dessus de tout */
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    white-space: nowrap;
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+}
+
+/* Variantes de couleurs Néon */
+.global-banner.type-info {
+    background: linear-gradient(90deg, rgba(14, 165, 233, 0.1), rgba(14, 165, 233, 0.05));
+    border-bottom-color: var(--neon-blue);
+}
+.global-banner.type-warning {
+    background: linear-gradient(90deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.05));
+    border-bottom-color: #f59e0b;
+}
+.global-banner.type-maint {
+    background: linear-gradient(90deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05));
+    border-bottom-color: #ef4444;
+}
+.global-banner.type-feature {
+    background: linear-gradient(90deg, rgba(217, 70, 239, 0.1), rgba(217, 70, 239, 0.05));
+    border-bottom-color: var(--neon-purple);
+}
+
+/* Animation de défilement */
+.banner-track {
+    display: flex;
+    gap: 50px; /* Espace entre la fin du message et la répétition */
+    animation: marquee 20s linear infinite;
+    width: max-content;
+    padding-left: 100vw; /* Commence hors écran */
+}
+
+/* Si on veut que ça passe en boucle quand on survole on peut mettre animation-play-state: paused; */
+.global-banner:hover .banner-track {
+    animation-play-state: paused;
+}
+
+@keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-100%); }
+}
+
+.banner-content {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.banner-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 800;
+    font-size: 0.8rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+}
+
+/* Couleurs des badges */
+.type-info .banner-badge { background: var(--neon-blue); color: #000; box-shadow: 0 0 10px var(--neon-blue); }
+.type-warning .banner-badge { background: #f59e0b; color: #000; box-shadow: 0 0 10px #f59e0b; }
+.type-maint .banner-badge { background: #ef4444; color: white; box-shadow: 0 0 10px #ef4444; }
+.type-feature .banner-badge { background: var(--neon-purple); color: white; box-shadow: 0 0 10px var(--neon-purple); }
+
+.banner-text {
+    font-weight: 500;
+    font-size: 0.95rem;
+    color: white;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+
+/* Ajustement si Sidebar présente sur PC */
+@media (min-width: 769px) {
+    .global-banner {
+        left: 260px; /* Largeur de la sidebar pour ne pas passer dessus */
+        width: calc(100% - 260px);
+    }
+}

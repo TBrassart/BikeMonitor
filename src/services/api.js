@@ -481,21 +481,24 @@ export const api = {
         return data;
     },
 
-    // VÉRIFICATION PIN SÉCURISÉE
+    // VÉRIFICATION PIN SÉCURISÉE (Via RPC)
     async checkAdminPin(inputPin) {
-        // On récupère le vrai PIN stocké en base
-        const { data, error } = await supabase
-            .from('app_settings')
-            .select('value')
-            .eq('key', 'admin_pin')
-            .single();
+        try {
+            // Appel de la fonction SQL sécurisée
+            const { data, error } = await supabase.rpc('verify_admin_pin', { 
+                input_pin: inputPin 
+            });
             
-        if (error || !data) return false;
-        
-        // Comparaison (Le PIN en base est stocké comme JSON string, ex: "1234")
-        // On nettoie les guillemets éventuels
-        const realPin = String(data.value).replace(/"/g, '');
-        return inputPin === realPin;
+            if (error) {
+                console.error("Erreur vérification PIN:", error);
+                return false;
+            }
+            
+            // La fonction SQL renvoie true ou false
+            return data;
+        } catch (e) {
+            return false;
+        }
     },
 
     // --- ADMIN : SUPPRESSION ---

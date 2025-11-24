@@ -152,12 +152,15 @@ function AdminPage() {
                             type="password" 
                             value={pin} 
                             onChange={e => setPin(e.target.value)} 
-                            placeholder="PIN" 
+                            placeholder="Mot de passe Admin" // Changé
                             autoFocus 
-                            maxLength={4}
+                            // SUPPRIMÉ : maxLength={4} 
                             className="pin-input"
+                            style={{ letterSpacing: '5px' }} // Espacement plus normal que les 15px d'avant
                         />
-                        <button type="submit" className="primary-btn" style={{width:'100%'}}>Déverrouiller</button>
+                        <button type="submit" className="primary-btn" style={{width:'100%'}}>
+                            Déverrouiller
+                        </button>
                     </form>
                 </div>
             </div>

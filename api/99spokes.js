@@ -1,68 +1,68 @@
 export default async function handler(req, res) {
     const { brand, year, model } = req.query;
 
-    // 1. Définition de la fonction de nettoyage (DANS le fichier serveur)
+    // Fonction de nettoyage interne (Indispensable)
     const toSlug = (str) => {
         if (!str) return '';
         return str
             .toLowerCase()
-            .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Enlève les accents
-            .replace(/[^a-z0-9\s-]/g, "") // Enlève les caractères spéciaux
+            .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+            .replace(/[^a-z0-9\s-]/g, "")
             .trim()
-            .replace(/\s+/g, '-'); // Espaces -> tirets
+            .replace(/\s+/g, '-');
     };
 
     if (!brand || !year || !model) {
-        return res.status(400).json({ error: 'Paramètres manquants (brand, year, model)' });
+        return res.status(400).json({ error: 'Paramètres manquants' });
     }
 
     try {
-        // 2. Nettoyage des entrées
         const safeBrand = toSlug(brand);
         const safeModel = toSlug(model);
 
-        console.log(`🔍 Recherche: ${safeBrand} ${safeModel} (${year})`);
+        console.log(`🔍 [API] Recherche 99spokes: ${safeBrand} ${safeModel} (${year})`);
 
-        // 3. Récupérer le BUILD_ID sur la home page
+        // 1. Home Page pour le BUILD_ID
         const homeResponse = await fetch('https://99spokes.com/fr-FR', {
-            headers: { 'User-Agent': 'Mozilla/5.0 (compatible; BikeMonitor/1.0)' }
+            headers: { 
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36' 
+            }
         });
         
-        if (!homeResponse.ok) throw new Error("Impossible d'accéder à 99spokes (Home)");
+        if (!homeResponse.ok) throw new Error(`Home unreachable: ${homeResponse.status}`);
         
         const homeHtml = await homeResponse.text();
+        
+        // Regex plus souple pour trouver le buildId
         const buildIdMatch = homeHtml.match(/"buildId":"([^"]+)"/);
         
         if (!buildIdMatch || !buildIdMatch[1]) {
-            console.error("❌ Build ID introuvable");
-            return res.status(500).json({ error: 'Impossible de récupérer le BUILD_ID 99spokes' });
+            console.error("❌ [API] Build ID introuvable dans le HTML");
+            return res.status(500).json({ error: 'Impossible de récupérer le token 99spokes.' });
         }
         
         const buildId = buildIdMatch[1];
         
-        // 4. Construction de l'URL JSON
-        // Structure : /bikes/{marque}/{année}/{modèle}.json
+        // 2. URL JSON
         const apiUrl = `https://99spokes.com/_next/data/${buildId}/fr-FR/bikes/${safeBrand}/${year}/${safeModel}.json?makerId=${safeBrand}&year=${year}&modelId=${safeModel}`;
 
-        console.log("👉 Fetching API:", apiUrl);
+        console.log("👉 [API] Fetching:", apiUrl);
 
-        // 5. Appel de l'API interne 99spokes
         const specsResponse = await fetch(apiUrl, {
-            headers: { 'User-Agent': 'Mozilla/5.0 (compatible; BikeMonitor/1.0)' }
+            headers: { 
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
         });
 
         if (specsResponse.status === 404) {
-            console.warn("⚠️ Vélo introuvable (404)");
-            return res.status(404).json({ error: `Vélo introuvable : ${brand} ${model} (${year}). Vérifiez la marque et le modèle.` });
+            return res.status(404).json({ error: 'Vélo introuvable. Vérifiez l\'orthographe exacte.' });
         }
 
         if (!specsResponse.ok) {
-            throw new Error(`Erreur 99spokes: ${specsResponse.status}`);
+            throw new Error(`Erreur API 99spokes: ${specsResponse.status}`);
         }
 
         const data = await specsResponse.json();
-
-        // 6. Parsing des composants
         const rawComponents = data.pageProps?.bike?.components || {};
         const cleanParts = [];
 
@@ -81,25 +81,20 @@ export default async function handler(req, res) {
             'saddle': 'peripheriques'
         };
 
-        // Parcours récursif ou itératif des sections
         Object.keys(rawComponents).forEach(section => {
             const items = rawComponents[section];
             if (typeof items === 'object' && items !== null) {
                 Object.keys(items).forEach(key => {
                     const partName = items[key];
-                    
-                    // On cherche si la clé (ex: "chain") correspond à une catégorie connue
                     let myCat = 'autre';
+                    
+                    // Détection de catégorie
                     for (const [detect, cat] of Object.entries(categoryMap)) {
                         if (key.toLowerCase().includes(detect.toLowerCase())) myCat = cat;
                     }
 
-                    // Si on a trouvé une catégorie pertinente (pas "autre" ou null)
-                    // Note: On peut ajuster ici pour inclure 'autre' si tu veux tout importer
                     if (myCat !== 'autre' && partName) {
-                         // Parfois 99spokes met un tableau de strings
                          const finalName = Array.isArray(partName) ? partName.join(' ') : partName;
-
                          cleanParts.push({
                             name: finalName,
                             category: myCat,
@@ -110,12 +105,11 @@ export default async function handler(req, res) {
             }
         });
 
-        console.log(`✅ Succès : ${cleanParts.length} pièces trouvées`);
         return res.status(200).json(cleanParts);
 
     } catch (error) {
-        console.error("❌ Erreur Serveur:", error);
-        return res.status(500).json({ error: error.message || 'Erreur interne lors du scraping' });
+        console.error("🔥 [API CRASH]", error);
+        return res.status(500).json({ error: error.message || 'Erreur interne' });
     }
 }
 

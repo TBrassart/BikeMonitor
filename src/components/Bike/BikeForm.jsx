@@ -17,6 +17,7 @@ function BikeForm() {
     const [formData, setFormData] = useState({
         name: '',
         brand: '',
+        model: '',
         model_year: new Date().getFullYear(),
         type: 'Route',
         total_km: 0,
@@ -38,6 +39,7 @@ function BikeForm() {
                 setFormData({
                     name: data.name || '',
                     brand: data.brand || '',
+                    model: data.model || '',
                     model_year: data.model_year || '',
                     type: data.type || 'Route',
                     total_km: data.total_km || 0,
@@ -70,18 +72,30 @@ function BikeForm() {
         e.preventDefault();
         setLoading(true);
         try {
-            let bikeData = { ...formData };
+            // --- NETTOYAGE DES DONNÉES (Pour éviter l'erreur 22P02) ---
+            // On convertit les chaînes vides "" en null pour les champs numériques
+            const cleanedData = {
+                ...formData,
+                model_year: formData.model_year ? parseInt(formData.model_year) : null,
+                weight: formData.weight ? parseFloat(formData.weight) : null,
+                // total_km est généralement géré à part ou forcé à 0
+                total_km: formData.total_km ? parseInt(formData.total_km) : 0
+            };
+
             let idToUse = bikeId;
 
-            // 1. Création ou Mise à jour des données texte
+            // 1. Création ou Mise à jour
             if (isEditMode) {
-                await bikeService.update(bikeId, bikeData);
+                await bikeService.update(bikeId, cleanedData);
             } else {
-                const newBike = await bikeService.add(bikeData);
-                idToUse = newBike[0]?.id; // Récupérer l'ID du nouveau vélo
+                const newBike = await bikeService.add(cleanedData);
+                // Supabase renvoie un tableau, on prend le premier élément
+                if (newBike && newBike[0]) {
+                    idToUse = newBike[0].id;
+                }
             }
 
-            // 2. Upload de la photo si modifiée
+            // 2. Upload de la photo
             if (photoFile && idToUse) {
                 const url = await bikeService.uploadPhoto(photoFile);
                 await bikeService.update(idToUse, { photo_url: url });
@@ -89,8 +103,8 @@ function BikeForm() {
 
             navigate('/app/garage');
         } catch (error) {
-            console.error(error);
-            alert("Erreur lors de l'enregistrement.");
+            console.error("Erreur enregistrement:", error);
+            alert("Erreur lors de l'enregistrement. Vérifiez que les champs numériques sont corrects.");
         } finally {
             setLoading(false);
         }
@@ -144,7 +158,7 @@ function BikeForm() {
                         />
                         <small style={{color:'var(--text-secondary)', fontSize:'0.7rem'}}>Sert à trouver les pièces d'origine</small>
                     </div>
-                    
+
                     <div className="form-group">
                         <label>Type</label>
                         <select name="type" value={formData.type} onChange={handleChange}>

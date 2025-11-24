@@ -10,7 +10,6 @@ import './AdminPage.css';
 function AdminPage() {
     const [isLocked, setIsLocked] = useState(true);
     const [pin, setPin] = useState('');
-    const ADMIN_PIN = "1234";
 
     const [activeTab, setActiveTab] = useState('users'); 
     const [stats, setStats] = useState(null);
@@ -61,13 +60,23 @@ function AdminPage() {
         }
     };
 
-    const handlePinSubmit = (e) => {
+    const handlePinSubmit = async (e) => {
         e.preventDefault();
-        if (pin === ADMIN_PIN) {
-            unlockAndLoad();
-        } else {
-            alert("Code PIN incorrect");
-            setPin('');
+        setLoading(true); // Petit effet de chargement pendant la vérif
+
+        try {
+            const isValid = await adminService.verifyPin(pin);
+            
+            if (isValid) {
+                unlockAndLoad(); // Si c'est bon, on charge les données
+            } else {
+                alert("Code PIN incorrect ⛔");
+                setPin('');
+                setLoading(false); // On arrête le chargement si échec
+            }
+        } catch (err) {
+            console.error(err);
+            setLoading(false);
         }
     };
 

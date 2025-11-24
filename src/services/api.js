@@ -481,6 +481,23 @@ export const api = {
         return data;
     },
 
+    // VÉRIFICATION PIN SÉCURISÉE
+    async checkAdminPin(inputPin) {
+        // On récupère le vrai PIN stocké en base
+        const { data, error } = await supabase
+            .from('app_settings')
+            .select('value')
+            .eq('key', 'admin_pin')
+            .single();
+            
+        if (error || !data) return false;
+        
+        // Comparaison (Le PIN en base est stocké comme JSON string, ex: "1234")
+        // On nettoie les guillemets éventuels
+        const realPin = String(data.value).replace(/"/g, '');
+        return inputPin === realPin;
+    },
+
     // --- ADMIN : SUPPRESSION ---
     async deleteUserProfile(userId) {
         // On supprime le profil. Le CASCADE SQL fera le reste (Vélos, Parts, etc.)
@@ -597,5 +614,6 @@ export const adminService = {
     setMaintenance: (s) => api.setMaintenanceMode(s),
     cleanupPhotos: () => api.cleanupUnusedPhotos(),
     exportLibrary: () => api.getFullLibrary(),
-    exportLogs: () => api.getFullLogs()
+    exportLogs: () => api.getFullLogs(),
+    verifyPin: (p) => api.checkAdminPin(p),
 };

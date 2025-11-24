@@ -62,20 +62,23 @@ function SideBar() {
                     <p className="section-title">PRINCIPAL</p>
                     <NavLink to="/app/dashboard" icon={FaChartPie} label="Tableau de bord" />
                     <NavLink to="/app/activities" icon={FaRunning} label="Activités" />
+                    <NavLink to="/app/turlag" icon={FaUsers} label="Mon Turlag" />
                 </div>
 
                 <div className="nav-section">
                     <p className="section-title">GARAGE & ÉQUIPEMENT</p>
                     <NavLink to="/app/garage" icon={FaBicycle} label="Mes Vélos" />
                     <NavLink to="/app/equipment" icon={FaTshirt} label="Équipements" />
-                    <NavLink to="/app/library" icon={FaBook} label="Bibliothèque" />
+                    
+                    {(profile?.app_role === 'admin' || profile?.app_role === 'moderator') && (
+                        <NavLink to="/app/library" icon={FaBook} label="Bibliothèque" />
+                    )}
                 </div>
 
                 <div className="nav-section">
                     <p className="section-title">PRÉPARATION</p>
                     <NavLink to="/app/nutrition" icon={FaAppleAlt} label="Nutrition" />
                     <NavLink to="/app/kits" icon={FaToolbox} label="Kits & Checklists" />
-                    <NavLink to="/app/turlag" icon={FaUsers} label="Mon Turlag" />
                 </div>
 
                 <div className="spacer"></div>

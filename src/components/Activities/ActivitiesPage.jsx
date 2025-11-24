@@ -67,7 +67,8 @@ function ActivitiesPage() {
         if (type === 'Yoga' || type === 'Pilates') tags.push({ label: 'Zen 🧘', color: 'green' });
 
         // Performance
-        if (dist >= 2500) tags.push({ label: 'RAF 🗺️', color: 'gold' });
+        if (dist >= 4800) tags.push({ label: 'RAAM 🦅', color: 'gold' });
+        else if (dist >= 2500) tags.push({ label: 'RAF 🗺️', color: 'gold' });
         else if (dist >= 500) tags.push({ label: 'Ultra 🌟', color: 'red' });
         else if (dist >= 200) tags.push({ label: '2️⃣0️⃣0️⃣', color: 'purple' });
         else if (dist >= 100) tags.push({ label: 'Century 💯', color: 'blue' });

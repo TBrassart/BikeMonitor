@@ -102,12 +102,16 @@ function AdminPage() {
         }
     };
 
-    const handleNewsletter = () => {
+    const handleNewsletter = async () => { // Ajout de async
         const emails = users.map(u => u.email).filter(e => e).join(', ');
         if (emails) {
             navigator.clipboard.writeText(emails);
-            alert(`${users.length} emails copiés !`);
-        } else alert("Aucun email.");
+            // LOG DE L'ACTION
+            await adminService.log('ADMIN_DATA', `A copié la liste des emails (${users.length} adresses)`, 'warning');
+            alert(`${users.length} emails copiés dans le presse-papier !`);
+        } else {
+            alert("Aucun email trouvé.");
+        }
     };
 
     const handleRoleChange = async (user, currentRole) => {
@@ -126,16 +130,43 @@ function AdminPage() {
         }
     };
 
+    // --- EXPORTS ---
     const exportData = async (type, format) => {
-        const data = type === 'library' ? await adminService.exportLibrary() : await adminService.exportLogs();
-        if (!data?.length) return alert("Rien à exporter");
-        
-        const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `export_${type}.json`;
-        a.click();
+        // 1. Log de l'action AVANT de commencer
+        await adminService.log(
+            'ADMIN_EXPORT', 
+            `Export des données : ${type} (format ${format})`, 
+            'info'
+        );
+
+        let data;
+        try {
+            if (type === 'library') data = await adminService.exportLibrary();
+            if (type === 'logs') data = await adminService.exportLogs();
+
+            if (!data || data.length === 0) {
+                alert("Aucune donnée à exporter.");
+                return;
+            }
+
+            if (format === 'json') {
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                downloadFile(blob, `${type}_export_${new Date().toISOString().split('T')[0]}.json`);
+            } else {
+                const headers = Object.keys(data[0]).join(',');
+                const rows = data.map(row => 
+                    Object.values(row).map(v => 
+                        typeof v === 'object' ? JSON.stringify(v).replace(/"/g, "'") : `"${v}"`
+                    ).join(',')
+                );
+                const csvContent = [headers, ...rows].join('\n');
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                downloadFile(blob, `${type}_export_${new Date().toISOString().split('T')[0]}.csv`);
+            }
+        } catch (e) {
+            console.error("Erreur export", e);
+            alert("Erreur lors de l'export.");
+        }
     };
 
     if (!loading && !isAdmin) return <div className="admin-denied"><h1>⛔ Accès Interdit</h1></div>;
@@ -251,7 +282,19 @@ function AdminPage() {
                             };
                             try {
                                 await adminService.setBanner(settings);
+                                
+                                // LOG DE L'ACTION
+                                await adminService.log(
+                                    'ADMIN_BANNER', 
+                                    `Nouvelle bannière programmée : "${settings.message}" (${settings.type})`, 
+                                    'info'
+                                );
+                                
                                 alert("Bannière programmée !");
+                                // Optionnel: Recharger les logs pour voir l'action tout de suite
+                                const newLogs = await adminService.getLogs();
+                                setLogs(newLogs);
+                                
                             } catch(err) { alert("Erreur sauvegarde"); }
                         }} className="banner-form">
                             

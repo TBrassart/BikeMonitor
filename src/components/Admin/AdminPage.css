@@ -106,3 +106,66 @@
 .export-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
 .icon-action { background: rgba(255,255,255,0.1); border: none; color: white; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .icon-action:hover { background: var(--neon-blue); }
+
+/* FORMULAIRE BANNIÈRE */
+.banner-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.admin-input {
+    width: 100%;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border-color);
+    color: white;
+    border-radius: 8px;
+    font-family: inherit;
+    box-sizing: border-box; /* Empêche le débordement */
+}
+
+.admin-input:focus {
+    border-color: var(--neon-blue);
+    outline: none;
+}
+
+/* Gestion des dates : on passe en colonne si pas assez de place */
+.dates-row {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap; /* C'est ça qui empêche le chevauchement */
+}
+
+.dates-row .form-group {
+    flex: 1;
+    min-width: 200px; /* Si < 200px, ça passe à la ligne */
+}
+
+/* Radio Buttons Stylés */
+.radio-group {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-top: 5px;
+}
+
+.radio-label {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.radio-label.info { color: var(--neon-blue); }
+.radio-label.warning { color: #f59e0b; }
+.radio-label.danger { color: #ef4444; }
+.radio-label.feature { color: #d946ef; }
+
+.radio-label input {
+    accent-color: currentColor; /* Le bouton prend la couleur du texte */
+    width: 16px; 
+    height: 16px;
+}

@@ -252,42 +252,37 @@ function AdminPage() {
                             try {
                                 await adminService.setBanner(settings);
                                 alert("Bannière programmée !");
-                            } catch(err) { alert("Erreur"); }
-                        }}>
-                            <div style={{display:'flex', flexDirection:'column', gap:'15px'}}>
-                                <input name="message" type="text" placeholder="Message (ex: Maintenance ce soir...)" required style={{width:'100%', padding:'10px', background:'rgba(0,0,0,0.3)', border:'1px solid #444', color:'white', borderRadius:'8px'}} />
-                                
-                                <div style={{display:'flex', gap:'10px'}}>
-                                    <div style={{flex:1}}>
-                                        <label style={{fontSize:'0.8rem', color:'#888'}}>Début</label>
-                                        <input name="startAt" type="datetime-local" required style={{width:'100%', padding:'10px', background:'rgba(0,0,0,0.3)', border:'1px solid #444', color:'white', borderRadius:'8px'}} />
-                                    </div>
-                                    <div style={{flex:1}}>
-                                        <label style={{fontSize:'0.8rem', color:'#888'}}>Fin</label>
-                                        <input name="endAt" type="datetime-local" required style={{width:'100%', padding:'10px', background:'rgba(0,0,0,0.3)', border:'1px solid #444', color:'white', borderRadius:'8px'}} />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label style={{fontSize:'0.8rem', color:'#888'}}>Type d'annonce</label>
-                                    <div style={{display:'flex', gap:'10px', marginTop:'5px'}}>
-                                        <label style={{cursor:'pointer', display:'flex', alignItems:'center', gap:'5px', color:'var(--neon-blue)'}}>
-                                            <input type="radio" name="type" value="info" defaultChecked /> Info
-                                        </label>
-                                        <label style={{cursor:'pointer', display:'flex', alignItems:'center', gap:'5px', color:'#f59e0b'}}>
-                                            <input type="radio" name="type" value="warning" /> Attention
-                                        </label>
-                                        <label style={{cursor:'pointer', display:'flex', alignItems:'center', gap:'5px', color:'#ef4444'}}>
-                                            <input type="radio" name="type" value="maintenance" /> Maintenance
-                                        </label>
-                                        <label style={{cursor:'pointer', display:'flex', alignItems:'center', gap:'5px', color:'var(--neon-purple)'}}>
-                                            <input type="radio" name="type" value="feature" /> Nouveauté
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <button type="submit" className="admin-std-btn">Programmer l'annonce</button>
+                            } catch(err) { alert("Erreur sauvegarde"); }
+                        }} className="banner-form">
+                            
+                            <div className="form-group">
+                                <label>Message</label>
+                                <input name="message" type="text" placeholder="Ex: Maintenance ce soir..." required className="admin-input" />
                             </div>
+                            
+                            {/* CORRECTION : ON EMPILERA CES CHAMPS VIA CSS */}
+                            <div className="dates-row">
+                                <div className="form-group">
+                                    <label>Début</label>
+                                    <input name="startAt" type="datetime-local" required className="admin-input" />
+                                </div>
+                                <div className="form-group">
+                                    <label>Fin</label>
+                                    <input name="endAt" type="datetime-local" required className="admin-input" />
+                                </div>
+                            </div>
+
+                            <div className="form-group">
+                                <label>Type d'annonce</label>
+                                <div className="radio-group">
+                                    <label className="radio-label info"><input type="radio" name="type" value="info" defaultChecked /> Info</label>
+                                    <label className="radio-label warning"><input type="radio" name="type" value="warning" /> Attention</label>
+                                    <label className="radio-label danger"><input type="radio" name="type" value="maintenance" /> Maint.</label>
+                                    <label className="radio-label feature"><input type="radio" name="type" value="feature" /> New</label>
+                                </div>
+                            </div>
+
+                            <button type="submit" className="admin-std-btn">Programmer l'annonce</button>
                         </form>
                     </div>
                 </div>

@@ -24,6 +24,8 @@ import TurlagDetail from './components/Settings/TurlagDetail';
 import SettingsPage from './components/Settings/SettingsPage';
 import StravaCallback from './components/Settings/StravaCallback';
 
+import AdminPage from './components/Admin/AdminPage';
+
 import './App.css';
 
 function App() {
@@ -84,6 +86,8 @@ function App() {
                     } />
                     <Route path="/app/turlag/:turlagId" element={<TurlagDetail />} />
                     <Route path="/app/settings" element={<SettingsPage />} />
+
+                    <Route path="/app/admin" element={<AdminPage />} />
                     
                     <Route path="*" element={<Navigate to="/app/dashboard" />} />
                 </Routes>

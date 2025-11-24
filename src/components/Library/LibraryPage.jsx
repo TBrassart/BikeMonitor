@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { libraryService } from '../../services/api';
+import { authService, libraryService } from '../../services/api';
 import { FaPlus, FaCogs, FaFilter } from 'react-icons/fa';
 import LibraryForm from './LibraryForm';
 import './LibraryPage.css';
@@ -13,10 +13,19 @@ function LibraryPage() {
     // On initialise juste avec 'Tous', le reste sera dynamique
     const [categories, setCategories] = useState(['Tous']);
     const [selectedCat, setSelectedCat] = useState('Tous');
+    const [canEdit, setCanEdit] = useState(false); // Nouvel état
 
     useEffect(() => {
         loadLibrary();
     }, []);
+
+    const checkPermissions = async () => {
+        const profile = await authService.getMyProfile();
+        // Seuls Admin et Moderator peuvent éditer
+        if (profile && (profile.app_role === 'admin' || profile.app_role === 'moderator')) {
+            setCanEdit(true);
+        }
+    };
 
     const loadLibrary = async () => {
         try {
@@ -56,9 +65,12 @@ function LibraryPage() {
                     <h2>Bibliothèque</h2>
                     <p className="subtitle">Catalogue de pièces de référence</p>
                 </div>
-                <button className="add-btn" onClick={() => setShowForm(!showForm)}>
-                    <FaPlus /> <span className="desktop-only">Ajouter</span>
-                </button>
+
+                {canEdit && (
+                    <button className="add-btn" onClick={() => setShowForm(!showForm)}>
+                        <FaPlus /> <span className="desktop-only">Ajouter</span>
+                    </button>
+                )}
             </header>
 
             {/* BARRE DE FILTRES */}

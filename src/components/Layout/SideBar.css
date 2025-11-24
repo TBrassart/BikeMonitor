@@ -5,33 +5,70 @@
     flex-direction: column;
     background-color: var(--bg-sidebar); 
     border-right: 1px solid var(--border-color);
-    
-    /* --- CORRECTION ARRONDIS --- */
-    /* Uniquement en haut à droite et en bas à droite */
+    /* Arrondis à droite uniquement */
     border-top-right-radius: 30px;
     border-bottom-right-radius: 30px;
-    
-    /* On s'assure que ça ne déborde pas */
-    overflow: hidden; 
+    overflow: hidden;
 }
 
-.logo-container {
-    padding: 30px 25px;
+/* --- NOUVEAU HEADER PROFIL --- */
+.sidebar-header {
+    padding: 25px 20px;
     border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    cursor: pointer;
+    transition: background 0.2s;
 }
 
-.gradient-text {
-    /* Le dégradé est géré globalement dans index.css */
-    font-size: 1.8rem;
-    margin: 0;
-    font-weight: 800;
+.sidebar-header:hover {
+    background: rgba(255,255,255,0.03);
 }
+
+.mini-avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: var(--gradient-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+    border: 2px solid rgba(255,255,255,0.1);
+}
+
+.mini-user-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-name {
+    font-weight: 700;
+    color: white;
+    font-size: 1rem;
+}
+
+.app-name {
+    font-size: 0.75rem;
+    color: var(--neon-blue);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+/* ----------------------------- */
 
 .nav-scroll {
     flex: 1;
     overflow-y: auto;
     padding: 20px 15px;
 }
+
+/* Masquer la scrollbar tout en permettant le scroll */
+.nav-scroll::-webkit-scrollbar { display: none; }
+.nav-scroll { -ms-overflow-style: none; scrollbar-width: none; }
 
 .nav-section {
     margin-bottom: 25px;
@@ -41,7 +78,7 @@
 }
 
 .section-title {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: var(--text-secondary);
     font-weight: 700;
     margin: 0 0 10px 15px;
@@ -55,7 +92,7 @@
     align-items: center;
     gap: 15px;
     padding: 12px 15px;
-    color: var(--text-secondary); /* Gris par défaut */
+    color: var(--text-secondary);
     text-decoration: none;
     border-radius: 12px;
     transition: all 0.2s ease;
@@ -66,18 +103,16 @@
 .nav-item:hover {
     background: rgba(255, 255, 255, 0.03);
     color: white;
-    padding-left: 20px; /* Petit effet de glissement */
+    padding-left: 20px;
 }
 
 .nav-item.active {
-    /* Fond sombre légèrement éclairci pour l'actif */
     background: rgba(255, 255, 255, 0.05); 
     color: white;
-    /* Bordure gauche en dégradé (simulé par border-image ou couleur simple) */
     position: relative; 
 }
 
-/* Petite barre colorée à gauche de l'item actif */
+/* Barre latérale active */
 .nav-item.active::before {
     content: '';
     position: absolute;
@@ -89,9 +124,7 @@
     border-radius: 0 4px 4px 0;
 }
 
-.nav-item .icon {
-    font-size: 1.2rem;
-}
+.nav-item .icon { font-size: 1.2rem; }
 
 .logout-btn {
     width: 100%;
@@ -106,18 +139,4 @@
 .logout-btn:hover {
     background: rgba(239, 68, 68, 0.1);
     color: #f87171;
-}
-
-.sidebar.glass-panel {
-    /* Haut-Gauche et Bas-Gauche à 0 pour coller au bord de l'écran */
-    border-top-left-radius: 0 !important;
-    border-bottom-left-radius: 0 !important;
-    
-    /* Haut-Droite et Bas-Droite arrondis */
-    border-top-right-radius: 30px !important;
-    border-bottom-right-radius: 30px !important;
-    
-    /* On s'assure qu'il n'y a pas de marge à gauche */
-    margin-left: 0 !important;
-    border-left: none !important;
 }

@@ -419,6 +419,40 @@ export const api = {
         const { error } = await supabase.from('equipment').delete().eq('id', id);
         if (error) throw error;
     },
+
+    // --- ADMINISTRATION ---
+    
+    // Récupérer tous les profils (Admin only)
+    async getAllProfiles() {
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        return data;
+    },
+
+    // Changer le rôle global d'un user
+    async updateUserRole(userId, newRole) {
+        const { error } = await supabase
+            .from('profiles')
+            .update({ app_role: newRole })
+            .eq('user_id', userId);
+        if (error) throw error;
+    },
+
+    // Statistiques Globales
+    async getAppStats() {
+        const { count: users } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
+        const { count: bikes } = await supabase.from('bikes').select('*', { count: 'exact', head: true });
+        const { count: parts } = await supabase.from('component_library').select('*', { count: 'exact', head: true });
+        
+        // Pour le total KM, c'est plus lourd, on fait simple pour l'instant
+        const { data: activities } = await supabase.from('activities').select('distance');
+        const totalKm = activities?.reduce((acc, a) => acc + (a.distance || 0), 0) / 1000 || 0;
+
+        return { users, bikes, parts, totalKm: Math.round(totalKm) };
+    },
 };
 
 // ==========================================
@@ -466,4 +500,10 @@ export const equipmentService = {
     add: (d) => api.addEquipment(d),
     update: (id, d) => api.updateEquipment(id, d),
     delete: (id) => api.deleteEquipment(id)
+};
+
+export const adminService = {
+    getAllUsers: () => api.getAllProfiles(),
+    updateRole: (uid, role) => api.updateUserRole(uid, role),
+    getStats: () => api.getAppStats()
 };

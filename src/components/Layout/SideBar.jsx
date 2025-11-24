@@ -1,15 +1,32 @@
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
     FaChartPie, FaBicycle, FaUsers, FaTshirt, FaAppleAlt, 
-    FaToolbox, FaBook, FaRunning, FaCog, FaSignOutAlt 
+    FaToolbox, FaBook, FaRunning, FaCog, FaSignOutAlt, FaBolt 
 } from 'react-icons/fa';
 import { authService } from '../../services/api';
 import './SideBar.css';
 
 function SideBar() {
     const location = useLocation();
+    const navigate = useNavigate();
     const isActive = (path) => location.pathname.startsWith(path);
+
+    // --- ÉTATS POUR LE PROFIL ---
+    const [profile, setProfile] = useState(null);
+
+    useEffect(() => {
+        loadUser();
+    }, []);
+
+    const loadUser = async () => {
+        try {
+            const data = await authService.getMyProfile();
+            setProfile(data);
+        } catch (e) {
+            console.error("Erreur chargement sidebar", e);
+        }
+    };
 
     const handleLogout = async () => {
         if (window.confirm("Se déconnecter ?")) {
@@ -27,10 +44,18 @@ function SideBar() {
 
     return (
         <aside className="sidebar glass-panel">
-            {/* LOGO AVEC DÉGRADÉ */}
-            <div className="logo-container">
-                <h2 className="gradient-text">BikeMonitor</h2>
+            
+            {/* --- EN-TÊTE PROFIL (NOUVEAU) --- */}
+            <div className="sidebar-header" onClick={() => navigate('/app/settings')}>
+                <div className="mini-avatar">
+                    {profile ? profile.avatar : <FaBolt />}
+                </div>
+                <div className="mini-user-info">
+                    <span className="user-name">{profile ? profile.name : 'Chargement...'}</span>
+                    <span className="app-name">BikeMonitor</span>
+                </div>
             </div>
+            {/* -------------------------------- */}
 
             <nav className="nav-scroll">
                 <div className="nav-section">

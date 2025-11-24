@@ -3,7 +3,7 @@ import { adminService, authService } from '../../services/api';
 import { 
     FaUsers, FaDatabase, FaChartLine, FaUserShield, FaTrash, 
     FaListAlt, FaLock, FaTools, FaFileCsv, FaFileCode, 
-    FaEnvelopeOpenText, FaBroom, FaPowerOff, FaSearch 
+    FaEnvelopeOpenText, FaBroom, FaPowerOff, FaSearch, FaBullhorn
 } from 'react-icons/fa';
 import './AdminPage.css';
 

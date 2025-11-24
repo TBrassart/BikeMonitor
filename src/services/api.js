@@ -456,7 +456,12 @@ export const api = {
 
     // BANNIÈRE GLOBALE
     async getBannerSettings() {
-        const { data } = await supabase.from('app_settings').select('value').eq('key', 'global_banner').single();
+        const { data } = await supabase
+            .from('app_settings')
+            .select('value')
+            .eq('key', 'global_banner')
+            .maybeSingle();
+            
         return data?.value || null;
     },
 

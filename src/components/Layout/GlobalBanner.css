@@ -1,20 +1,23 @@
 .global-banner {
-    position: fixed;
+    position: sticky; 
     top: 0;
-    left: 0; /* Si sidebar présente, on ajustera dans App.css ou ici via media query */
-    right: 0;
+    width: 100%;
     height: 40px;
-    z-index: 2000; /* Au-dessus de tout */
+    z-index: 40;
+    
     display: flex;
     align-items: center;
     overflow: hidden;
     white-space: nowrap;
+    
     backdrop-filter: blur(10px);
     border-bottom: 1px solid rgba(255,255,255,0.1);
-    box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    
+    margin-bottom: 20px;
+    border-radius: 0 0 12px 12px; 
 }
 
-/* Variantes de couleurs Néon */
 .global-banner.type-info {
     background: linear-gradient(90deg, rgba(14, 165, 233, 0.1), rgba(14, 165, 233, 0.05));
     border-bottom-color: var(--neon-blue);

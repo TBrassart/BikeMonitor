@@ -77,11 +77,12 @@ function App() {
 
     return (
         <div className="app-container">
-            {/* LA BANNIÈRE EST ICI */}
-            <GlobalBanner />
             
             <SideBar />
             <main className="main-content">
+
+                <GlobalBanner />
+                
                 <Routes>
                     <Route path="/" element={<Navigate to="/app/dashboard" />} />
                     <Route path="/strava-callback" element={<StravaCallback />} />

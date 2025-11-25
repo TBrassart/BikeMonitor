@@ -23,8 +23,24 @@ export const authService = {
         return await supabase.auth.signOut();
     },
     async getCurrentUser() {
-        const { data: { user } } = await supabase.auth.getUser();
-        return user;
+        try {
+            // On récupère la session
+            const { data, error } = await supabase.auth.getUser();
+            
+            // Si erreur (ex: 403 User deleted) ou pas de data, on renvoie null
+            if (error || !data || !data.user) {
+                // Par sécurité, on nettoie le stockage local si le token est invalide
+                if (error?.status === 403) {
+                    await supabase.auth.signOut(); 
+                }
+                return null;
+            }
+            
+            return data.user;
+        } catch (e) {
+            console.warn("Session invalide:", e);
+            return null;
+        }
     },
     async getMyProfile() {
         const user = await this.getCurrentUser();

@@ -7,11 +7,12 @@
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    width: 100%;
+    width: 100%; 
     position: relative;
     overflow: hidden;
-    background-color: var(--color-dark-bg); /* Assure-toi que cette variable est définie, sinon mets #12121e */
+    background-color: var(--color-dark-bg);
     padding: 20px;
+    box-sizing: border-box;
 }
 
 /* --- FOND ANIMÉ (Halos) --- */
@@ -96,10 +97,16 @@
 }
 
 /* Le conteneur d'un champ (Icône + Input) */
-.input-group {
-    position: relative;
-    width: 100%;
-    margin-bottom: 15px;
+.input-icon {
+    position: absolute;
+    top: 50%;
+    left: 15px;
+    transform: translateY(-50%);
+    color: #aaa;
+    font-size: 1.1rem;
+    z-index: 10; /* Au-dessus de l'input */
+    pointer-events: none; /* Le clic traverse l'icône pour aller dans le champ */
+    transition: color 0.3s;
 }
 /* Effet au focus */
 .input-group:focus-within {
@@ -125,8 +132,8 @@
 
 .input-group input {
     width: 100%;
-    /* Padding à gauche pour laisser la place à l'icône */
-    padding: 14px 14px 14px 45px; 
+    /* Padding gauche de 45px pour laisser la place à l'icône */
+    padding: 14px 14px 14px 45px;
     
     background: rgba(0, 0, 0, 0.3) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -136,7 +143,7 @@
     outline: none;
     font-family: inherit;
     transition: all 0.3s ease;
-    box-sizing: border-box; /* S'assure que padding est inclus dans width */
+    box-sizing: border-box; /* Indispensable */
 }
 .input-group input::placeholder { color: #666; }
 

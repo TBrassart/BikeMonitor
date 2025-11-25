@@ -3,7 +3,7 @@ import { adminService, authService } from '../../services/api';
 import { 
     FaUsers, FaDatabase, FaChartLine, FaUserShield, FaTrash, 
     FaListAlt, FaLock, FaTools, FaFileCsv, FaFileCode, 
-    FaEnvelopeOpenText, FaBroom, FaPowerOff, FaSearch, FaBullhorn
+    FaEnvelopeOpenText, FaBroom, FaPowerOff, FaSearch, FaBullhorn, FaExclamationCircle, FaFilter
 } from 'react-icons/fa';
 import './AdminPage.css';
 
@@ -19,7 +19,10 @@ function AdminPage() {
     
     const [loading, setLoading] = useState(true);
     const [isAdmin, setIsAdmin] = useState(false);
+
+    // --- FILTRES ---
     const [searchTerm, setSearchTerm] = useState('');
+    const [filterRole, setFilterRole] = useState('all');
 
     useEffect(() => {
         checkRights();

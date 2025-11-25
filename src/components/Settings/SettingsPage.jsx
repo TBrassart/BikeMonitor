@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { authService, supabase } from '../../services/api';
 import { stravaService } from '../../services/stravaService'; 
 import ProfilePage from './ProfilePage';
+import { FaSync, FaCheck, FaUnlink, FaLink } from 'react-icons/fa'; // Icônes
 import './SettingsPage.css';
 
 function SettingsPage() {
     const [activeTab, setActiveTab] = useState('profile');
     const [stravaStatus, setStravaStatus] = useState('loading');
+    const [syncing, setSyncing] = useState(false); // État du bouton sync
 
     useEffect(() => {
         if (activeTab === 'integrations') {
@@ -17,31 +19,34 @@ function SettingsPage() {
     const checkStravaStatus = async () => {
         try {
             setStravaStatus('loading');
-            
-            // 1. On récupère le profil (car c'est lui qui détient le lien Strava)
             const profile = await authService.getMyProfile();
-            
             if (!profile) {
                 setStravaStatus('disconnected');
                 return;
             }
-
-            // 2. On cherche l'intégration avec le bon profile_id
-            const { data, error } = await supabase
+            const { data } = await supabase
                 .from('profile_integrations')
                 .select('*')
-                .eq('profile_id', profile.id) // <-- C'est ici que ça change (profile.id au lieu de user.id)
+                .eq('profile_id', profile.id)
                 .eq('provider', 'strava')
                 .single();
 
-            if (data) {
-                setStravaStatus('connected');
-            } else {
-                setStravaStatus('disconnected');
-            }
+            setStravaStatus(data ? 'connected' : 'disconnected');
         } catch (e) {
-            console.error("Erreur vérification Strava:", e);
             setStravaStatus('disconnected');
+        }
+    };
+
+    const handleSync = async () => {
+        setSyncing(true);
+        try {
+            const result = await stravaService.syncActivities();
+            alert(`Synchronisation terminée !\n${result.added} nouvelles activités ajoutées.`);
+        } catch (e) {
+            console.error(e);
+            alert("Erreur lors de la synchronisation.");
+        } finally {
+            setSyncing(false);
         }
     };
 
@@ -52,66 +57,73 @@ function SettingsPage() {
 
     return (
         <div className="settings-page">
-            <h2 style={{ marginBottom: '20px' }}>Paramètres</h2>
+            <h2 style={{ marginBottom: '20px' }} className="gradient-text">Paramètres</h2>
 
             <div className="settings-tabs" style={{ display:'flex', gap:'15px', marginBottom:'25px' }}>
                 <button 
                     onClick={() => setActiveTab('profile')}
                     className={activeTab === 'profile' ? 'primary-btn' : 'secondary-btn'}
-                    style={{ 
-                        padding: '10px 25px', 
-                        borderRadius: '50px', /* Pill shape */
-                        cursor: 'pointer',
-                        fontSize: '1rem'
-                        /* Les couleurs sont gérées par la classe CSS globale maintenant */
-                    }}
+                    style={{ padding: '10px 25px', borderRadius: '50px', cursor: 'pointer', fontSize: '1rem' }}
                 >
                     Mon Profil
                 </button>
                 <button 
                     onClick={() => setActiveTab('integrations')}
                     className={activeTab === 'integrations' ? 'primary-btn' : 'secondary-btn'}
-                    style={{ 
-                        padding: '10px 25px', 
-                        borderRadius: '50px',
-                        cursor: 'pointer',
-                        fontSize: '1rem'
-                    }}
+                    style={{ padding: '10px 25px', borderRadius: '50px', cursor: 'pointer', fontSize: '1rem' }}
                 >
                     Intégrations
                 </button>
             </div>
 
-            <div className="settings-content" style={{ padding:'20px', borderRadius:'8px', minHeight:'300px' }}>
+            <div className="settings-content glass-panel" style={{ padding:'20px', borderRadius:'16px' }}>
                 {activeTab === 'profile' && <ProfilePage />}
                 
                 {activeTab === 'integrations' && (
                     <div className="integrations">
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '15px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
+                        <div className="integration-card glass-panel" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px' }}>
                             <div>
-                                <h3 style={{ margin: '0 0 5px 0', color: '#fc4c02' }}>Strava</h3>
+                                <h3 style={{ margin: '0 0 5px 0', color: '#fc4c02', display:'flex', alignItems:'center', gap:'10px' }}>
+                                    Strava {stravaStatus === 'connected' && <FaCheck style={{fontSize:'0.8rem'}}/>}
+                                </h3>
                                 <p style={{ margin: 0, fontSize: '0.9em', color: '#ccc' }}>
                                     {stravaStatus === 'loading' ? 'Vérification...' : 
-                                     stravaStatus === 'connected' ? '✅ Compte relié et synchronisé' : '❌ Aucun compte relié'}
+                                     stravaStatus === 'connected' ? 'Compte relié. Les vélos seront créés automatiquement.' : 'Liez votre compte pour importer vos sorties.'}
                                 </p>
                             </div>
                             
-                            <div>
+                            <div style={{display:'flex', gap:'10px'}}>
                                 {stravaStatus === 'disconnected' && (
                                     <button 
                                         onClick={() => stravaService.initiateAuth()} 
-                                        style={{ background:'#fc4c02', color:'white', border:'none', padding:'10px 15px', borderRadius:'5px', cursor:'pointer', fontWeight: 'bold' }}
+                                        className="primary-btn"
+                                        style={{ background:'#fc4c02', display:'flex', alignItems:'center', gap:'8px' }}
                                     >
-                                        Connecter
+                                        <FaLink /> Connecter
                                     </button>
                                 )}
+                                
                                 {stravaStatus === 'connected' && (
-                                    <button 
-                                        onClick={() => stravaService.disconnect().then(checkStravaStatus)} 
-                                        style={{ background:'transparent', border:'1px solid #fc4c02', color:'#fc4c02', padding:'8px 12px', borderRadius:'5px', cursor:'pointer' }}
-                                    >
-                                        Déconnecter
-                                    </button>
+                                    <>
+                                        {/* BOUTON SYNCHRO MANUELLE */}
+                                        <button 
+                                            onClick={handleSync} 
+                                            className="primary-btn"
+                                            disabled={syncing}
+                                            style={{ background: 'var(--gradient-success)', display:'flex', alignItems:'center', gap:'8px' }}
+                                        >
+                                            <FaSync className={syncing ? 'spinning' : ''} /> 
+                                            {syncing ? '...' : 'Synchroniser'}
+                                        </button>
+
+                                        <button 
+                                            onClick={() => stravaService.disconnect().then(checkStravaStatus)} 
+                                            className="secondary-btn"
+                                            style={{ borderColor:'#fc4c02', color:'#fc4c02' }}
+                                        >
+                                            <FaUnlink />
+                                        </button>
+                                    </>
                                 )}
                             </div>
                         </div>
@@ -119,6 +131,11 @@ function SettingsPage() {
                 )}
             </div>
 
+            <div style={{ marginTop: '40px', borderTop: '1px solid var(--border-color)', paddingTop: '20px' }}>
+                <button onClick={handleLogout} style={{ width:'100%', padding:'15px', background:'rgba(239, 68, 68, 0.2)', color:'#ef4444', border:'1px solid #ef4444', borderRadius:'8px', fontWeight:'bold', cursor:'pointer' }}>
+                    Se déconnecter
+                </button>
+            </div>
         </div>
     );
 }

@@ -521,11 +521,13 @@ export const api = {
         }
     },
 
-    // --- ADMIN : SUPPRESSION ---
+    // --- ADMIN : SUPPRESSION VIA RPC ---
     async deleteUserProfile(userId) {
-        // On supprime le profil. Le CASCADE SQL fera le reste (Vélos, Parts, etc.)
-        // Note: L'utilisateur reste dans Supabase Auth mais son compte est "vide"
-        const { error } = await supabase.from('profiles').delete().eq('user_id', userId);
+        // Appel de la fonction sécurisée côté serveur
+        const { error } = await supabase.rpc('delete_user_profile', { 
+            target_user_id: userId 
+        });
+        
         if (error) throw error;
     },
 

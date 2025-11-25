@@ -26,37 +26,32 @@ const AuthScreen = ({ onLogin, isInviteFlow = false, inviteToken = null, forceSi
         try {
             if (isLoginMode) {
                 // --- CONNEXION ---
-                await onLogin(email, password);
+                await authService.signInWithEmail(email, password);
+                if (onLogin) await onLogin(); // Rafraîchit la session dans App.jsx
             } else {
                 // --- INSCRIPTION ---
-                if (password.length < 6) {
-                    throw new Error("Le mot de passe doit faire au moins 6 caractères.");
-                }
-                if (password !== confirmPassword) {
-                    throw new Error("Les mots de passe ne correspondent pas.");
-                }
+                if (password.length < 6) throw new Error("Le mot de passe doit faire au moins 6 caractères.");
+                if (password !== confirmPassword) throw new Error("Les mots de passe ne correspondent pas.");
 
-                // On construit l'URL de redirection SI on a un token
                 const redirectUrl = inviteToken 
                     ? `${window.location.origin}/join/${inviteToken}`
                     : undefined;
 
-                // Appel à l'inscription
+                // Appel inscription
                 const { data, error } = await authService.signUp(email, password, '', redirectUrl, inviteToken);
                 
                 if (error) throw error;
 
-                // LOGIQUE DE SUCCÈS / MAIL
+                // GESTION DU SUCCÈS
                 if (data.user && !data.session) {
-                    // Cas : Supabase attend une validation email
-                    setSuccessMsg("Compte créé avec succès ! 📧 Vérifie tes emails pour valider ton compte avant de te connecter.");
-                    setIsLoginMode(true); // On bascule sur l'écran de connexion
+                    // Cas 1 : Email de confirmation envoyé (Pas de session immédiate)
+                    setSuccessMsg("Compte créé ! 📧 Vérifie tes emails pour valider ton compte.");
+                    setIsLoginMode(true); // Retour à l'écran de connexion
                     setPassword('');
                     setConfirmPassword('');
                 } else if (data.user && data.session) {
-                    // Cas : Connexion directe (si email confirm désactivé)
-                    // On laisse le composant parent gérer la suite via le callback ou le reload
-                    window.location.reload(); 
+                    // Cas 2 : Connexion directe (si activé)
+                    window.location.reload();
                 }
             }
         } catch (error) {
@@ -89,14 +84,14 @@ const AuthScreen = ({ onLogin, isInviteFlow = false, inviteToken = null, forceSi
                     </p>
                 </div>
                 
-                {/* MESSAGE DE SUCCÈS (POPUP VERTE) */}
+                {/* MESSAGE DE SUCCÈS (VERT) */}
                 {successMsg && (
                     <div className="auth-message success">
                         {successMsg}
                     </div>
                 )}
 
-                {/* MESSAGE D'ERREUR (POPUP ROUGE) */}
+                {/* MESSAGE D'ERREUR (ROUGE) */}
                 {errorMsg && (
                     <div className="auth-message error">
                         {errorMsg}

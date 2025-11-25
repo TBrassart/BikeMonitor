@@ -13,8 +13,10 @@ function TurlagDetail() {
     const [loading, setLoading] = useState(true);
     const [currentUser, setCurrentUser] = useState(null);
     
+    const [showAdminModal, setShowAdminModal] = useState(false);
     const [showEventForm, setShowEventForm] = useState(false);
     const [showEditForm, setShowEditForm] = useState(false);
+
     const [eventData, setEventData] = useState({ title: '', date: '', location: '', description: '' });
     const [editData, setEditData] = useState({ name: '', description: '', icon_url: '' });
 
@@ -98,17 +100,15 @@ function TurlagDetail() {
                         <p className="turlag-desc">{details.turlag.description}</p>
                     </div>
                 </div>
+                {isPrivileged() && (
+                    <button onClick={() => setShowAdminModal(true)} className="edit-btn" title="Administration">
+                        <FaCog />
+                    </button>
+                )}
             </div>
 
             <div className="turlag-layout">
                 <div className="left-col">
-                    <div className="glass-panel invite-card">
-                        <span className="label">Code d'invitation</span>
-                        <div className="code-box" onClick={copyCode}>
-                            <code>{turlagId.slice(0,8)}...</code> <FaCopy />
-                        </div>
-                    </div>
-
                     <div className="glass-panel members-list">
                         <h3>Membres ({details.members.length})</h3>
                         {details.members.map(m => (
@@ -146,29 +146,61 @@ function TurlagDetail() {
                         {isPrivileged() && <button onClick={() => setShowEventForm(true)} className="add-event-btn"><FaPlus /> Créer</button>}
                     </div>
                     
-                    {/* ... (Reste de la section Events & Modales inchangé) ... */}
-                     {/* Je raccourcis pour la clarté, garde tes events existants */}
-                     <div className="events-list">
+                    <div className="events-list">
                         {details.events.map(ev => (
                             <div key={ev.id} className="event-card glass-panel">
                                 <div className="event-date-box">
                                     <span className="day">{new Date(ev.event_date).getDate()}</span>
+                                    <span className="month">{new Date(ev.event_date).toLocaleDateString('fr-FR', {month:'short'})}</span>
                                 </div>
                                 <div className="event-content">
                                     <h4>{ev.title}</h4>
+                                    <div className="event-meta">
+                                        <span><FaMapMarkerAlt /> {ev.location || 'Non spécifié'}</span>
+                                    </div>
                                     <p>{ev.description}</p>
                                 </div>
                             </div>
                         ))}
+                        {details.events.length === 0 && <p className="empty-text">Aucun événement prévu.</p>}
                     </div>
-
-                    {isPrivileged() && (
-                        <TurlagAdmin turlagId={turlagId} turlagData={details.turlag} onUpdate={loadData} />
-                    )}
                     
-                    {showEventForm && ( /* Formulaire Event */ <div className="glass-panel event-form"><button onClick={()=>setShowEventForm(false)}>Fermer</button></div> )}
+                    {showEventForm && (
+                        <div className="glass-panel event-form">
+                            <h4>Nouvel Événement</h4>
+                            <form onSubmit={handleCreateEvent}>
+                                <input type="text" placeholder="Titre" value={eventData.title} onChange={e => setEventData({...eventData, title: e.target.value})} required />
+                                <div className="row">
+                                    <input type="date" value={eventData.date} onChange={e => setEventData({...eventData, date: e.target.value})} required />
+                                    <input type="text" placeholder="Lieu" value={eventData.location} onChange={e => setEventData({...eventData, location: e.target.value})} />
+                                </div>
+                                <textarea placeholder="Détails..." value={eventData.description} onChange={e => setEventData({...eventData, description: e.target.value})} />
+                                <div className="form-actions">
+                                    <button type="button" onClick={() => setShowEventForm(false)}>Annuler</button>
+                                    <button type="submit" className="primary-btn">Publier</button>
+                                </div>
+                            </form>
+                        </div>
+                    )}
                 </div>
             </div>
+
+            {/* --- MODALE ADMIN --- */}
+            {showAdminModal && (
+                <div className="modal-overlay" onClick={() => setShowAdminModal(false)}>
+                    {/* On arrête la propagation pour que le clic DANS la modale ne la ferme pas */}
+                    <div className="glass-panel modal-content admin-modal-size" onClick={e => e.stopPropagation()}>
+                        <div className="modal-header-row">
+                             <h3 style={{margin:0}}>Administration du Groupe</h3>
+                             <button className="close-btn" onClick={() => setShowAdminModal(false)}><FaTimes /></button>
+                        </div>
+                        
+                        {/* Le composant Admin est ici, propre et isolé */}
+                        <TurlagAdmin turlagId={turlagId} turlagData={details.turlag} onUpdate={loadData} />
+                    </div>
+                </div>
+            )}
+
         </div>
     );
 }

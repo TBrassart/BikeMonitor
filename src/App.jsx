@@ -36,6 +36,11 @@ function App() {
     const [loading, setLoading] = useState(true);
     const [isMaintenance, setIsMaintenance] = useState(false);
 
+    // DÉTECTION INVITATION (Même si non connecté)
+    const path = window.location.pathname;
+    const isInvite = path.startsWith('/invite/');
+    const inviteToken = isInvite ? path.split('/')[2] : null;
+
     useEffect(() => {
         checkSession();
     }, []);
@@ -55,14 +60,25 @@ function App() {
                     setIsMaintenance(true);
                 }
             }
-        } catch (e) { /*...*/ } 
+        } catch (e) { console.error("Erreur session", e); } 
         finally { setLoading(false); }
     };
 
     if (loading) return <div className="app-loading">Chargement...</div>;
 
     if (!user) {
-        return <AuthScreen onLogin={checkSession} />;
+        // CAS SPÉCIAL : Si on est sur un lien d'invitation ou reset mdp
+        if (path === '/update-password') return <UpdatePassword />;
+        
+        // On passe le token à AuthScreen pour qu'il sache qu'on veut s'inscrire pour rejoindre
+        return (
+            <AuthScreen 
+                onLogin={checkSession} 
+                isInviteFlow={!!inviteToken} 
+                inviteToken={inviteToken} 
+                forceSignUp={!!inviteToken} // On force l'onglet inscription
+            />
+        );
     }
 
     if (isMaintenance) {
@@ -83,7 +99,6 @@ function App() {
             <SideBar />
 
             <main className="main-content">
-                {/* LA BANNIÈRE EST MAINTENANT ICI (DANS LE FLUX) */}
                 <GlobalBanner />
 
                 <Routes>
@@ -91,7 +106,7 @@ function App() {
                     <Route path="/strava-callback" element={<StravaCallback />} />
                     <Route path="/update-password" element={<UpdatePassword />} />
                     <Route path="/invite/:code" element={<InviteLanding />} />
-                    
+
                     <Route path="/app/dashboard" element={<Dashboard />} />
                     <Route path="/app/activities" element={<ActivitiesPage />} />
 

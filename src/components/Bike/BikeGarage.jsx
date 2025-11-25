@@ -113,7 +113,11 @@ function BikeGarage() {
                         <div 
                             key={bike.id} 
                             className={`bike-card glass-panel ${!isMine ? 'friend-bike' : ''}`}
-                            onClick={() => navigate(`/app/bike/${bike.id}`)}
+                            onClick={() => isMine && navigate(`/app/bike/${bike.id}`)}
+                            style={{ 
+                                cursor: isMine ? 'pointer' : 'default',
+                                opacity: isMine ? 1 : 0.85
+                            }}
                         >
                             <div className="bike-image-placeholder">
                                 {bike.photo_url ? (

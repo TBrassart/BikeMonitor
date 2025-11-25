@@ -10,6 +10,8 @@ function EquipmentPage() {
     const [activeTab, setActiveTab] = useState('textile'); // 'textile', 'tech', 'accessory'
     const [showForm, setShowForm] = useState(false);
 
+    const [currentProfile, setCurrentProfile] = useState(null);
+
     useEffect(() => {
         loadData();
     }, []);
@@ -17,8 +19,14 @@ function EquipmentPage() {
     const loadData = async () => {
         try {
             setLoading(true);
-            const data = await equipmentService.getAll();
+            // On charge en parallèle les items et le profil
+            const [data, profile] = await Promise.all([
+                equipmentService.getAll(),
+                authService.getMyProfile()
+            ]);
+            
             setItems(data || []);
+            setCurrentProfile(profile);
         } catch (e) {
             console.error(e);
         } finally {
@@ -107,37 +115,45 @@ function EquipmentPage() {
                             <p>Rien ici pour l'instant.</p>
                         </div>
                     ) : (
-                        filteredItems.map(item => (
-                            <div 
-                                key={item.id} 
-                                className="equip-card glass-panel"
-                                style={{ borderLeft: `4px solid ${getConditionColor(item.condition)}` }}
-                            >
-                                <div className="equip-header">
-                                    <div className="equip-title">
-                                        <h4>{item.name}</h4>
-                                        <span className="brand">{item.brand}</span>
-                                    </div>
-                                    <div className="equip-icons">
-                                        {item.type === 'textile' && <span className="season-icon">{getSeasonIcon(item.season)}</span>}
-                                        {item.type === 'tech' && <FaBatteryThreeQuarters className="tech-icon" />}
-                                    </div>
-                                </div>
+                        filteredItems.map(item => {
+                            // VÉRIFICATION DE PROPRIÉTÉ
+                            const isMine = currentProfile && item.profile_id === currentProfile.id;
 
-                                <div className="equip-meta">
-                                    <span className="category-badge">{item.category}</span>
-                                    {item.profiles?.avatar && (
-                                        <div className="owner-avatar-small" title={item.profiles.name}>
-                                            {item.profiles.avatar}
+                            return (
+                                <div 
+                                    key={item.id} 
+                                    className="equip-card glass-panel"
+                                    style={{ borderLeft: `4px solid ${getConditionColor(item.condition)}` }}
+                                >
+                                    <div className="equip-header">
+                                        <div className="equip-title">
+                                            <h4>{item.name}</h4>
+                                            <span className="brand">{item.brand}</span>
                                         </div>
+                                        <div className="equip-icons">
+                                            {item.type === 'textile' && <span className="season-icon">{getSeasonIcon(item.season)}</span>}
+                                            {item.type === 'tech' && <FaBatteryThreeQuarters className="tech-icon" />}
+                                        </div>
+                                    </div>
+
+                                    <div className="equip-meta">
+                                        <span className="category-badge">{item.category}</span>
+                                        {item.profiles?.avatar && (
+                                            <div className="owner-avatar-small" title={item.profiles.name}>
+                                                {item.profiles.avatar}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* AFFICHER BOUTON SUPPRIMER UNIQUEMENT SI C'EST MON ITEM */}
+                                    {isMine && (
+                                        <button onClick={() => handleDelete(item.id)} className="delete-icon">
+                                            <FaTrash />
+                                        </button>
                                     )}
                                 </div>
-
-                                <button onClick={() => handleDelete(item.id)} className="delete-icon">
-                                    <FaTrash />
-                                </button>
-                            </div>
-                        ))
+                            );
+                        })
                     )}
                 </div>
             )}

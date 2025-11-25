@@ -192,6 +192,10 @@ export const authService = {
         if (error) throw error;
     },
 
+    // --- AJOUTER CES DEUX LIGNES ICI : ---
+    updateMemberRole: (tid, uid, role) => api.updateMemberRole(tid, uid, role),
+    kickMember: (tid, uid) => api.kickMember(tid, uid),
+
     // 1. Demander le reset (Envoie un email)
     async resetPasswordForEmail(email) {
         const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -538,13 +542,33 @@ export const api = {
         }
     },
 
-    // --- ADMIN : SUPPRESSION VIA RPC ---
+    // --- ADMIN GLOBAL : SUPPRESSION VIA RPC ---
     async deleteUserProfile(userId) {
-        // Appel de la fonction sécurisée côté serveur
+        // MODIFICATION : On appelle la fonction SQL sécurisée au lieu du delete direct
         const { error } = await supabase.rpc('delete_user_profile', { 
             target_user_id: userId 
         });
-        
+        if (error) throw error;
+    },
+
+    // --- TURLAG : GESTION MEMBRES (AJOUTS) ---
+    
+    // Promouvoir / Destituer un membre
+    async updateMemberRole(turlagId, userId, newRole) {
+        const { error } = await supabase.rpc('set_turlag_member_role', {
+            target_turlag_id: turlagId,
+            target_user_id: userId,
+            new_role: newRole
+        });
+        if (error) throw error;
+    },
+
+    // Éjecter un membre du groupe
+    async kickMember(turlagId, userId) {
+        const { error } = await supabase.rpc('kick_turlag_member', {
+            target_turlag_id: turlagId,
+            target_user_id: userId
+        });
         if (error) throw error;
     },
 

@@ -191,8 +191,7 @@ function TurlagDetail() {
                     {/* On arrête la propagation pour que le clic DANS la modale ne la ferme pas */}
                     <div className="glass-panel modal-content admin-modal-size" onClick={e => e.stopPropagation()}>
                         <div className="modal-header-row">
-                             <h3 style={{margin:0}}>Administration du Groupe</h3>
-                             <button className="close-btn" onClick={() => setShowAdminModal(false)}><FaTimes /></button>
+                            <button className="close-btn" onClick={() => setShowAdminModal(false)}><FaTimes /></button>
                         </div>
                         
                         {/* Le composant Admin est ici, propre et isolé */}

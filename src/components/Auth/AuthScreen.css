@@ -1,20 +1,21 @@
 /* src/components/Auth/AuthScreen.css */
 
+/* Le conteneur principal qui prend tout l'écran et centre le contenu */
 .auth-screen {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    padding: 20px;
-    text-align: center;
-    background-color: var(--color-dark-bg); /* Utilise ta variable ou #12121e */
     width: 100%;
     position: relative;
     overflow: hidden;
+    background-color: var(--color-dark-bg); /* Assure-toi que cette variable est définie, sinon mets #12121e */
+    padding: 20px;
 }
 
 /* --- FOND ANIMÉ (Halos) --- */
+/* Ils doivent être en position absolute et z-index 0 pour être derrière */
 .bg-glow {
     position: absolute;
     border-radius: 50%;
@@ -37,59 +38,165 @@
 }
 @keyframes float { 0%,100%{transform:translate(0,0)} 50%{transform:translate(30px,50px)} }
 
-/* --- CARTE --- */
+/* --- CARTE CENTRALE (Glassmorphism) --- */
+/* C'est sûrement ici que ça a cassé chez toi */
 .auth-card {
     position: relative;
-    z-index: 10;
-    background: rgba(30, 30, 46, 0.85); /* Fond sombre semi-transparent */
+    z-index: 10; /* Important pour être au-dessus des halos */
+    
+    /* Style "Verre" si la classe glass-panel globale ne marche pas */
+    background: rgba(30, 30, 46, 0.85); 
     backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 16px;
+    
+    border-radius: 24px;
     padding: 40px 30px;
     width: 100%;
-    max-width: 400px;
+    max-width: 420px; /* Largeur max sur PC */
     box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    text-align: center;
 }
 
-.auth-brand { margin-bottom: 30px; }
-.logo-wrapper { display: flex; justify-content: center; margin-bottom: 15px; }
+/* --- HEADER (Logo & Titre) --- */
+.auth-brand { 
+    margin-bottom: 35px; 
+}
+.logo-wrapper { 
+    display: flex; 
+    justify-content: center; 
+    margin-bottom: 20px; 
+    filter: drop-shadow(0 0 10px #00e5ff);
+}
 
 .auth-brand h1 {
-    font-size: 2.5rem;
+    font-size: 2.2rem;
     margin: 0;
-    background: linear-gradient(135deg, #00e5ff 0%, #ff00c8 100%);
+    font-weight: 800;
+    letter-spacing: -1px;
+    /* Le dégradé de texte */
+    background: linear-gradient(135deg, #00e5ff 0%, #d946ef 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
-.subtitle { color: #aaa; margin-top: 5px; font-size: 0.95rem; }
+.subtitle { 
+    color: #aaa; 
+    margin-top: 10px; 
+    font-size: 1rem; 
+    font-weight: 500;
+}
 
 /* --- FORMULAIRE --- */
 .login-form {
-    display: flex; flex-direction: column; gap: 15px;
+    display: flex; 
+    flex-direction: column; 
+    gap: 15px; /* Espace entre les champs */
 }
 
+/* Le conteneur d'un champ (Icône + Input) */
 .input-group {
-    display: flex; align-items: center;
-    background: rgba(0, 0, 0, 0.3);
+    display: flex; 
+    align-items: center;
+    background: rgba(0, 0, 0, 0.3); /* Fond sombre des inputs */
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
+    border-radius: 12px;
     padding: 12px 15px;
-    transition: all 0.3s;
+    transition: all 0.3s ease;
 }
+/* Effet au focus */
 .input-group:focus-within {
     border-color: #00e5ff;
-    box-shadow: 0 0 10px rgba(0, 229, 255, 0.2);
+    box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
+    background: rgba(0, 0, 0, 0.5);
 }
 
-.input-icon { color: #aaa; margin-right: 10px; }
+.input-icon { 
+    color: #666; 
+    margin-right: 15px; 
+    font-size: 1.1rem;
+    transition: color 0.3s;
+}
+.input-group:focus-within .input-icon {
+    color: #00e5ff;
+}
 
 .input-group input {
-    border: none; background: transparent; color: white;
-    width: 100%; font-size: 1rem; outline: none;
+    border: none; 
+    background: transparent; 
+    color: white;
+    width: 100%; 
+    font-size: 1rem; 
+    outline: none;
+    font-family: inherit;
+}
+.input-group input::placeholder { color: #666; }
+
+/* --- SE SOUVENIR DE MOI --- */
+.remember-me {
+    display: flex; 
+    align-items: center; 
+    gap: 10px;
+    color: #ccc; 
+    font-size: 0.9rem; 
+    cursor: pointer;
+    margin: 5px 0 15px 0; 
+    user-select: none;
+    justify-content: flex-start;
+}
+.check-icon { font-size: 1.2rem; color: #444; transition: all 0.2s;}
+.check-icon.active { color: #00e5ff; transform: scale(1.1); }
+
+/* --- BOUTON PRINCIPAL --- */
+.login-btn {
+    margin-top: 10px; 
+    padding: 14px;
+    background: linear-gradient(135deg, #00e5ff 0%, #d946ef 100%);
+    border: none; 
+    border-radius: 12px;
+    color: white; 
+    font-weight: 700; 
+    font-size: 1.1rem;
+    cursor: pointer; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    gap: 10px;
+    transition: all 0.3s;
+    box-shadow: 0 5px 15px rgba(0, 229, 255, 0.3);
+}
+.login-btn:hover { 
+    filter: brightness(1.1); 
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(217, 70, 239, 0.4);
+}
+.login-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+
+/* --- FOOTER (Lien switch) --- */
+.signup-link {
+    margin-top: 30px; 
+    color: #aaa; 
+    font-size: 0.95rem;
+    border-top: 1px solid rgba(255,255,255,0.1); 
+    padding-top: 25px;
+}
+.switch-btn {
+    background: none; 
+    border: none; 
+    color: #00e5ff;
+    font-weight: bold; 
+    cursor: pointer; 
+    margin-left: 5px;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+}
+.switch-btn:hover { 
+    color: #d946ef;
+    text-shadow: 0 0 10px rgba(217, 70, 239, 0.5);
 }
 
-/* --- MESSAGES --- */
+/* --- MESSAGES ERREUR/SUCCES --- */
 .auth-message {
     padding: 12px; border-radius: 8px; margin-bottom: 20px;
     font-size: 0.9rem; text-align: center; animation: fadeIn 0.3s;
@@ -98,44 +205,10 @@
     background: rgba(231, 76, 60, 0.2); border: 1px solid #e74c3c; color: #ff6b6b;
 }
 .auth-message.success {
-    background: rgba(46, 204, 113, 0.2); border: 1px solid #2ecc71; color: #2ecc71;
+    background: rgba(16, 185, 129, 0.2); border: 1px solid #2ecc71; color: #2ecc71;
 }
 
-/* --- SE SOUVENIR DE MOI --- */
-.remember-me {
-    display: flex; align-items: center; gap: 8px;
-    color: #ccc; font-size: 0.9rem; cursor: pointer;
-    margin-top: 5px; user-select: none;
-}
-.check-icon { font-size: 1.1rem; color: #555; }
-.check-icon.active { color: #00e5ff; }
-
-/* BOUTON */
-.login-btn {
-    margin-top: 15px; padding: 14px;
-    background: linear-gradient(135deg, #00e5ff 0%, #ff00c8 100%);
-    border: none; border-radius: 8px;
-    color: white; font-weight: bold; font-size: 1.1rem;
-    cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px;
-    transition: transform 0.2s, filter 0.2s;
-}
-.login-btn:hover { filter: brightness(1.1); transform: translateY(-2px); }
-.login-btn:disabled { opacity: 0.7; cursor: not-allowed; }
-
-/* FOOTER */
-.signup-link {
-    margin-top: 25px; color: #aaa; font-size: 0.9rem;
-    border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;
-}
-.switch-btn {
-    background: none; border: none; color: #00e5ff;
-    font-weight: bold; cursor: pointer; margin-left: 5px;
-    text-decoration: underline; text-decoration-color: transparent;
-    transition: text-decoration-color 0.2s;
-}
-.switch-btn:hover { text-decoration-color: #00e5ff; }
-
-/* ANIMATIONS */
+/* --- ANIMATIONS & LOADER --- */
 .slide-in { animation: slideIn 0.3s ease; }
 @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }

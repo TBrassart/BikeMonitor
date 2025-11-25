@@ -200,7 +200,15 @@ function AdminPage() {
 
     if (loading) return <div className="loading">Chargement...</div>;
 
-    const filteredUsers = users.filter(u => u.name?.toLowerCase().includes(searchTerm.toLowerCase()));
+    // --- LOGIQUE DE FILTRAGE ---
+    const filteredUsers = users.filter(u => {
+        const matchesSearch = (u.name && u.name.toLowerCase().includes(searchTerm.toLowerCase())) || 
+                              (u.email && u.email.toLowerCase().includes(searchTerm.toLowerCase()));
+        
+        const matchesRole = filterRole === 'all' || u.app_role === filterRole;
+        
+        return matchesSearch && matchesRole;
+    });
 
     return (
         <div className="admin-page">
@@ -331,13 +339,34 @@ function AdminPage() {
                 </div>
             )}
 
-            {/* TAB USERS */}
+            {/* TAB UTILISATEURS (AVEC FILTRES) */}
             {activeTab === 'users' && (
                 <div className="admin-section">
                     <div className="section-header">
-                        <h3>Utilisateurs</h3>
-                        <div className="search-box"><FaSearch /><input value={searchTerm} onChange={e=>setSearchTerm(e.target.value)} placeholder="Chercher..." /></div>
+                        <h3>Utilisateurs ({filteredUsers.length})</h3>
+                        
+                        <div className="filters-toolbar">
+                            <div className="search-box">
+                                <FaSearch />
+                                <input value={searchTerm} onChange={e=>setSearchTerm(e.target.value)} placeholder="Nom ou email..." />
+                            </div>
+                            
+                            <div className="role-filter-wrapper">
+                                <FaFilter className="filter-icon" />
+                                <select 
+                                    value={filterRole} 
+                                    onChange={(e) => setFilterRole(e.target.value)} 
+                                    className="role-select"
+                                >
+                                    <option value="all">Tous les rôles</option>
+                                    <option value="admin">Admins</option>
+                                    <option value="moderator">Modérateurs</option>
+                                    <option value="user">Utilisateurs</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
+                    
                     <div className="users-table-container">
                         <table className="users-table">
                             <thead><tr><th>Avatar</th><th>Nom</th><th>Rôle</th><th>Inscrit le</th><th>Actions</th></tr></thead>
@@ -346,13 +375,20 @@ function AdminPage() {
                                     <tr key={u.id}>
                                         <td><span className="user-avatar">{u.avatar}</span></td>
                                         <td>{u.name}<div style={{fontSize:'0.7rem', color:'#888'}}>{u.email}</div></td>
-                                        <td><span className={`role-badge ${u.app_role}`}>{u.app_role}</span></td>
+                                        <td>
+                                            {/* Badge Rôle Dynamique */}
+                                            <span className={`role-badge ${u.app_role}`}>
+                                                {u.app_role === 'admin' && '👑 '}
+                                                {u.app_role === 'moderator' && '🛡️ '}
+                                                {u.app_role}
+                                            </span>
+                                        </td>
                                         <td>{new Date(u.created_at).toLocaleDateString()}</td>
                                         <td>
                                             {u.app_role !== 'admin' && (
                                                 <div className="actions-row">
-                                                    <button className="action-icon" onClick={() => handleRoleChange(u, u.app_role)}><FaUserShield /></button>
-                                                    <button className="action-icon delete" onClick={() => handleEjectUser(u)}><FaTrash /></button>
+                                                    <button className="action-icon" onClick={() => handleRoleChange(u, u.app_role)} title="Changer Rôle"><FaUserShield /></button>
+                                                    <button className="action-icon delete" onClick={() => handleEjectUser(u)} title="Éjecter"><FaTrash /></button>
                                                 </div>
                                             )}
                                         </td>

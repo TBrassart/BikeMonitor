@@ -24,21 +24,29 @@ export const authService = {
     },
     async getCurrentUser() {
         try {
-            // On récupère la session
-            const { data, error } = await supabase.auth.getUser();
+            // 1. On récupère la réponse brute (SANS déstructuration immédiate qui ferait crasher)
+            const response = await supabase.auth.getUser();
             
-            // Si erreur (ex: 403 User deleted) ou pas de data, on renvoie null
-            if (error || !data || !data.user) {
-                // Par sécurité, on nettoie le stockage local si le token est invalide
-                if (error?.status === 403) {
-                    await supabase.auth.signOut(); 
-                }
+            // 2. Vérification de sécurité
+            // Si data est null, ou si user est null, c'est que le compte n'existe plus ou que le token est invalide
+            if (!response || !response.data || !response.data.user) {
+                
+                // 3. AUTO-NETTOYAGE
+                // On force la déconnexion locale pour supprimer le vieux token corrompu
+                await supabase.auth.signOut(); 
+                
+                // On renvoie null pour dire à l'app "Personne n'est connecté"
+                // L'app affichera alors l'écran de connexion proprement
                 return null;
             }
             
-            return data.user;
+            // Tout va bien, on renvoie l'utilisateur
+            return response.data.user;
+
         } catch (e) {
-            console.warn("Session invalide:", e);
+            console.warn("Session invalide détectée, nettoyage en cours...", e);
+            // En cas de crash imprévu, on nettoie aussi
+            await supabase.auth.signOut();
             return null;
         }
     },

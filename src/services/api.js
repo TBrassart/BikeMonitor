@@ -432,12 +432,13 @@ export const api = {
         return data;
     },
 
-    // Changer le rôle global d'un user
+    // Changer le rôle global d'un user (Via fonction sécurisée RPC)
     async updateUserRole(userId, newRole) {
-        const { error } = await supabase
-            .from('profiles')
-            .update({ app_role: newRole })
-            .eq('user_id', userId);
+        const { error } = await supabase.rpc('set_user_role', { 
+            target_user_id: userId, 
+            new_role: newRole 
+        });
+        
         if (error) throw error;
     },
 

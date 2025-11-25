@@ -657,6 +657,11 @@ export const api = {
 
         if (invError || !invite) throw new Error("Invitation invalide ou introuvable.");
 
+        if (!invite.turlags) {
+            console.error("Erreur: Le groupe lié à l'invitation est introuvable ou inaccessible.");
+            throw new Error("Impossible d'accéder aux informations du groupe (Erreur de droits).");
+        }
+        
         // 2. Vérifier expiration
         if (invite.expires_at && new Date(invite.expires_at) < new Date()) {
             throw new Error("Cette invitation a expiré.");

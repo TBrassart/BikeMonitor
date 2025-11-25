@@ -98,7 +98,6 @@ function TurlagDetail() {
                         <p className="turlag-desc">{details.turlag.description}</p>
                     </div>
                 </div>
-                {isPrivileged() && <button onClick={() => setShowEditForm(true)} className="edit-btn"><FaCog /></button>}
             </div>
 
             <div className="turlag-layout">

@@ -169,3 +169,76 @@
     width: 16px; 
     height: 16px;
 }
+
+/* BARRE D'OUTILS FILTRES */
+.filters-toolbar {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.role-filter-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 0 10px;
+}
+
+.role-filter-wrapper .filter-icon {
+    color: var(--text-secondary);
+    margin-right: 5px;
+}
+
+.role-select {
+    background: transparent;
+    border: none;
+    color: white;
+    padding: 10px 5px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    outline: none;
+}
+
+.role-select option {
+    background-color: #1e1e2d;
+    color: white;
+}
+
+/* BADGES ROLES (MISE A JOUR) */
+.role-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    display: inline-block;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* Admin = Jaune/Or */
+.role-badge.admin {
+    background: rgba(234, 179, 8, 0.2);
+    color: #fde047;
+    border: 1px solid rgba(234, 179, 8, 0.5);
+    box-shadow: 0 0 10px rgba(234, 179, 8, 0.1);
+}
+
+/* Moderator = Vert Néon (NEW) */
+.role-badge.moderator {
+    background: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.5);
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.1);
+}
+
+/* User = Gris Discret */
+.role-badge.user {
+    background: rgba(255, 255, 255, 0.05);
+    color: #94a3b8;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}

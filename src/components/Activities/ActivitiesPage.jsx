@@ -2,7 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { api } from '../../services/api';
 import { 
     FaSearch, FaFilter, FaBicycle, FaRunning, FaHiking, FaSwimmer, 
-    FaMountain, FaRoad, FaStopwatch, FaSnowboarding, FaDumbbell, FaSpa 
+    FaMountain, FaRoad, FaStopwatch, FaSnowboarding, FaDumbbell, FaSpa,
+    FaTimes, FaFire, FaHeartbeat, FaBolt, FaExternalLinkAlt 
 } from 'react-icons/fa';
 
 import Slider from 'rc-slider';
@@ -11,21 +12,24 @@ import './ActivitiesPage.css';
 
 function ActivitiesPage() {
     const [rawActivities, setRawActivities] = useState([]);
+    const [bikesList, setBikesList] = useState([]); // Pour retrouver le nom du vélo
     const [loading, setLoading] = useState(true);
     
     // --- ÉTATS FILTRES ---
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedYear, setSelectedYear] = useState('Tous');
     const [selectedType, setSelectedType] = useState('Tous');
-    const [selectedTag, setSelectedTag] = useState('Tous'); // Filtre par badge
+    const [selectedTag, setSelectedTag] = useState('Tous');
     
-    // Sliders
     const [distRange, setDistRange] = useState([0, 200]);
     const [elevRange, setElevRange] = useState([0, 3000]);
     const [timeRange, setTimeRange] = useState([0, 10]); 
-
     const [maxValues, setMaxValues] = useState({ dist: 200, elev: 3000, time: 10 });
+    
     const [showFilters, setShowFilters] = useState(false);
+
+    // --- ÉTAT MODALE DÉTAIL ---
+    const [selectedActivity, setSelectedActivity] = useState(null);
 
     useEffect(() => {
         loadData();
@@ -34,13 +38,18 @@ function ActivitiesPage() {
     const loadData = async () => {
         try {
             setLoading(true);
-            const activities = await api.getActivities();
-            setRawActivities(activities || []);
+            const [acts, bikes] = await Promise.all([
+                api.getActivities(),
+                api.getBikes()
+            ]);
 
-            if (activities.length > 0) {
-                const maxD = Math.ceil(Math.max(...activities.map(a => a.distance > 1000 ? a.distance/1000 : a.distance)));
-                const maxE = Math.ceil(Math.max(...activities.map(a => a.total_elevation_gain)));
-                const maxT = Math.ceil(Math.max(...activities.map(a => a.moving_time / 3600)));
+            setRawActivities(acts || []);
+            setBikesList(bikes || []);
+
+            if (acts.length > 0) {
+                const maxD = Math.ceil(Math.max(...acts.map(a => a.distance > 1000 ? a.distance/1000 : a.distance)));
+                const maxE = Math.ceil(Math.max(...acts.map(a => a.total_elevation_gain)));
+                const maxT = Math.ceil(Math.max(...acts.map(a => a.moving_time / 3600)));
 
                 setMaxValues({ dist: maxD, elev: maxE, time: maxT });
                 setDistRange([0, maxD]);
@@ -54,19 +63,18 @@ function ActivitiesPage() {
         }
     };
 
-    // --- SYSTÈME DE TAGS (Restauré) ---
+    // --- LOGIQUE TAGS ---
     const getTags = (act) => {
         const tags = [];
         const dist = act.distance > 1000 ? act.distance / 1000 : act.distance;
         const elev = act.total_elevation_gain;
         const type = act.type;
 
-        // Type spécifique
         if (type === 'VirtualRide') tags.push({ label: 'Zwift 🏠', color: 'purple' });
         if (type === 'WeightTraining' || type === 'Workout') tags.push({ label: 'Muscu 💪', color: 'red' });
         if (type === 'Yoga' || type === 'Pilates') tags.push({ label: 'Zen 🧘', color: 'green' });
-
-        // Performance
+        
+         // Performance
         if (dist >= 4800) tags.push({ label: 'RAAM 🦅', color: 'gold' });
         else if (dist >= 2500) tags.push({ label: 'RAF 🗺️', color: 'gold' });
         else if (dist >= 500) tags.push({ label: 'Ultra 🌟', color: 'red' });
@@ -87,29 +95,17 @@ function ActivitiesPage() {
         return tags;
     };
 
-    // --- FILTRAGE ---
     const filteredActivities = useMemo(() => {
         return rawActivities.filter(act => {
             const dist = act.distance > 1000 ? act.distance / 1000 : act.distance;
             const hours = act.moving_time / 3600;
             const year = new Date(act.start_date).getFullYear().toString();
-            const tags = getTags(act); // On génère les tags pour filtrer dessus
+            const tags = getTags(act);
 
-            // Recherche Texte
             if (!act.name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
-            
-            // Selects
             if (selectedYear !== 'Tous' && year !== selectedYear) return false;
             if (selectedType !== 'Tous' && act.type !== selectedType) return false;
-            
-            // Filtre par Badge (ex: "Zwift")
-            if (selectedTag !== 'Tous') {
-                // On vérifie si un des tags contient le mot sélectionné
-                const hasTag = tags.some(t => t.label.includes(selectedTag));
-                if (!hasTag) return false;
-            }
-
-            // Sliders
+            if (selectedTag !== 'Tous' && !tags.some(t => t.label.includes(selectedTag))) return false;
             if (dist < distRange[0] || dist > distRange[1]) return false;
             if (act.total_elevation_gain < elevRange[0] || act.total_elevation_gain > elevRange[1]) return false;
             if (hours < timeRange[0] || hours > timeRange[1]) return false;
@@ -118,7 +114,6 @@ function ActivitiesPage() {
         });
     }, [rawActivities, searchTerm, selectedYear, selectedType, selectedTag, distRange, elevRange, timeRange]);
 
-    // --- VISUELS ---
     const getVisuals = (type) => {
         switch(type) {
             case 'Run': return { icon: <FaRunning />, class: 'run' };
@@ -135,8 +130,84 @@ function ActivitiesPage() {
     const types = [...new Set(rawActivities.map(a => a.type))].sort();
     const filterTags = ['Zwift', 'Muscu', 'Century', 'Longue', 'Grimpeur', 'Morning'];
 
+    const getBikeName = (id) => {
+        const bike = bikesList.find(b => b.id === id);
+        return bike ? bike.name : 'Vélo inconnu';
+    };
+
     return (
         <div className="activities-page">
+            {/* --- MODALE DÉTAIL --- */}
+            {selectedActivity && (
+                <div className="modal-overlay" onClick={() => setSelectedActivity(null)}>
+                    <div className="modal-content activity-modal" onClick={e => e.stopPropagation()}>
+                        <div className="act-modal-header">
+                            <button className="close-modal-btn" onClick={() => setSelectedActivity(null)}><FaTimes /></button>
+                            <div className="act-modal-title">
+                                <div className="act-modal-date">{new Date(selectedActivity.start_date).toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long', year:'numeric'})}</div>
+                                <h2>{selectedActivity.name}</h2>
+                            </div>
+                        </div>
+                        
+                        <div className="act-modal-body">
+                            <div className="stats-grid-modal">
+                                <div className="stat-box">
+                                    <span className="label">Distance</span>
+                                    <span className="value">{(selectedActivity.distance / (selectedActivity.distance > 1000 ? 1000 : 1)).toFixed(1)}</span>
+                                    <span className="unit">km</span>
+                                </div>
+                                <div className="stat-box">
+                                    <span className="label">Dénivelé</span>
+                                    <span className="value">{Math.round(selectedActivity.total_elevation_gain)}</span>
+                                    <span className="unit">m</span>
+                                </div>
+                                <div className="stat-box">
+                                    <span className="label">Durée</span>
+                                    <span className="value">{Math.floor(selectedActivity.moving_time / 3600)}h{Math.floor((selectedActivity.moving_time % 3600) / 60)}</span>
+                                    <span className="unit">min</span>
+                                </div>
+                                {/* Stats Avancées si dispos dans external_data */}
+                                {selectedActivity.external_data?.average_speed && (
+                                    <div className="stat-box">
+                                        <span className="label">Vitesse Moy.</span>
+                                        <span className="value">{(selectedActivity.external_data.average_speed * 3.6).toFixed(1)}</span>
+                                        <span className="unit">km/h</span>
+                                    </div>
+                                )}
+                                {selectedActivity.external_data?.average_watts && (
+                                    <div className="stat-box">
+                                        <span className="label"><FaBolt /> Puissance</span>
+                                        <span className="value">{Math.round(selectedActivity.external_data.average_watts)}</span>
+                                        <span className="unit">W</span>
+                                    </div>
+                                )}
+                                {selectedActivity.external_data?.kilojoules && (
+                                    <div className="stat-box">
+                                        <span className="label"><FaFire /> Énergie</span>
+                                        <span className="value">{Math.round(selectedActivity.external_data.kilojoules)}</span>
+                                        <span className="unit">kJ</span>
+                                    </div>
+                                )}
+                            </div>
+
+                            {selectedActivity.bike_id && (
+                                <div className="bike-used">
+                                    <div className="bike-thumb"><FaBicycle style={{fontSize:'1.5rem', color:'#666', margin:'12px'}}/></div>
+                                    <div>
+                                        <div style={{fontSize:'0.8rem', color:'#888'}}>Matériel utilisé</div>
+                                        <div style={{fontWeight:'bold', color:'white'}}>{getBikeName(selectedActivity.bike_id)}</div>
+                                    </div>
+                                </div>
+                            )}
+
+                            <button className="strava-link-btn" onClick={() => window.open(`https://www.strava.com/activities/${selectedActivity.id}`, '_blank')}>
+                                <FaExternalLinkAlt /> Voir l'analyse sur Strava
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <header className="activities-header">
                 <div>
                     <h2 className="gradient-text">Journal d'activités</h2>
@@ -152,6 +223,7 @@ function ActivitiesPage() {
                 <FaSearch className="search-icon-overlay" />
             </div>
 
+            {/* ... (FILTRES INCHANGÉS) ... */}
             <div className={`filters-panel glass-panel ${showFilters ? 'open' : ''}`}>
                 <div className="filters-row">
                     <select value={selectedYear} onChange={e => setSelectedYear(e.target.value)} className="neon-select">
@@ -213,11 +285,15 @@ function ActivitiesPage() {
                         filteredActivities.map(act => {
                             const visuals = getVisuals(act.type);
                             const distKm = act.distance > 1000 ? act.distance / 1000 : act.distance;
-                            // APPEL DE LA FONCTION TAGS ICI
                             const tags = getTags(act);
 
                             return (
-                                <div key={act.id} className="activity-card glass-panel">
+                                <div 
+                                    key={act.id} 
+                                    className="activity-card glass-panel" 
+                                    onClick={() => setSelectedActivity(act)} // OUVERTURE DE LA POPUP
+                                    style={{cursor: 'pointer'}} // Feedback visuel
+                                >
                                     <div className="act-main">
                                         <div className={`act-icon-box ${visuals.class}`}>
                                             {visuals.icon}
@@ -228,7 +304,6 @@ function ActivitiesPage() {
                                                 <span className="act-date">{new Date(act.start_date).toLocaleDateString()}</span>
                                             </div>
                                             
-                                            {/* AFFICHAGE DES TAGS RESTAURÉ */}
                                             {tags.length > 0 && (
                                                 <div className="tags-row">
                                                     {tags.map((t, i) => (

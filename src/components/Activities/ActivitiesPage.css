@@ -154,3 +154,70 @@
     border-color: rgba(6, 182, 212, 0.5) !important;
     box-shadow: 0 0 10px rgba(6, 182, 212, 0.1) !important;
 }
+
+/* --- MODALE DÉTAIL --- */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 2000; animation: fadeIn 0.2s;
+}
+
+.modal-content.activity-modal {
+    width: 600px; max-width: 95%; max-height: 90vh;
+    overflow-y: auto; padding: 0;
+    border-radius: 20px; border: 1px solid var(--border-color);
+    background: var(--bg-card);
+}
+
+/* Header Modale avec Map en fond (simulé par gradient si pas de map) */
+.act-modal-header {
+    height: 150px;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.3), var(--bg-card)), url('/map-placeholder.jpg'); /* Fallback */
+    background-size: cover; position: relative;
+    padding: 20px; display: flex; flex-direction: column; justify-content: space-between;
+}
+
+.close-modal-btn {
+    position: absolute; top: 15px; right: 15px;
+    background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2);
+    color: white; width: 35px; height: 35px; border-radius: 50%;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.close-modal-btn:hover { background: #ef4444; border-color: #ef4444; }
+
+.act-modal-title h2 { margin: 0; font-size: 1.5rem; text-shadow: 0 2px 5px rgba(0,0,0,0.8); }
+.act-modal-date { color: #ccc; font-size: 0.9rem; }
+
+/* Corps Modale */
+.act-modal-body { padding: 25px; }
+
+/* Grille Stats */
+.stats-grid-modal {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;
+    margin-bottom: 25px;
+}
+
+.stat-box {
+    background: rgba(255,255,255,0.03); border: 1px solid var(--border-color);
+    padding: 15px; border-radius: 12px; text-align: center;
+}
+.stat-box .label { display: block; font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 5px; }
+.stat-box .value { font-size: 1.2rem; font-weight: 700; color: white; }
+.stat-box .unit { font-size: 0.8rem; color: var(--text-secondary); font-weight: 400; margin-left: 2px; }
+
+/* Section Vélo */
+.bike-used {
+    display: flex; align-items: center; gap: 15px;
+    background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px;
+    margin-bottom: 25px; border-left: 3px solid var(--neon-blue);
+}
+.bike-thumb { width: 50px; height: 50px; border-radius: 8px; background: #333; overflow: hidden; }
+.bike-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+.strava-link-btn {
+    width: 100%; padding: 12px; background: #fc4c02; color: white; border: none;
+    border-radius: 10px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+    transition: transform 0.2s;
+}
+.strava-link-btn:hover { transform: translateY(-2px); background: #e34402; }

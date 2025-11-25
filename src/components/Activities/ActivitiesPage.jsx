@@ -6,6 +6,7 @@ import {
     FaTimes, FaFire, FaHeartbeat, FaBolt, FaExternalLinkAlt 
 } from 'react-icons/fa';
 
+import ActivityMap from './ActivityMap';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
 import './ActivitiesPage.css';
@@ -141,10 +142,26 @@ function ActivitiesPage() {
             {selectedActivity && (
                 <div className="modal-overlay" onClick={() => setSelectedActivity(null)}>
                     <div className="modal-content activity-modal" onClick={e => e.stopPropagation()}>
-                        <div className="act-modal-header">
-                            <button className="close-modal-btn" onClick={() => setSelectedActivity(null)}><FaTimes /></button>
-                            <div className="act-modal-title">
-                                <div className="act-modal-date">{new Date(selectedActivity.start_date).toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long', year:'numeric'})}</div>
+                        
+                        {/* HEADER CARTE */}
+                        <div className="act-modal-map-container" style={{height: '250px', position: 'relative'}}>
+                            {/* Si on a une polyline, on affiche la carte, sinon un fond dégradé */}
+                            {selectedActivity.map_polyline ? (
+                                <ActivityMap polyline={selectedActivity.map_polyline} />
+                            ) : (
+                                <div className="map-placeholder-gradient"></div>
+                            )}
+
+                            {/* BOUTON FERMER FLOTTANT */}
+                            <button className="close-modal-btn floating" onClick={() => setSelectedActivity(null)}>
+                                <FaTimes />
+                            </button>
+                            
+                            {/* TITRE SUPERPOSÉ EN BAS DE CARTE */}
+                            <div className="map-overlay-title">
+                                <div className="act-modal-date">
+                                    {new Date(selectedActivity.start_date).toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long', year:'numeric'})}
+                                </div>
                                 <h2>{selectedActivity.name}</h2>
                             </div>
                         </div>

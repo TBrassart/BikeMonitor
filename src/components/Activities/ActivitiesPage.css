@@ -171,11 +171,20 @@
 }
 
 /* Header Modale avec Map en fond (simulé par gradient si pas de map) */
-.act-modal-header {
-    height: 150px;
-    background: linear-gradient(to bottom, rgba(0,0,0,0.3), var(--bg-card)), url('/map-placeholder.jpg'); /* Fallback */
-    background-size: cover; position: relative;
-    padding: 20px; display: flex; flex-direction: column; justify-content: space-between;
+.act-modal-header { display: none; }
+
+/* Bouton fermer flottant au-dessus de la carte */
+.close-modal-btn.floating {
+    position: absolute;
+    top: 15px; 
+    right: 15px;
+    z-index: 1000; /* Au-dessus de la carte Leaflet */
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white;
+    width: 35px; height: 35px; border-radius: 50%;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
 }
 
 .close-modal-btn {
@@ -187,7 +196,10 @@
 .close-modal-btn:hover { background: #ef4444; border-color: #ef4444; }
 
 .act-modal-title h2 { margin: 0; font-size: 1.5rem; text-shadow: 0 2px 5px rgba(0,0,0,0.8); }
-.act-modal-date { color: #ccc; font-size: 0.9rem; }
+.act-modal-date {
+    color: #ccc; font-size: 0.9rem; margin-bottom: 2px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+}
 
 /* Corps Modale */
 .act-modal-body { padding: 25px; }
@@ -221,3 +233,33 @@
     transition: transform 0.2s;
 }
 .strava-link-btn:hover { transform: translateY(-2px); background: #e34402; }
+
+/* Conteneur de la carte */
+.act-modal-map-container {
+    height: 250px;
+    width: 100%;
+    position: relative;
+    background-color: #000; /* Fond noir le temps que la carte charge */
+}
+
+/* Fallback si pas de GPS */
+.map-placeholder-gradient {
+    width: 100%; height: 100%;
+    background: linear-gradient(135deg, #1e1e2d, #2a2a3e);
+    border-radius: 16px 16px 0 0;
+}
+
+/* Titre par dessus la carte (en bas) */
+.map-overlay-title {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 60px 20px 15px 20px; /* Gros padding top pour le dégradé */
+    background: linear-gradient(to top, #1e1e2d 20%, transparent); /* Fondu vers le contenu */
+    z-index: 900;
+    pointer-events: none; /* Laisse passer les clics vers la carte si besoin */
+}
+
+.map-overlay-title h2 {
+    margin: 0; font-size: 1.5rem; color: white;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+}

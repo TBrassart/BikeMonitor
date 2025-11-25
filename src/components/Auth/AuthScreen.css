@@ -240,3 +240,12 @@
     animation: spin 1s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+.forgot-link {
+    background: none; border: none;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    cursor: pointer;
+    text-decoration: underline;
+}
+.forgot-link:hover { color: var(--neon-blue); }

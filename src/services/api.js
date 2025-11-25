@@ -190,7 +190,24 @@ export const authService = {
     async deleteTurlagEvent(id) {
         const { error } = await supabase.from('turlag_events').delete().eq('id', id);
         if (error) throw error;
-    }
+    },
+
+    // 1. Demander le reset (Envoie un email)
+    async resetPasswordForEmail(email) {
+        const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: window.location.origin + '/update-password', // On créera cette route après
+        });
+        if (error) throw error;
+        return data;
+    },
+
+    // 2. Mettre à jour le mot de passe (Une fois l'utilisateur revenu via le lien)
+    async updateUserPassword(newPassword) {
+        const { data, error } = await supabase.auth.updateUser({ password: newPassword });
+        if (error) throw error;
+        return data;
+    },
+
 };
 
 // ==========================================

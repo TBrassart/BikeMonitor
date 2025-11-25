@@ -4,6 +4,7 @@ import { authService, adminService } from './services/api';
 
 // Pages & Composants
 import AuthScreen from './components/Auth/AuthScreen';
+import UpdatePassword from './components/Auth/UpdatePassword';
 import Dashboard from './components/Dashboard/Dashboard';
 import SideBar from './components/Layout/SideBar';
 import BottomNav from './components/Layout/BottomNav';
@@ -87,7 +88,8 @@ function App() {
                 <Routes>
                     <Route path="/" element={<Navigate to="/app/dashboard" />} />
                     <Route path="/strava-callback" element={<StravaCallback />} />
-
+                    <Route path="/update-password" element={<UpdatePassword />} />
+                    
                     <Route path="/app/dashboard" element={<Dashboard />} />
                     <Route path="/app/activities" element={<ActivitiesPage />} />
 

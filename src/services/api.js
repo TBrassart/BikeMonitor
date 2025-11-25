@@ -236,6 +236,10 @@ export const authService = {
         return data;
     },
 
+    createInvite: (tid, opt) => api.createInvite(tid, opt),
+    getInvites: (tid) => api.getInvites(tid),
+    deleteInvite: (id) => api.deleteInvite(id),
+    joinByCode: (code) => api.joinByInviteCode(code),
 };
 
 // ==========================================
@@ -594,6 +598,101 @@ export const api = {
             target_user_id: userId
         });
         if (error) throw error;
+    },
+
+    // --- TURLAG INVITATIONS ---
+
+    // Générer un code aléatoire
+    async createInvite(turlagId, options = {}) {
+        // options: { expiresInDays, maxUses }
+        const user = await authService.getCurrentUser();
+        
+        // Génération code court (6 chars)
+        const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+        
+        let expiresAt = null;
+        if (options.expiresInDays) {
+            const d = new Date();
+            d.setDate(d.getDate() + parseInt(options.expiresInDays));
+            expiresAt = d.toISOString();
+        }
+
+        const { data, error } = await supabase.from('turlag_invites').insert([{
+            turlag_id: turlagId,
+            code: code,
+            created_by: user.id,
+            expires_at: expiresAt,
+            max_uses: options.maxUses || null
+        }]).select().single();
+
+        if (error) throw error;
+        return data;
+    },
+
+    async getInvites(turlagId) {
+        const { data, error } = await supabase
+            .from('turlag_invites')
+            .select('*')
+            .eq('turlag_id', turlagId)
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        return data;
+    },
+
+    async deleteInvite(inviteId) {
+        const { error } = await supabase.from('turlag_invites').delete().eq('id', inviteId);
+        if (error) throw error;
+    },
+
+    // REJOINDRE VIA CODE (Logique complexe)
+    async joinByInviteCode(code) {
+        const user = await authService.getCurrentUser();
+
+        // 1. Vérifier l'invitation
+        const { data: invite, error: invError } = await supabase
+            .from('turlag_invites')
+            .select('*, turlags(*)')
+            .eq('code', code)
+            .single();
+
+        if (invError || !invite) throw new Error("Invitation invalide ou introuvable.");
+
+        // 2. Vérifier expiration
+        if (invite.expires_at && new Date(invite.expires_at) < new Date()) {
+            throw new Error("Cette invitation a expiré.");
+        }
+
+        // 3. Vérifier usage
+        if (invite.max_uses && invite.uses_count >= invite.max_uses) {
+            throw new Error("Nombre maximum d'utilisations atteint.");
+        }
+
+        // 4. Vérifier limite membres groupe
+        const { count } = await supabase
+            .from('turlag_members')
+            .select('*', { count: 'exact', head: true })
+            .eq('turlag_id', invite.turlag_id);
+            
+        if (invite.turlags.max_members && count >= invite.turlags.max_members) {
+            throw new Error("Ce groupe est complet.");
+        }
+
+        // 5. Rejoindre
+        const { error: joinError } = await supabase.from('turlag_members').insert([{
+            turlag_id: invite.turlag_id,
+            user_id: user.id,
+            role: 'member'
+        }]);
+
+        if (joinError) {
+            if (joinError.code === '23505') throw new Error("Vous êtes déjà membre.");
+            throw joinError;
+        }
+
+        // 6. Incrémenter compteur
+        await supabase.from('turlag_invites').update({ uses_count: invite.uses_count + 1 }).eq('id', invite.id);
+
+        return invite.turlags; // On retourne les infos du groupe rejoint
     },
 
     // --- SETTINGS & TOOLS ---

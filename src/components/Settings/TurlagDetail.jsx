@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { authService } from '../../services/api';
 import { FaUsers, FaCalendarAlt, FaCog, FaCrown, FaUserShield, FaCopy, FaArrowLeft, FaMapMarkerAlt, FaPlus, FaTimes, FaEdit, FaTrash } from 'react-icons/fa';
 import './TurlagDetail.css';
+import TurlagAdmin from './TurlagAdmin';
 
 function TurlagDetail() {
     const { turlagId } = useParams();
@@ -161,9 +162,12 @@ function TurlagDetail() {
                             </div>
                         ))}
                     </div>
+
+                    {isPrivileged() && (
+                        <TurlagAdmin turlagId={turlagId} turlagData={details.turlag} onUpdate={loadData} />
+                    )}
                     
                     {showEventForm && ( /* Formulaire Event */ <div className="glass-panel event-form"><button onClick={()=>setShowEventForm(false)}>Fermer</button></div> )}
-                    {showEditForm && ( /* Formulaire Edit */ <div className="modal-overlay"><div className="glass-panel modal-content"><button onClick={()=>setShowEditForm(false)}>Fermer</button></div></div> )}
                 </div>
             </div>
         </div>

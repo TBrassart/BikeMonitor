@@ -127,24 +127,73 @@ const ThemeEffects = ({ effect }) => {
 
         // 5. GRAND TOUR (Route qui défile)
         let roadOffset = 0;
+        const roadSpeed = 8; // Vitesse de défilement de la route
+
+        // Création des cyclistes
+        const cyclists = Array(25).fill().map(() => {
+            const isMaillotJaune = Math.random() > 0.3; // 70% de maillots jaunes
+            return {
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                // Vitesse relative : certains vont un peu plus vite que la route, d'autres moins vite
+                speedVar: (Math.random() - 0.5) * 2, 
+                color: isMaillotJaune ? '#facc15' : (Math.random() > 0.5 ? '#ffffff' : '#ef4444'), // Jaune, Blanc ou Rouge
+                width: 12,
+                height: 20
+            };
+        });
+
         const drawRoad = () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            // Texture Asphalte (Bruit gris)
-            // Pour perf, on fait juste un fond gris et des lignes
-            ctx.fillStyle = '#333';
+            
+            // 1. Fond Asphalte
+            ctx.fillStyle = '#333'; 
             ctx.fillRect(0,0,canvas.width, canvas.height);
             
-            // Lignes jaunes centrales
+            // 2. Lignes de route défilantes
             ctx.fillStyle = '#facc15';
-            roadOffset += 5;
-            if(roadOffset > 100) roadOffset = 0;
-            
-            // Dessine ligne centrale
+            roadOffset += roadSpeed; 
+            if(roadOffset > 200) roadOffset = 0;
             const centerX = canvas.width / 2;
-            for(let i = -100; i < canvas.height; i+=100) {
-                // Effet de perspective simple (trapèze)
-                ctx.fillRect(centerX - 5, i + roadOffset, 10, 60);
+            for(let i = -200; i < canvas.height; i+=200) {
+                // Ligne centrale pointillée
+                ctx.fillRect(centerX - 5, i + roadOffset, 10, 100);
             }
+
+            // 3. Dessiner les Cyclistes
+            cyclists.forEach(c => {
+                // Mise à jour position : vitesse de la route + leur propre variation
+                c.y += roadSpeed + c.speedVar;
+
+                // Respawn en haut s'ils sortent en bas
+                if(c.y > canvas.height + 50) {
+                    c.y = -50;
+                    c.x = Math.random() * canvas.width;
+                }
+                // Respawn en bas s'ils sortent en haut (pour les plus lents)
+                if(c.y < -50) {
+                    c.y = canvas.height + 50;
+                    c.x = Math.random() * canvas.width;
+                }
+
+                // Dessin du cycliste (vue de dessus simplifiée)
+                ctx.save();
+                ctx.translate(c.x, c.y);
+
+                // Ombre portée (pour la profondeur)
+                ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                ctx.beginPath(); ctx.ellipse(2, 5, c.width/2, c.height/2, 0, 0, Math.PI*2); ctx.fill();
+
+                // Corps/Maillot (Ellipse)
+                ctx.fillStyle = c.color;
+                ctx.beginPath(); ctx.ellipse(0, 0, c.width/2, c.height/2, 0, 0, Math.PI*2); ctx.fill();
+
+                // Casque (Petit cercle noir)
+                ctx.fillStyle = '#222';
+                ctx.beginPath(); ctx.arc(0, -c.height/3, c.width/3, 0, Math.PI*2); ctx.fill();
+
+                ctx.restore();
+            });
         };
 
         // 6. GIRO (Pétales Roses)

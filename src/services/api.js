@@ -252,11 +252,12 @@ export const api = {
             .from('bikes')
             .select(`
                 *, 
-                profiles:user_id(name,avatar), 
-                parts(id, name, status),
-                frame_details:shop_items!frame_id(asset_data) 
+                profiles:user_id ( name, avatar ),
+                parts ( id, name, status ),
+                shop_items!frame_id ( asset_data ) 
             `)
             .order('created_at', { ascending: false });
+            
         if(error) throw error; 
         return data || [];
     },

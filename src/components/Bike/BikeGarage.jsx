@@ -68,13 +68,15 @@ function BikeGarage() {
 
     // Style dynamique par vélo (Cadre)
     const getFrameStyle = (bike) => {
-        // bike.shop_items contient les données du cadre s'il en a un
-        if (bike.shop_items && bike.shop_items.asset_data) {
-            const style = bike.shop_items.asset_data;
+        // Sécurité : Supabase peut renvoyer un objet ou un tableau selon la relation
+        const item = Array.isArray(bike.shop_items) ? bike.shop_items[0] : bike.shop_items;
+
+        if (item && item.asset_data) {
+            const style = item.asset_data;
             return {
                 border: `3px solid ${style.border}`,
-                boxShadow: `0 0 15px ${style.border}`,
-                // Si l'item a un effet 'shine', on peut ajouter une anim CSS ici
+                boxShadow: `0 0 20px ${style.border}`, // Ombre plus forte
+                zIndex: 1 // S'assure que le cadre est au-dessus
             };
         }
         return {};

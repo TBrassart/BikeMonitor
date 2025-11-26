@@ -57,7 +57,7 @@
 .bike-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
-    border-color: var(--neon-blue) !important;
+    border-color: var(--neon-blue);
 }
 
 .bike-image-placeholder {

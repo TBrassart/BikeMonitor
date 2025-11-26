@@ -825,6 +825,14 @@ export const api = {
         });
         if (error) throw error;
     },
+    // Retirer le cadre d'un vélo
+    async removeBikeFrame(bikeId) {
+        const { error } = await supabase
+            .from('bikes')
+            .update({ frame_id: null })
+            .eq('id', bikeId);
+        if (error) throw error;
+    },
 };
 
 // ==========================================
@@ -900,4 +908,7 @@ export const shopService = {
     equipBike: (bikeId, frameId) => api.equipBikeFrame(bikeId, frameId),
     equip: (invId, type) => api.equipItem(invId, type),
     unequip: (type) => api.unequipCategory(type),
+    equipBike: (bikeId, frameId) => api.equipBikeFrame(bikeId, frameId),
+    unequipBike: (bikeId) => api.removeBikeFrame(bikeId), // <--- AJOUT
+    syncHistory: () => api.syncWatts()
 };

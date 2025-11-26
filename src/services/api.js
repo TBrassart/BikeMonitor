@@ -253,7 +253,8 @@ export const api = {
             .select(`
                 *, 
                 profiles:user_id(name,avatar), 
-                parts(id, name, status)
+                parts(id, name, status),
+                shop_items!frame_id(asset_data)
             `)
             .order('created_at', { ascending: false });
         if(error) throw error; 
@@ -290,6 +291,17 @@ export const api = {
         if (error) throw error;
         const { data } = supabase.storage.from(bucket).getPublicUrl(fileName);
         return data.publicUrl;
+    },
+    async equipBikeFrame(bikeId, frameItemId) {
+        // Vérif: l'utilisateur possède-t-il cet item ?
+        // (Optionnel si on fait confiance au front, mais mieux pour la sécu)
+        
+        const { error } = await supabase
+            .from('bikes')
+            .update({ frame_id: frameItemId })
+            .eq('id', bikeId);
+            
+        if (error) throw error;
     },
 
     // --- CALCULS INTELLIGENTS ---
@@ -895,5 +907,6 @@ export const shopService = {
     getInventory: () => api.getMyInventory(),
     buy: (id, currency) => api.purchaseItem(id, currency),
     equip: (invId, type) => api.equipItem(invId, type),
-    syncHistory: () => api.syncWatts()
+    syncHistory: () => api.syncWatts(),
+    equipBike: (bikeId, frameId) => api.equipBikeFrame(bikeId, frameId),
 };

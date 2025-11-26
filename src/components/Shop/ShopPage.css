@@ -175,3 +175,31 @@
 .btn-action.equipped { background: rgba(16, 185, 129, 0.15); color: var(--neon-green); border-color: var(--neon-green); cursor: default; }
 
 @keyframes spin { 100% { transform: rotate(360deg); } }
+
+.preview-frame {
+    width: 80%; height: 80%;
+    border: 4px solid white;
+    border-radius: 10px;
+    box-shadow: 0 0 15px currentColor;
+}
+
+.bike-selector-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.bike-select-item {
+    padding: 15px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 10px;
+    transition: background 0.2s;
+}
+
+.bike-select-item:hover {
+    background: var(--gradient-primary);
+    border-color: transparent;
+}

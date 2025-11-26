@@ -7,14 +7,10 @@ import './BikeGarage.css';
 function BikeGarage() {
     const [bikes, setBikes] = useState([]);
     const [filteredBikes, setFilteredBikes] = useState([]);
-    
-    // Filtres
-    const [owners, setOwners] = useState([]); // Liste des propriétaires (membres de tes Turlags)
+    const [owners, setOwners] = useState([]);
     const [selectedOwner, setSelectedOwner] = useState('Tous');
-    
     const [loading, setLoading] = useState(true);
     const [currentUser, setCurrentUser] = useState(null);
-    
     const [equippedFrame, setEquippedFrame] = useState(null);
 
     const navigate = useNavigate();
@@ -29,7 +25,6 @@ function BikeGarage() {
             const user = await authService.getCurrentUser();
             setCurrentUser(user);
 
-            // On charge les vélos ET l'inventaire en parallèle
             const [data, inventory] = await Promise.all([
                 bikeService.getAll(),
                 shopService.getInventory()
@@ -38,7 +33,6 @@ function BikeGarage() {
             setBikes(data);
             setFilteredBikes(data);
 
-            // On cherche le cadre équipé
             const frame = inventory.find(i => i.shop_items.type === 'frame' && i.is_equipped);
             if (frame) setEquippedFrame(frame.shop_items.asset_data);
 
@@ -72,18 +66,21 @@ function BikeGarage() {
         return bike.parts.some(p => p.status === 'critical' || p.status === 'warning');
     };
 
-    // Style dynamique du cadre (Or, Argent, etc.)
-    const getFrameStyle = (isMine) => {
-        if (!isMine || !equippedFrame) return {};
-        
-        return {
-            border: `3px solid ${equippedFrame.border}`,
-            boxShadow: `0 0 15px ${equippedFrame.border}`,
-            transform: 'scale(1.02)' // Petit effet "pop"
-        };
+    // Style dynamique par vélo (Cadre)
+    const getFrameStyle = (bike) => {
+        // bike.shop_items contient les données du cadre s'il en a un
+        if (bike.shop_items && bike.shop_items.asset_data) {
+            const style = bike.shop_items.asset_data;
+            return {
+                border: `3px solid ${style.border}`,
+                boxShadow: `0 0 15px ${style.border}`,
+                // Si l'item a un effet 'shine', on peut ajouter une anim CSS ici
+            };
+        }
+        return {};
     };
 
-    if (loading) return <div className="loading-state">Chargement du garage...</div>;
+    if (loading) return <div className="loading-state">Ouverture du garage...</div>;
 
     return (
         <div className="bike-garage">
@@ -135,7 +132,7 @@ function BikeGarage() {
                             style={{ 
                                 cursor: isMine ? 'pointer' : 'default',
                                 opacity: isMine ? 1 : 0.85,
-                                ...getFrameStyle(isMine) 
+                                ...getFrameStyle(bike)
                             }}
                         >
                             <div className="bike-image-placeholder">

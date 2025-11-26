@@ -58,6 +58,9 @@ function ShopPage() {
         try {
             await shopService.equip(invItem.id, invItem.shop_items.type);
             await loadData();
+            if (invItem.shop_items.type === 'skin') {
+                window.dispatchEvent(new Event('themeChange'));
+            }
         } catch (e) { console.error(e); } 
         finally { setProcessing(null); }
     };

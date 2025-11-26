@@ -25,6 +25,17 @@ function BikeGarage() {
             setCurrentUser(user);
 
             const data = await bikeService.getAll();
+            
+            // --- DEBUG LOGS ---
+            console.log("🚲 DONNÉES REÇUES DU GARAGE :", data);
+            if (data.length > 0) {
+                console.log("🔍 Premier vélo - Détails Cadre :", data[0].frame_details);
+                if (!data[0].frame_details) {
+                    console.warn("⚠️ ALERTE : 'frame_details' est manquant ! Vérifiez api.js");
+                }
+            }
+            // ------------------
+
             setBikes(data);
             setFilteredBikes(data);
 
@@ -56,23 +67,25 @@ function BikeGarage() {
         return bike.parts.some(p => p.status === 'critical' || p.status === 'warning');
     };
 
-    // --- CORRECTION ICI : Utilisation de frame_details ---
     const getFrameStyle = (bike) => {
-        // L'API renvoie 'frame_details' (voir api.js), pas 'shop_items'
+        // Gestion robuste : Tableau ou Objet
         const frame = Array.isArray(bike.frame_details) ? bike.frame_details[0] : bike.frame_details;
         
         if (frame && frame.asset_data) {
+            // On loggue si on trouve un cadre pour confirmer que le code passe ici
+            // console.log("✅ Cadre trouvé pour", bike.name, frame.asset_data);
             return {
                 border: `3px solid ${frame.asset_data.border}`,
                 boxShadow: `0 0 20px ${frame.asset_data.border}, inset 0 0 10px ${frame.asset_data.border}`,
                 transform: 'scale(1.02)',
-                transition: 'all 0.3s ease'
+                transition: 'all 0.3s ease',
+                zIndex: 10 // Pour passer au-dessus des autres éléments si besoin
             };
         }
-        return {}; // Style par défaut géré par le CSS
+        return {};
     };
 
-    if (loading) return <div className="loading-state">Chargement du garage...</div>;
+    if (loading) return <div className="loading-state">Ouverture du garage...</div>;
 
     return (
         <div className="bike-garage">
@@ -103,16 +116,12 @@ function BikeGarage() {
             </div>
 
             <div className="bikes-grid">
-                {filteredBikes.length === 0 && (
-                    <div className="empty-state glass-panel" style={{gridColumn: '1/-1'}}>
-                        <p>Aucun vélo trouvé pour ce filtre.</p>
-                    </div>
-                )}
-
                 {filteredBikes.map(bike => {
                     const isMine = bike.user_id === currentUser?.id;
                     const alert = hasAlerts(bike);
                     const ownerName = isMine ? 'Moi' : (bike.profiles?.name || 'Inconnu');
+                    
+                    const frameStyle = getFrameStyle(bike);
 
                     return (
                         <div 
@@ -122,7 +131,7 @@ function BikeGarage() {
                             style={{ 
                                 cursor: isMine ? 'pointer' : 'default',
                                 opacity: isMine ? 1 : 0.85,
-                                ...getFrameStyle(bike) // Applique le cadre
+                                ...frameStyle
                             }}
                         >
                             <div className="bike-image-placeholder">

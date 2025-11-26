@@ -784,6 +784,12 @@ export const api = {
         if (error) throw new Error(error.message); // Renvoie "Solde insuffisant" etc.
     },
 
+    async syncWatts() {
+        const { data, error } = await supabase.rpc('sync_watts_history');
+        if (error) throw error;
+        return data; // Retourne le nouveau solde
+    },
+
     // Équiper un objet (ex: changer de thème)
     // Cette fonction est générique, on pourra l'affiner selon le type d'objet
     async equipItem(inventoryId, type) {
@@ -888,5 +894,6 @@ export const shopService = {
     getCatalog: () => api.getShopCatalog(),
     getInventory: () => api.getMyInventory(),
     buy: (id, currency) => api.purchaseItem(id, currency),
-    equip: (invId, type) => api.equipItem(invId, type)
+    equip: (invId, type) => api.equipItem(invId, type),
+    syncHistory: () => api.syncWatts()
 };

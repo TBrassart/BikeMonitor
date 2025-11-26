@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { shopService, authService } from '../../services/api';
-import { FaBolt, FaGem, FaCheck, FaMagic, FaPalette, FaIdBadge, FaCrown } from 'react-icons/fa';
-import './ShopPage.css';
-
+import { FaBolt, FaGem, FaCheck, FaMagic, FaPalette, FaIdBadge, FaCrown, FaSync } from 'react-icons/fa';
 function ShopPage() {
     const [catalog, setCatalog] = useState([]);
     const [inventory, setInventory] = useState([]);
@@ -10,6 +8,7 @@ function ShopPage() {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('skin'); // skin, frame, badge, title
     const [processing, setProcessing] = useState(null); // ID de l'item en cours d'achat
+    const [isSyncing, setIsSyncing] = useState(false);
 
     useEffect(() => {
         loadData();
@@ -29,6 +28,18 @@ function ShopPage() {
             console.error("Erreur chargement shop", e);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleSyncWatts = async () => {
+        setIsSyncing(true);
+        try {
+            await shopService.syncHistory();
+            await loadData(); // Recharge le profil pour voir le nouveau solde
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setIsSyncing(false);
         }
     };
 
@@ -81,6 +92,17 @@ function ShopPage() {
                         <span>{profile?.watts || 0}</span>
                         <small>Watts</small>
                     </div>
+
+                    {/* BOUTON DE SYNCHRO DES WATTS */}
+                    <button 
+                        onClick={handleSyncWatts} 
+                        className="icon-action-small" 
+                        title="Récupérer mes Watts historiques"
+                        disabled={isSyncing}
+                    >
+                        <FaSync className={isSyncing ? 'spinning' : ''} />
+                    </button>
+                    
                     <div className="wallet-divider"></div>
                     <div className="wallet-item chips">
                         <FaGem />

@@ -818,6 +818,13 @@ export const api = {
 
         if (error) throw error;
     },
+    // Déséquiper toute une catégorie (Reset)
+    async unequipCategory(type) {
+        const { error } = await supabase.rpc('unequip_category', { 
+            target_type: type 
+        });
+        if (error) throw error;
+    },
 };
 
 // ==========================================
@@ -891,4 +898,6 @@ export const shopService = {
     equip: (invId, type) => api.equipItem(invId, type),
     syncHistory: () => api.syncWatts(),
     equipBike: (bikeId, frameId) => api.equipBikeFrame(bikeId, frameId),
+    equip: (invId, type) => api.equipItem(invId, type),
+    unequip: (type) => api.unequipCategory(type),
 };

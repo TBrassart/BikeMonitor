@@ -54,6 +54,31 @@ function BikeGarage() {
         return bike.parts.some(p => p.status === 'critical' || p.status === 'warning');
     };
 
+    const getFrameStyle = (bike) => {
+        const frame = Array.isArray(bike.frame_details) ? bike.frame_details[0] : bike.frame_details;
+        
+        if (frame && frame.asset_data) {
+            // Si c'est un nouveau cadre avec une classe CSS, on ne met pas de style inline
+            if (frame.asset_data.className) {
+                return {}; 
+            }
+
+            // Fallback pour les cadres Gold/Anciens qui utilisent des styles directs
+            if (frame.asset_data.border) {
+                return {
+                    border: `3px solid ${frame.asset_data.border}`,
+                    boxShadow: `0 0 20px ${frame.asset_data.border}, inset 0 0 10px ${frame.asset_data.border}`,
+                    transform: 'scale(1.02)',
+                    transition: 'all 0.3s ease',
+                    zIndex: 10
+                };
+            }
+        }
+        return {};
+    };
+
+    if (loading) return <div className="loading-state">Ouverture du garage...</div>;
+
     return (
         <div className="bike-garage">
             <header className="garage-header">
@@ -81,13 +106,13 @@ function BikeGarage() {
                     const alert = hasAlerts(bike);
                     const ownerName = isMine ? 'Moi' : (bike.profiles?.name || 'Inconnu');
                     
-                    // --- LOGIQUE CADRE CORRIGÉE ---
                     let frameClass = '';
                     const frame = Array.isArray(bike.frame_details) ? bike.frame_details[0] : bike.frame_details;
                     if (frame && frame.asset_data && frame.asset_data.className) {
                         frameClass = frame.asset_data.className;
                     }
-                    // ------------------------------
+
+                    const frameStyle = getFrameStyle(bike);
 
                     return (
                         <div 
@@ -95,7 +120,7 @@ function BikeGarage() {
                             // ON AJOUTE LA CLASSE ICI
                             className={`garage-bike-card ${!isMine ? 'friend-bike' : ''} ${frameClass}`}
                             onClick={() => isMine && navigate(`/app/bike/${bike.id}`)}
-                            style={{ cursor: isMine ? 'pointer' : 'default', opacity: isMine ? 1 : 0.85 }}
+                            style={{ cursor: isMine ? 'pointer' : 'default', opacity: isMine ? 1 : 0.85, ...frameStyle }}
                         >
                             <div className="bike-image-placeholder">
                                 {bike.photo_url ? <img src={bike.photo_url} alt={bike.name} loading="lazy" /> : <span style={{fontSize: '4rem', opacity:0.5}}>🚲</span>}

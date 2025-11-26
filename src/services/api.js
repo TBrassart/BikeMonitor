@@ -780,9 +780,14 @@ export const api = {
         const user = await authService.getCurrentUser();
         const { data, error } = await supabase
             .from('user_inventory')
-            .select('*, shop_items(*)') // On joint pour avoir les détails de l'objet
+            // On utilise !item_id pour forcer Supabase à comprendre le lien
+            .select('*, shop_items!item_id(*)') 
             .eq('user_id', user.id);
-        if (error) throw error;
+            
+        if (error) {
+            console.error("Erreur Inventory:", error);
+            throw error;
+        }
         return data || [];
     },
 
@@ -806,34 +811,10 @@ export const api = {
     // Équiper un objet (ex: changer de thème)
     // Cette fonction est générique, on pourra l'affiner selon le type d'objet
     async equipItem(inventoryId, type) {
-        const user = await authService.getCurrentUser();
-        
-        // 1. Déséquiper tous les items du même type
-        // (On suppose qu'on ne peut avoir qu'un seul thème actif à la fois)
-        // Il faudrait une logique plus complexe SQL, mais on fait simple en JS pour l'instant :
-        
-        // On récupère tous les items de ce type dans l'inventaire
-        const { data: myItems } = await supabase
-            .from('user_inventory')
-            .select('id, shop_items(type)')
-            .eq('user_id', user.id);
-
-        const itemsToUnequip = myItems
-            .filter(i => i.shop_items.type === type)
-            .map(i => i.id);
-
-        if (itemsToUnequip.length > 0) {
-            await supabase
-                .from('user_inventory')
-                .update({ is_equipped: false })
-                .in('id', itemsToUnequip);
-        }
-
-        // 2. Équiper le nouveau
-        const { error } = await supabase
-            .from('user_inventory')
-            .update({ is_equipped: true })
-            .eq('id', inventoryId);
+        // On ignore le paramètre 'type' car le SQL le trouve tout seul maintenant
+        const { error } = await supabase.rpc('equip_shop_item', { 
+            target_inventory_id: inventoryId 
+        });
 
         if (error) throw error;
     },

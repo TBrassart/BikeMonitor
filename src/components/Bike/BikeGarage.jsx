@@ -26,15 +26,7 @@ function BikeGarage() {
 
             const data = await bikeService.getAll();
             
-            // --- DEBUG LOGS ---
-            console.log("🚲 DONNÉES REÇUES DU GARAGE :", data);
-            if (data.length > 0) {
-                console.log("🔍 Premier vélo - Détails Cadre :", data[0].frame_details);
-                if (!data[0].frame_details) {
-                    console.warn("⚠️ ALERTE : 'frame_details' est manquant ! Vérifiez api.js");
-                }
-            }
-            // ------------------
+            console.log("Données Garage:", data); // Debug
 
             setBikes(data);
             setFilteredBikes(data);
@@ -68,18 +60,15 @@ function BikeGarage() {
     };
 
     const getFrameStyle = (bike) => {
-        // Gestion robuste : Tableau ou Objet
         const frame = Array.isArray(bike.frame_details) ? bike.frame_details[0] : bike.frame_details;
         
         if (frame && frame.asset_data) {
-            // On loggue si on trouve un cadre pour confirmer que le code passe ici
-            // console.log("✅ Cadre trouvé pour", bike.name, frame.asset_data);
             return {
                 border: `3px solid ${frame.asset_data.border}`,
-                boxShadow: `0 0 20px ${frame.asset_data.border}, inset 0 0 10px ${frame.asset_data.border}`,
+                boxShadow: `0 0 25px ${frame.asset_data.border}, inset 0 0 10px ${frame.asset_data.border}`,
                 transform: 'scale(1.02)',
                 transition: 'all 0.3s ease',
-                zIndex: 10 // Pour passer au-dessus des autres éléments si besoin
+                zIndex: 10
             };
         }
         return {};
@@ -126,12 +115,13 @@ function BikeGarage() {
                     return (
                         <div 
                             key={bike.id} 
-                            className={`bike-card glass-panel ${!isMine ? 'friend-bike' : ''}`}
+                            // CHANGEMENT DE CLASSE ICI (plus de 'glass-panel' ni 'bike-card')
+                            className={`garage-bike-card ${!isMine ? 'friend-bike' : ''}`}
                             onClick={() => isMine && navigate(`/app/bike/${bike.id}`)}
                             style={{ 
                                 cursor: isMine ? 'pointer' : 'default',
                                 opacity: isMine ? 1 : 0.85,
-                                ...frameStyle
+                                ...frameStyle // Le style s'appliquera enfin !
                             }}
                         >
                             <div className="bike-image-placeholder">

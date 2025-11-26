@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { bikeService, authService } from '../../services/api';
+import { bikeService, authService, shopService } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
 import { FaExclamationTriangle, FaPlus, FaUsers } from 'react-icons/fa';
 import './BikeGarage.css';
@@ -15,6 +15,8 @@ function BikeGarage() {
     const [loading, setLoading] = useState(true);
     const [currentUser, setCurrentUser] = useState(null);
     
+    const [equippedFrame, setEquippedFrame] = useState(null);
+
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -27,17 +29,21 @@ function BikeGarage() {
             const user = await authService.getCurrentUser();
             setCurrentUser(user);
 
-            const data = await bikeService.getAll(); // Récupère mes vélos + ceux des turlags
+            // On charge les vélos ET l'inventaire en parallèle
+            const [data, inventory] = await Promise.all([
+                bikeService.getAll(),
+                shopService.getInventory()
+            ]);
+
             setBikes(data);
             setFilteredBikes(data);
 
-            // On extrait la liste unique des propriétaires pour faire les filtres
-            // C'est plus simple que de gérer les Turlags complexes : 
-            // "Qui sont les gens dont je vois les vélos ?"
+            // On cherche le cadre équipé
+            const frame = inventory.find(i => i.shop_items.type === 'frame' && i.is_equipped);
+            if (frame) setEquippedFrame(frame.shop_items.asset_data);
+
             const uniqueOwners = ['Tous', 'Moi', ...new Set(
-                data
-                .filter(b => b.user_id !== user.id) // Exclure moi de la liste générique
-                .map(b => b.profiles?.name || 'Inconnu')
+                data.filter(b => b.user_id !== user.id).map(b => b.profiles?.name || 'Inconnu')
             )];
             setOwners(uniqueOwners);
 
@@ -64,6 +70,17 @@ function BikeGarage() {
         if (!bike.parts) return false;
         // Vérifie s'il y a des pièces en statut critical/warning
         return bike.parts.some(p => p.status === 'critical' || p.status === 'warning');
+    };
+
+    // Style dynamique du cadre (Or, Argent, etc.)
+    const getFrameStyle = (isMine) => {
+        if (!isMine || !equippedFrame) return {};
+        
+        return {
+            border: `3px solid ${equippedFrame.border}`,
+            boxShadow: `0 0 15px ${equippedFrame.border}`,
+            transform: 'scale(1.02)' // Petit effet "pop"
+        };
     };
 
     if (loading) return <div className="loading-state">Chargement du garage...</div>;
@@ -100,7 +117,7 @@ function BikeGarage() {
             <div className="bikes-grid">
                 {filteredBikes.length === 0 && (
                     <div className="empty-state glass-panel" style={{gridColumn: '1/-1'}}>
-                        <p>Aucun vélo trouvé pour ce filtre.</p>
+                        <p>Aucun vélo trouvé.</p>
                     </div>
                 )}
 
@@ -114,9 +131,11 @@ function BikeGarage() {
                             key={bike.id} 
                             className={`bike-card glass-panel ${!isMine ? 'friend-bike' : ''}`}
                             onClick={() => isMine && navigate(`/app/bike/${bike.id}`)}
+                            // APPLICATION DU STYLE CADRE ICI
                             style={{ 
                                 cursor: isMine ? 'pointer' : 'default',
-                                opacity: isMine ? 1 : 0.85
+                                opacity: isMine ? 1 : 0.85,
+                                ...getFrameStyle(isMine) 
                             }}
                         >
                             <div className="bike-image-placeholder">

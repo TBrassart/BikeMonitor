@@ -5,7 +5,7 @@
 .shop-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-end;
+    align-items: center; /* Alignement vertical centré */
     margin-bottom: 30px;
     flex-wrap: wrap;
     gap: 20px;
@@ -18,6 +18,14 @@
     padding: 10px 20px;
     border-radius: 16px;
     gap: 20px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border-color);
+}
+
+.wallet-section {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Espace entre le montant et le bouton */
 }
 
 .wallet-item {
@@ -40,10 +48,10 @@
     margin-top: 4px;
 }
 
-.wallet-item.watts { color: #f59e0b; } /* Jaune Électrique */
+.wallet-item.watts { color: #f59e0b; }
 .wallet-item.watts small { color: #f59e0b; }
 
-.wallet-item.chips { color: #0ea5e9; } /* Bleu Diamant */
+.wallet-item.chips { color: #0ea5e9; }
 .wallet-item.chips small { color: #0ea5e9; }
 
 .wallet-divider {
@@ -51,6 +59,31 @@
     height: 30px;
     background: rgba(255,255,255,0.1);
 }
+
+/* BOUTON SYNCHRO (Petit et discret) */
+.icon-action-small {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text-secondary);
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+}
+
+.icon-action-small:hover {
+    background: var(--gradient-primary);
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 0 10px rgba(255,255,255,0.2);
+}
+
+.spinning {
+    animation: spin 1s linear infinite;
+}
+@keyframes spin { 100% { transform: rotate(360deg); } }
 
 /* TABS */
 .shop-tabs {
@@ -184,25 +217,3 @@
     border-color: var(--neon-green);
     cursor: default;
 }
-
-.icon-action-small {
-    background: rgba(255,255,255,0.1);
-    border: none;
-    color: var(--text-secondary);
-    width: 30px; height: 30px;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    margin: 0 10px;
-    transition: all 0.2s;
-}
-
-.icon-action-small:hover {
-    background: var(--gradient-primary);
-    color: white;
-}
-
-.spinning {
-    animation: spin 1s linear infinite;
-}
-@keyframes spin { 100% { transform: rotate(360deg); } }

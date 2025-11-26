@@ -84,26 +84,27 @@ function ShopPage() {
         <div className="shop-page">
             <header className="shop-header">
                 <h2 className="gradient-text">Le Marché</h2>
-                
                 {/* PORTE-MONNAIE */}
                 <div className="wallet-display glass-panel">
-                    <div className="wallet-item watts">
-                        <FaBolt />
-                        <span>{profile?.watts || 0}</span>
-                        <small>Watts</small>
+                    <div className="wallet-section">
+                        <div className="wallet-item watts">
+                            <FaBolt />
+                            <span>{profile?.watts || 0}</span>
+                            <small>Watts</small>
+                        </div>
+                        
+                        <button 
+                            onClick={handleSyncWatts} 
+                            className="icon-action-small" 
+                            title="Récupérer mes Watts historiques"
+                            disabled={isSyncing}
+                        >
+                            <FaSync className={isSyncing ? 'spinning' : ''} />
+                        </button>
                     </div>
 
-                    {/* BOUTON DE SYNCHRO DES WATTS */}
-                    <button 
-                        onClick={handleSyncWatts} 
-                        className="icon-action-small" 
-                        title="Récupérer mes Watts historiques"
-                        disabled={isSyncing}
-                    >
-                        <FaSync className={isSyncing ? 'spinning' : ''} />
-                    </button>
-                    
                     <div className="wallet-divider"></div>
+                    
                     <div className="wallet-item chips">
                         <FaGem />
                         <span>{profile?.neon_chips || 0}</span>

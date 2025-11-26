@@ -661,7 +661,7 @@ export const api = {
             console.error("Erreur: Le groupe lié à l'invitation est introuvable ou inaccessible.");
             throw new Error("Impossible d'accéder aux informations du groupe (Erreur de droits).");
         }
-        
+
         // 2. Vérifier expiration
         if (invite.expires_at && new Date(invite.expires_at) < new Date()) {
             throw new Error("Cette invitation a expiré.");
@@ -748,6 +748,76 @@ export const api = {
         const { data } = await supabase.from('app_logs').select('*').order('created_at', { ascending: false });
         return data;
     },
+
+    // --- BOUTIQUE & ÉCONOMIE ---
+    
+    // Récupérer tout le catalogue
+    async getShopCatalog() {
+        const { data, error } = await supabase
+            .from('shop_items')
+            .select('*')
+            .eq('is_active', true)
+            .order('price_watts', { ascending: true });
+        if (error) throw error;
+        return data || [];
+    },
+
+    // Récupérer mon inventaire
+    async getMyInventory() {
+        const user = await authService.getCurrentUser();
+        const { data, error } = await supabase
+            .from('user_inventory')
+            .select('*, shop_items(*)') // On joint pour avoir les détails de l'objet
+            .eq('user_id', user.id);
+        if (error) throw error;
+        return data || [];
+    },
+
+    // Acheter un objet (Appel RPC)
+    async purchaseItem(itemId, currency) {
+        // currency = 'watts' ou 'chips'
+        const { error } = await supabase.rpc('purchase_item', { 
+            item_id_input: itemId, 
+            currency_input: currency 
+        });
+        
+        if (error) throw new Error(error.message); // Renvoie "Solde insuffisant" etc.
+    },
+
+    // Équiper un objet (ex: changer de thème)
+    // Cette fonction est générique, on pourra l'affiner selon le type d'objet
+    async equipItem(inventoryId, type) {
+        const user = await authService.getCurrentUser();
+        
+        // 1. Déséquiper tous les items du même type
+        // (On suppose qu'on ne peut avoir qu'un seul thème actif à la fois)
+        // Il faudrait une logique plus complexe SQL, mais on fait simple en JS pour l'instant :
+        
+        // On récupère tous les items de ce type dans l'inventaire
+        const { data: myItems } = await supabase
+            .from('user_inventory')
+            .select('id, shop_items(type)')
+            .eq('user_id', user.id);
+
+        const itemsToUnequip = myItems
+            .filter(i => i.shop_items.type === type)
+            .map(i => i.id);
+
+        if (itemsToUnequip.length > 0) {
+            await supabase
+                .from('user_inventory')
+                .update({ is_equipped: false })
+                .in('id', itemsToUnequip);
+        }
+
+        // 2. Équiper le nouveau
+        const { error } = await supabase
+            .from('user_inventory')
+            .update({ is_equipped: true })
+            .eq('id', inventoryId);
+
+        if (error) throw error;
+    },
 };
 
 // ==========================================
@@ -812,4 +882,11 @@ export const adminService = {
     verifyPin: (p) => api.checkAdminPin(p),
     getBanner: () => api.getBannerSettings(),
     setBanner: (s) => api.setBannerSettings(s),
+};
+
+export const shopService = {
+    getCatalog: () => api.getShopCatalog(),
+    getInventory: () => api.getMyInventory(),
+    buy: (id, currency) => api.purchaseItem(id, currency),
+    equip: (invId, type) => api.equipItem(invId, type)
 };

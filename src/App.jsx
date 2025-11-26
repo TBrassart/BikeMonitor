@@ -29,6 +29,8 @@ import StravaCallback from './components/Settings/StravaCallback';
 import AdminPage from './components/Admin/AdminPage';
 import GlobalBanner from './components/Layout/GlobalBanner';
 
+import ShopPage from './components/Shop/ShopPage';
+
 import './App.css';
 
 function App() {
@@ -129,6 +131,8 @@ function App() {
                     <Route path="/app/turlag/:turlagId" element={<TurlagDetail />} />
                     <Route path="/app/settings" element={<SettingsPage />} />
 
+                    <Route path="/app/shop" element={<ShopPage />} />
+                    
                     <Route path="/app/admin" element={<AdminPage />} />
                     
                     <Route path="*" element={<Navigate to="/app/dashboard" />} />

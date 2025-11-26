@@ -134,72 +134,37 @@ const ThemeEffects = ({ effect }) => {
 
         // 5. GRAND TOUR (Route qui défile)
         let roadOffset = 0;
-        const roadSpeed = 8; // Vitesse de défilement de la route
-
-        // Création des cyclistes
-        const cyclists = Array(25).fill().map(() => {
-            const isMaillotJaune = Math.random() > 0.3; // 70% de maillots jaunes
-            return {
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height,
-                // Vitesse relative : certains vont un peu plus vite que la route, d'autres moins vite
-                speedVar: (Math.random() - 0.5) * 2, 
-                color: isMaillotJaune ? '#facc15' : (Math.random() > 0.5 ? '#ffffff' : '#ef4444'), // Jaune, Blanc ou Rouge
-                width: 12,
-                height: 20
-            };
-        });
+        // Peloton compact au centre
+        const peloton = Array(20).fill().map(() => ({
+            x: canvas.width/2 + (Math.random()-0.5)*150,
+            y: canvas.height/2 + (Math.random()-0.5)*200,
+            color: Math.random() > 0.2 ? '#facc15' : '#fff' // Majorité maillot jaune
+        }));
 
         const drawRoad = () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#333'; ctx.fillRect(0,0,canvas.width, canvas.height);
             
-            // 1. Fond Asphalte
-            ctx.fillStyle = '#333'; 
-            ctx.fillRect(0,0,canvas.width, canvas.height);
-            
-            // 2. Lignes de route défilantes
+            // Route qui défile
             ctx.fillStyle = '#facc15';
-            roadOffset += roadSpeed; 
+            roadOffset += 4; // Vitesse modérée
             if(roadOffset > 200) roadOffset = 0;
-            const centerX = canvas.width / 2;
+            
             for(let i = -200; i < canvas.height; i+=200) {
-                // Ligne centrale pointillée
-                ctx.fillRect(centerX - 5, i + roadOffset, 10, 100);
+                ctx.fillRect(canvas.width/2 - 5, i + roadOffset, 10, 80);
             }
 
-            // 3. Dessiner les Cyclistes
-            cyclists.forEach(c => {
-                // Mise à jour position : vitesse de la route + leur propre variation
-                c.y += roadSpeed + c.speedVar;
+            // Peloton statique (vue de dessus)
+            peloton.forEach(c => {
+                // Légère vibration
+                const vibX = (Math.random()-0.5)*1;
+                const vibY = (Math.random()-0.5)*1;
 
-                // Respawn en haut s'ils sortent en bas
-                if(c.y > canvas.height + 50) {
-                    c.y = -50;
-                    c.x = Math.random() * canvas.width;
-                }
-                // Respawn en bas s'ils sortent en haut (pour les plus lents)
-                if(c.y < -50) {
-                    c.y = canvas.height + 50;
-                    c.x = Math.random() * canvas.width;
-                }
-
-                // Dessin du cycliste (vue de dessus simplifiée)
-                ctx.save();
-                ctx.translate(c.x, c.y);
-
-                // Ombre portée (pour la profondeur)
-                ctx.fillStyle = 'rgba(0,0,0,0.3)';
-                ctx.beginPath(); ctx.ellipse(2, 5, c.width/2, c.height/2, 0, 0, Math.PI*2); ctx.fill();
-
-                // Corps/Maillot (Ellipse)
                 ctx.fillStyle = c.color;
-                ctx.beginPath(); ctx.ellipse(0, 0, c.width/2, c.height/2, 0, 0, Math.PI*2); ctx.fill();
-
-                // Casque (Petit cercle noir)
-                ctx.fillStyle = '#222';
-                ctx.beginPath(); ctx.arc(0, -c.height/3, c.width/3, 0, Math.PI*2); ctx.fill();
-
-                ctx.restore();
+                // Corps
+                ctx.beginPath(); ctx.ellipse(c.x+vibX, c.y+vibY, 8, 15, 0, 0, Math.PI*2); ctx.fill();
+                // Casque
+                ctx.fillStyle = '#111';
+                ctx.beginPath(); ctx.arc(c.x+vibX, c.y+vibY-10, 5, 0, Math.PI*2); ctx.fill();
             });
         };
 
@@ -355,182 +320,116 @@ const ThemeEffects = ({ effect }) => {
 
         // 11. MOUNTAIN (Parallaxe) ---
         // Génération des crêtes de montagne
-        const createMountain = (count, height, roughness) => {
+        const createPeaks = (count, height, yOffset) => {
             const points = [];
+            const step = canvas.width / count;
             for (let i = 0; i <= count; i++) {
-                points.push({
-                    x: (canvas.width / count) * i,
-                    y: canvas.height - height + (Math.random() - 0.5) * roughness
-                });
+                // Variation aléatoire pour faire "pic"
+                points.push({ x: i * step, y: canvas.height - yOffset - Math.random() * height });
             }
             return points;
         };
-        const layer1 = createMountain(10, 150, 50);
-        const layer2 = createMountain(20, 100, 30);
-        const layer3 = createMountain(30, 50, 20);
+        // On génère une fois pour toutes
+        const m1 = createPeaks(5, 300, 200); // Fond (Haut)
+        const m2 = createPeaks(10, 200, 100); // Milieu
+        
         let snowY = 0;
-
         const drawMountain = (time) => {
-            // Ciel dégradé
+            // Ciel
             const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            grad.addColorStop(0, '#0f172a'); grad.addColorStop(1, '#334155');
+            grad.addColorStop(0, '#0f172a'); grad.addColorStop(1, '#1e293b');
             ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Lune
-            ctx.fillStyle = '#f8fafc';
-            ctx.shadowBlur = 20; ctx.shadowColor = 'white';
-            const moonY = 100 + Math.sin(time * 0.0001) * 50;
-            ctx.beginPath(); ctx.arc(100, moonY, 40, 0, Math.PI*2); ctx.fill();
-            ctx.shadowBlur = 0;
-
-            // Dessin des couches (Simple parallaxe via translation)
-            const drawLayer = (points, color, speed) => {
+            const drawPoly = (points, color) => {
                 ctx.fillStyle = color;
                 ctx.beginPath();
                 ctx.moveTo(0, canvas.height);
-                const offset = (time * speed) % canvas.width;
-                
-                points.forEach(p => {
-                    // Astuce pour boucle infinie : on dessine 2 fois
-                    ctx.lineTo(p.x - offset, p.y);
-                });
-                // Suite de la boucle pour remplir l'écran
-                points.forEach(p => {
-                    ctx.lineTo(p.x + canvas.width - offset, p.y);
-                });
-                
+                points.forEach(p => ctx.lineTo(p.x, p.y));
                 ctx.lineTo(canvas.width, canvas.height);
-                ctx.lineTo(0, canvas.height);
                 ctx.fill();
             };
 
-            drawLayer(layer1, '#1e293b', 0.2); // Loin
-            drawLayer(layer2, '#334155', 0.5); // Moyen
-            drawLayer(layer3, '#475569', 1);   // Proche
+            drawPoly(m1, '#334155'); // Montagnes lointaines
+            drawPoly(m2, '#1e293b'); // Montagnes proches
 
-            // Neige
-            ctx.fillStyle = 'rgba(255,255,255,0.5)';
-            snowY += 0.5;
+            // Neige très lente
+            ctx.fillStyle = 'rgba(255,255,255,0.3)';
+            snowY += 0.2;
             for(let i=0; i<50; i++) {
-                const x = (i * 123456) % canvas.width;
+                const x = (i * 997) % canvas.width;
                 const y = (snowY + i * 123) % canvas.height;
+                ctx.beginPath(); ctx.arc(x, y, 1.5, 0, Math.PI*2); ctx.fill();
+            }
+        };
+
+        // 12. NATURE (Forêt & Lucioles) ---
+        const trees = Array(6).fill().map((_, i) => ({
+            x: i * (canvas.width/5) + Math.random()*50,
+            width: Math.random() * 40 + 60,
+        }));
+        
+        const drawNature = (time) => {
+            // Fond vert sombre
+            ctx.fillStyle = '#052e16'; ctx.fillRect(0,0,canvas.width, canvas.height);
+
+            // Rayons
+            ctx.save();
+            ctx.globalCompositeOperation = 'screen';
+            const rayGrad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            rayGrad.addColorStop(0, 'rgba(250, 204, 21, 0.05)');
+            rayGrad.addColorStop(1, 'transparent');
+            ctx.fillStyle = rayGrad;
+            ctx.beginPath();
+            const sway = Math.sin(time * 0.0002) * 50;
+            ctx.moveTo(0, 0); ctx.lineTo(canvas.width/2 + sway, canvas.height);
+            ctx.lineTo(canvas.width, 0);
+            ctx.fill();
+            ctx.restore();
+
+            // Arbres (Silhouettes noires massives)
+            ctx.fillStyle = '#022c22';
+            trees.forEach(t => {
+                ctx.fillRect(t.x, 0, t.width, canvas.height);
+            });
+            
+            // Lucioles lentes
+            for(let i=0; i<20; i++) {
+                const x = (Math.sin(time*0.0005 + i)*canvas.width/2) + canvas.width/2;
+                const y = (Math.cos(time*0.0003 + i)*canvas.height/2) + canvas.height/2;
+                ctx.fillStyle = 'rgba(250, 204, 21, 0.4)';
                 ctx.beginPath(); ctx.arc(x, y, 2, 0, Math.PI*2); ctx.fill();
             }
         };
 
-
-        // 12. NATURE (Forêt & Lucioles) ---
-        const particles = Array(40).fill().map(() => ({
-            x: Math.random() * canvas.width, y: Math.random() * canvas.height,
-            vx: Math.random() * 0.5, vy: Math.random() * -0.5,
-            size: Math.random() * 3, alpha: Math.random()
-        }));
-        let wind = 0;
-
-        const drawNature = (time) => {
-            // Fond vert profond
-            const grad = ctx.createRadialGradient(canvas.width/2, 0, 0, canvas.width/2, canvas.height, canvas.height);
-            grad.addColorStop(0, '#14532d'); grad.addColorStop(1, '#052e16');
-            ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Rayons de lumière (God Rays)
-            ctx.save();
-            ctx.globalCompositeOperation = 'screen'; // Mode lumière
-            const rayGrad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-            rayGrad.addColorStop(0, 'rgba(250, 204, 21, 0.1)');
-            rayGrad.addColorStop(1, 'transparent');
-            ctx.fillStyle = rayGrad;
-            ctx.beginPath();
-            ctx.moveTo(0, 0); ctx.lineTo(canvas.width/2 + Math.sin(time*0.0005)*200, canvas.height);
-            ctx.lineTo(canvas.width/2 + 300 + Math.sin(time*0.0005)*200, canvas.height);
-            ctx.lineTo(200, 0);
-            ctx.fill();
-            ctx.restore();
-
-            // Vent aléatoire
-            if (Math.random() > 0.99) wind = 2;
-            wind *= 0.98;
-
-            // Lucioles / Spores
-            particles.forEach(p => {
-                p.x += p.vx + wind;
-                p.y += p.vy;
-                if(p.x > canvas.width) p.x = 0;
-                if(p.y < 0) p.y = canvas.height;
-
-                ctx.fillStyle = `rgba(250, 204, 21, ${0.3 + Math.sin(time*0.005 + p.x)*0.2})`;
-                ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
-            });
-        };
-
-
         // 13. PINOT (Fumigènes & Chèvre) ---
-        const flares = []; // Particules de fumée
-        let goat = { x: -100, active: false }; // Kimberley la chèvre
-        let nextAttack = 0;
-
+        const smokeParticles = [];
         const drawPinot = (time) => {
             ctx.fillStyle = '#1e1b4b'; ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Générer fumigènes (BBR)
-            if (flares.length < 200) {
-                const colorPool = ['#0055a4', '#ffffff', '#ef4135']; // Bleu Blanc Rouge
-                flares.push({
+            if (smokeParticles.length < 100) {
+                const colors = ['rgba(0,85,164,0.5)', 'rgba(255,255,255,0.5)', 'rgba(239,65,53,0.5)'];
+                smokeParticles.push({
                     x: Math.random() * canvas.width,
-                    y: canvas.height + Math.random() * 50,
-                    vx: (Math.random() - 0.5) * 2,
-                    vy: -(Math.random() * 3 + 1),
+                    y: canvas.height + 20,
+                    vx: (Math.random()-0.5) * 0.5, // Vent latéral faible
+                    vy: -(Math.random() * 1 + 0.5), // Montée lente
                     size: Math.random() * 20 + 10,
-                    color: colorPool[Math.floor(Math.random() * 3)],
+                    color: colors[Math.floor(Math.random()*3)],
                     life: 1
                 });
             }
 
-            // Dessiner fumigènes
-            flares.forEach((p, i) => {
-                p.x += p.vx; p.y += p.vy; p.life -= 0.005;
-                p.size *= 1.01; // La fumée s'étend
-                if (p.life <= 0) flares.splice(i, 1);
+            smokeParticles.forEach((p, i) => {
+                p.x += p.vx; p.y += p.vy; p.life -= 0.002; // Meurent très lentement
+                p.size += 0.2; // S'étendent
+                if (p.life <= 0) smokeParticles.splice(i, 1);
 
-                ctx.globalAlpha = p.life * 0.3;
+                ctx.globalAlpha = p.life * 0.2; // Très transparent
                 ctx.fillStyle = p.color;
                 ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
             });
             ctx.globalAlpha = 1;
-
-            // L'ATTAQUE DE KIMBERLEY
-            if (!goat.active && Math.random() > 0.995 && time > nextAttack) {
-                goat.active = true;
-                goat.x = -100;
-                nextAttack = time + 10000; // Cooldown
-            }
-
-            if (goat.active) {
-                goat.x += 5; // Vitesse de sprint
-                
-                // Dessin Cycliste (Abstrait)
-                const cy = canvas.height - 100;
-                const cx = goat.x + 200;
-                ctx.fillStyle = '#fff';
-                ctx.fillRect(cx, cy, 30, 20); // Corps
-                ctx.beginPath(); ctx.arc(cx+5, cy+20, 10, 0, Math.PI*2); ctx.fill(); // Roue
-                ctx.beginPath(); ctx.arc(cx+25, cy+20, 10, 0, Math.PI*2); ctx.fill(); // Roue
-
-                // Dessin Chèvre (Kimberley)
-                ctx.fillStyle = '#eee'; // Blanc laine
-                const gy = canvas.height - 90 + Math.sin(time*0.05)*5; // Rebond
-                ctx.beginPath(); ctx.ellipse(goat.x, gy, 15, 10, 0, 0, Math.PI*2); ctx.fill(); // Corps
-                ctx.beginPath(); ctx.arc(goat.x+12, gy-8, 6, 0, Math.PI*2); ctx.fill(); // Tête
-                
-                // Texte ferveur
-                ctx.fillStyle = 'white';
-                ctx.font = '12px Arial';
-                ctx.fillText("ALLEZ THIBAUT !", cx - 20, cy - 30);
-
-                if (goat.x > canvas.width) goat.active = false;
-            }
         };
-
 
         // 14. MOUTONS (IA) ---
         // Initialisation du troupeau

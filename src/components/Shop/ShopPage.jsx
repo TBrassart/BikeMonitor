@@ -56,13 +56,28 @@ function ShopPage() {
     const handleEquip = async (invItem) => {
         setProcessing(invItem.item_id);
         try {
+            // 1. On met à jour en base
             await shopService.equip(invItem.id, invItem.shop_items.type);
+            
+            // 2. On recharge la liste locale pour mettre à jour les boutons "Équipé"
             await loadData();
+            
+            // 3. SI C'EST UN SKIN : On envoie l'ordre immédiat au ThemeManager
             if (invItem.shop_items.type === 'skin') {
-                window.dispatchEvent(new Event('themeChange'));
+                console.log("Envoi du thème:", invItem.shop_items.asset_data);
+                
+                // Utilisation de CustomEvent pour passer les données
+                const event = new CustomEvent('themeChange', { 
+                    detail: invItem.shop_items.asset_data 
+                });
+                window.dispatchEvent(event);
             }
-        } catch (e) { console.error(e); } 
-        finally { setProcessing(null); }
+
+        } catch (e) { 
+            console.error(e); 
+        } finally { 
+            setProcessing(null); 
+        }
     };
 
     const getOwnedItem = (itemId) => inventory.find(inv => inv.item_id === itemId);

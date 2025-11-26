@@ -30,6 +30,7 @@ import AdminPage from './components/Admin/AdminPage';
 import GlobalBanner from './components/Layout/GlobalBanner';
 
 import ShopPage from './components/Shop/ShopPage';
+import ThemeManager from './components/Layout/ThemeManager';
 
 import './App.css';
 
@@ -96,51 +97,52 @@ function App() {
     }
 
     return (
-        <div className="app-container">
-            {/* Sidebar reste fixe à gauche */}
-            <SideBar />
-
-            <main className="main-content">
-                <GlobalBanner />
-
-                <Routes>
-                    <Route path="/" element={<Navigate to="/app/dashboard" />} />
-                    <Route path="/strava-callback" element={<StravaCallback />} />
-                    <Route path="/update-password" element={<UpdatePassword />} />
-                    <Route path="/invite/:code" element={<InviteLanding />} />
-
-                    <Route path="/app/dashboard" element={<Dashboard />} />
-                    <Route path="/app/activities" element={<ActivitiesPage />} />
-
-                    <Route path="/app/garage" element={<BikeGarage />} />
-                    <Route path="/app/add-bike" element={<BikeForm />} />
-                    <Route path="/app/bike/:bikeId" element={<BikeDetailShell />} />
-                    <Route path="/app/edit-bike/:bikeId" element={<BikeForm />} />
-
-                    <Route path="/app/equipment" element={<EquipmentPage />} />
-                    <Route path="/app/nutrition" element={<NutritionPage />} />
-                    <Route path="/app/kits" element={<KitsPage />} />
-                    <Route path="/app/library" element={<LibraryPage />} />
-
-                    <Route path="/app/turlag" element={
-                        <div className="page-container">
-                            <h2 className="gradient-text" style={{marginBottom:'20px'}}>Mon Turlag</h2>
-                            <TurlagManager />
-                        </div>
-                    } />
-                    <Route path="/app/turlag/:turlagId" element={<TurlagDetail />} />
-                    <Route path="/app/settings" element={<SettingsPage />} />
-
-                    <Route path="/app/shop" element={<ShopPage />} />
-                    
-                    <Route path="/app/admin" element={<AdminPage />} />
-                    
-                    <Route path="*" element={<Navigate to="/app/dashboard" />} />
-                </Routes>
-            </main>
-            
-            <BottomNav />
-        </div>
+        <ThemeManager>
+            <div className="app-container">
+                <SideBar />
+    
+                <main className="main-content">
+                    <GlobalBanner />
+    
+                    <Routes>
+                        <Route path="/" element={<Navigate to="/app/dashboard" />} />
+                        <Route path="/strava-callback" element={<StravaCallback />} />
+                        <Route path="/update-password" element={<UpdatePassword />} />
+                        <Route path="/invite/:code" element={<InviteLanding />} />
+    
+                        <Route path="/app/dashboard" element={<Dashboard />} />
+                        <Route path="/app/activities" element={<ActivitiesPage />} />
+    
+                        <Route path="/app/garage" element={<BikeGarage />} />
+                        <Route path="/app/add-bike" element={<BikeForm />} />
+                        <Route path="/app/bike/:bikeId" element={<BikeDetailShell />} />
+                        <Route path="/app/edit-bike/:bikeId" element={<BikeForm />} />
+    
+                        <Route path="/app/equipment" element={<EquipmentPage />} />
+                        <Route path="/app/nutrition" element={<NutritionPage />} />
+                        <Route path="/app/kits" element={<KitsPage />} />
+                        <Route path="/app/library" element={<LibraryPage />} />
+    
+                        <Route path="/app/turlag" element={
+                            <div className="page-container">
+                                <h2 className="gradient-text" style={{marginBottom:'20px'}}>Mon Turlag</h2>
+                                <TurlagManager />
+                            </div>
+                        } />
+                        <Route path="/app/turlag/:turlagId" element={<TurlagDetail />} />
+                        <Route path="/app/settings" element={<SettingsPage />} />
+    
+                        <Route path="/app/shop" element={<ShopPage />} />
+                        
+                        <Route path="/app/admin" element={<AdminPage />} />
+                        
+                        <Route path="*" element={<Navigate to="/app/dashboard" />} />
+                    </Routes>
+                </main>
+                
+                <BottomNav />
+            </div>
+        </ThemeManager>
     );
 }
 

@@ -133,3 +133,109 @@ button.secondary-btn {
     padding-bottom: 10px;
     margin-top: 0;
 }
+
+/* --- CADRES SPÉCIAUX (FRAMES) --- */
+
+/* Base pour la preview boutique */
+.preview-frame {
+    width: 100%; height: 100%;
+    border-radius: 12px;
+    box-sizing: border-box; /* Important */
+}
+
+/* Base pour s'assurer que les bordures s'affichent bien */
+.garage-bike-card {
+    position: relative;
+    z-index: 1;
+}
+
+/* 1. CARBONE 3K */
+.frame-carbon {
+    border: 4px solid #333 !important;
+    /* Motif damier carbone simulé */
+    background-image: linear-gradient(45deg, #222 25%, transparent 25%, transparent 75%, #222 75%, #222),
+                      linear-gradient(45deg, #222 25%, transparent 25%, transparent 75%, #222 75%, #222) !important;
+    background-size: 10px 10px !important;
+    background-position: 0 0, 5px 5px !important;
+    box-shadow: 0 0 15px rgba(0,0,0,0.8) !important;
+}
+
+/* 2. TITANE BRUT */
+.frame-titanium {
+    border: 4px solid #b0b0b0 !important;
+    box-shadow: inset 0 0 20px rgba(255,255,255,0.2), 0 0 10px rgba(192,192,192,0.5) !important;
+    background: linear-gradient(135deg, rgba(40,40,45,0.9), rgba(60,60,65,0.9)) !important;
+}
+
+/* 3. HOLO-FOIL (Animé) */
+.frame-holo {
+    border: 4px solid transparent !important;
+    border-image: linear-gradient(135deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000) 1 !important;
+    animation: holoRotate 4s linear infinite;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.2) !important;
+}
+@keyframes holoRotate {
+    0% { filter: hue-rotate(0deg); }
+    100% { filter: hue-rotate(360deg); }
+}
+
+/* 4. RUSTY RAT */
+.frame-rusty {
+    border: 4px solid #8b4513 !important;
+    border-radius: 2px !important; /* Coins moins ronds */
+    box-shadow: inset 0 0 30px #5c2805 !important;
+}
+
+/* 5. BLUEPRINT */
+.frame-blueprint {
+    border: 2px dashed rgba(255,255,255,0.8) !important;
+    background-color: #003366 !important; /* Bleu architecte */
+    box-shadow: 0 0 0 4px #003366 !important; /* Double bordure */
+}
+
+/* 6. GLITCH ART */
+.frame-glitch {
+    border: 2px solid #00ff00 !important;
+    animation: glitchBorder 2s infinite;
+    box-shadow: 3px 0 rgba(255,0,0,0.5), -3px 0 rgba(0,0,255,0.5) !important;
+}
+@keyframes glitchBorder {
+    0% { border-color: #00ff00; transform: translate(0,0); }
+    20% { border-color: #ff00ff; transform: translate(-2px, 1px); }
+    40% { border-color: #00ffff; transform: translate(2px, -1px); }
+    60% { border-color: #ffff00; transform: translate(0,0); }
+    80% { transform: translate(1px, 1px); }
+    100% { border-color: #00ff00; }
+}
+
+/* 7. BOUE CX */
+.frame-mud {
+    border: 4px solid #5d4037 !important;
+    box-shadow: inset 0 0 50px #3e2723, 0 0 10px #5d4037 !important;
+}
+
+/* 8. CHAMPION DU MONDE */
+.frame-champion {
+    border: 5px solid transparent !important;
+    border-image: linear-gradient(to right, #0055a4 20%, #ef3340 20%, #ef3340 40%, #000000 40%, #000000 60%, #ffc72c 60%, #ffc72c 80%, #00a651 80%) 1 !important;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.2) !important;
+}
+
+/* 9. NÉON PULSE */
+.frame-neon-pulse {
+    border: 3px solid var(--neon-blue) !important;
+    animation: pulseBorder 1.5s infinite alternate;
+}
+@keyframes pulseBorder {
+    from { box-shadow: 0 0 10px var(--neon-blue), inset 0 0 10px var(--neon-blue); }
+    to { box-shadow: 0 0 25px var(--neon-blue), inset 0 0 20px var(--neon-blue); }
+}
+
+/* 10. INVISIBLE GLASS */
+.frame-glass {
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    backdrop-filter: blur(20px) !important;
+    box-shadow: none !important;
+}
+

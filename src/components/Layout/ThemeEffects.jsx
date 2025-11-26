@@ -269,6 +269,33 @@ const ThemeEffects = ({ effect }) => {
             ctx.globalAlpha = 1;
         };
 
+        // 10. SPACE
+        const stars = Array(200).fill().map(() => ({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            z: Math.random() * 2 + 0.5 // Vitesse/Profondeur
+        }));
+
+        const drawSpace = () => {
+            // Fond sombre semi-transparent pour laisser une trainée (effet warp)
+            ctx.fillStyle = 'rgba(10, 10, 20, 0.3)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'white';
+
+            stars.forEach(star => {
+                star.y += star.z; // Les étoiles descendent
+                if (star.y > canvas.height) {
+                    star.y = 0;
+                    star.x = Math.random() * canvas.width;
+                }
+                
+                // Taille selon la "profondeur" z
+                const size = star.z * 1.2;
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        };
 
         // BOUCLE D'ANIMATION
         const render = (time) => {
@@ -281,6 +308,7 @@ const ThemeEffects = ({ effect }) => {
             else if (effect === 'ocean') drawOcean(time);
             else if (effect === 'toxic') drawToxic();
             else if (effect === 'gold') drawGold();
+            else if (effect === 'space') drawSpace();
             
             requestRef.current = requestAnimationFrame(render);
         };

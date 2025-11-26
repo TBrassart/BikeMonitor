@@ -9,6 +9,7 @@ import InviteLanding from './components/Auth/InviteLanding';
 import Dashboard from './components/Dashboard/Dashboard';
 import SideBar from './components/Layout/SideBar';
 import BottomNav from './components/Layout/BottomNav';
+import ThemeManager from './components/Layout/ThemeManager';
 
 import BikeGarage from './components/Bike/BikeGarage';
 import BikeDetailShell from './components/Bike/BikeDetailShell';
@@ -30,7 +31,6 @@ import AdminPage from './components/Admin/AdminPage';
 import GlobalBanner from './components/Layout/GlobalBanner';
 
 import ShopPage from './components/Shop/ShopPage';
-import ThemeManager from './components/Layout/ThemeManager';
 
 import './App.css';
 

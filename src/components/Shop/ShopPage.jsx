@@ -1,19 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { shopService, authService } from '../../services/api';
-import { FaBolt, FaGem, FaCheck, FaMagic, FaPalette, FaIdBadge, FaCrown, FaSync } from 'react-icons/fa';
+// CORRECTION 1 : Ajout de bikeService ici
+import { shopService, authService, bikeService } from '../../services/api';
+import { FaBolt, FaGem, FaCheck, FaMagic, FaPalette, FaIdBadge, FaCrown, FaSync, FaBicycle, FaTimes } from 'react-icons/fa';
 import './ShopPage.css';
 
 function ShopPage() {
     const [catalog, setCatalog] = useState([]);
     const [inventory, setInventory] = useState([]);
-    const [myBikes, setMyBikes] = useState([]);
+    const [myBikes, setMyBikes] = useState([]); // CORRECTION 2 : État pour les vélos
     const [profile, setProfile] = useState(null);
-
+    
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('skin');
+    const [activeTab, setActiveTab] = useState('skin'); 
     const [processing, setProcessing] = useState(null);
     const [isSyncing, setIsSyncing] = useState(false);
-
+    
     // États Modale Choix Vélo
     const [showBikeSelector, setShowBikeSelector] = useState(false);
     const [selectedFrameItem, setSelectedFrameItem] = useState(null);
@@ -24,35 +25,41 @@ function ShopPage() {
 
     const loadData = async () => {
         try {
-            const [catData, invData, profData] = await Promise.all([
+            const [catData, invData, profData, bikeData] = await Promise.all([
                 shopService.getCatalog(),
                 shopService.getInventory(),
                 authService.getMyProfile(),
-                bikeService.getAll()
+                bikeService.getAll() // CORRECTION 1: Appel qui plantait
             ]);
+            
             setCatalog(catData || []);
             setInventory(invData || []);
             setProfile(profData);
+            // On ne garde que les vélos qui m'appartiennent
             setMyBikes(bikeData.filter(b => b.user_id === profData.user_id));
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setLoading(false);
+            
+        } catch (e) { 
+            console.error("Erreur chargement shop:", e); 
+        } finally { 
+            setLoading(false); 
         }
     };
 
     // --- ACHAT ---
     const handleBuy = async (item, currency) => {
         if (!window.confirm(`Acheter "${item.name}" ?`)) return;
+        setProcessing(item.id);
         try {
             await shopService.buy(item.id, currency);
             await loadData();
             alert("Achat réussi !");
         } catch (e) { alert(e.message); }
+        finally { setProcessing(null); }
     };
 
     // --- ÉQUIPEMENT GLOBAL (Skin, Badge, Titre) ---
     const handleGlobalEquip = async (invItem) => {
+        setProcessing(invItem.item_id);
         try {
             await shopService.equip(invItem.id, invItem.shop_items.type);
             await loadData();
@@ -61,6 +68,7 @@ function ShopPage() {
                 window.dispatchEvent(event);
             }
         } catch (e) { console.error(e); }
+        finally { setProcessing(null); }
     };
 
     // --- ÉQUIPEMENT VÉLO (Cadre) ---
@@ -74,7 +82,7 @@ function ShopPage() {
             await shopService.equipBike(bikeId, selectedFrameItem.id);
             alert("Cadre installé sur le vélo !");
             setShowBikeSelector(false);
-            loadData(); // Pour mettre à jour les "Équipé" si on veut
+            loadData(); 
         } catch(e) { alert("Erreur installation"); }
     };
 
@@ -91,7 +99,8 @@ function ShopPage() {
 
     return (
         <div className="shop-page">
-            {/* MODALE SÉLECTION VÉLO */}
+            
+            {/* MODALE SÉLECTION VÉLO (CORRECTION 3) */}
             {showBikeSelector && (
                 <div className="modal-overlay" onClick={() => setShowBikeSelector(false)}>
                     <div className="glass-panel modal-content" onClick={e => e.stopPropagation()}>
@@ -100,7 +109,7 @@ function ShopPage() {
                             <button onClick={() => setShowBikeSelector(false)} style={{background:'none', border:'none', color:'white', cursor:'pointer'}}><FaTimes /></button>
                         </div>
                         <div className="bike-selector-list">
-                            {myBikes.map(bike => (
+                            {myBikes.length === 0 ? <p>Aucun vélo dans le garage.</p> : myBikes.map(bike => (
                                 <div key={bike.id} className="bike-select-item" onClick={() => confirmFrameEquip(bike.id)}>
                                     <FaBicycle /> {bike.name}
                                 </div>
@@ -136,7 +145,6 @@ function ShopPage() {
             <div className="shop-grid">
                 {filteredItems.map(item => {
                     const ownedInv = getOwnedItem(item.id);
-                    // Pour les cadres, on ne dit pas "Equipé" ici car c'est par vélo. On dit "Possédé".
                     const isGlobalEquipped = ownedInv?.is_equipped; 
 
                     return (
@@ -154,15 +162,14 @@ function ShopPage() {
 
                             <div className="card-actions">
                                 {ownedInv ? (
+                                    // CORRECTION 4 : Logique pour les cadres
                                     item.type === 'frame' ? (
-                                        // BOUTON SPÉCIAL CADRE -> OUVRE MODALE
                                         <button className="btn-action equip" onClick={() => openBikeSelector(item)}>Installer sur un vélo</button>
                                     ) : (
-                                        // BOUTON STANDARD GLOBAL
                                         isGlobalEquipped ? (
                                             <button className="btn-action equipped" disabled><FaCheck /> Activé</button>
                                         ) : (
-                                            <button className="btn-action equip" onClick={() => handleGlobalEquip(ownedInv)}>Activer</button>
+                                            <button className="btn-action equip" onClick={() => handleGlobalEquip(ownedInv)} disabled={!!processing}>Activer</button>
                                         )
                                     )
                                 ) : (

@@ -291,6 +291,74 @@
     transform: scale(1.05);
 }
 
+/* NOUVEAUX STYLES COSMÉTIQUES */
+.equipped-badge {
+    margin-left: 10px;
+    font-size: 1.5rem;
+    vertical-align: middle;
+    filter: drop-shadow(0 0 5px var(--neon-blue));
+}
+
+.equipped-title {
+    color: var(--neon-purple);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border: 1px solid var(--neon-purple);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    background: rgba(217, 70, 239, 0.1);
+}
+
+/* SECTION CASIER */
+.locker-section {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.locker-group label {
+    display: block;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.locker-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.locker-item {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 8px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+}
+
+.locker-item:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+.locker-item.active {
+    background: var(--gradient-secondary);
+    border-color: transparent;
+    color: white;
+    box-shadow: 0 0 10px rgba(14, 165, 233, 0.3);
+}
+
+.empty-locker {
+    color: #666;
+    font-style: italic;
+}
+
 /* --- MOBILE & TABLETTE --- */
 @media (max-width: 1200px) {
     .profile-layout {

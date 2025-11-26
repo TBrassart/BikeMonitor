@@ -3,24 +3,34 @@ import { shopService } from '../../services/api';
 
 const ThemeManager = ({ children }) => {
     useEffect(() => {
+        // Lancement immédiat
         syncThemeFromDB();
+
+        const handleThemeChange = (e) => {
+            if (e.detail) updateCssVariables(e.detail);
+            else syncThemeFromDB();
+        };
+
         window.addEventListener('themeChange', handleThemeChange);
         return () => window.removeEventListener('themeChange', handleThemeChange);
     }, []);
 
-    const handleThemeChange = (e) => {
-        if (e.detail) updateCssVariables(e.detail);
-        else syncThemeFromDB();
-    };
-
     const syncThemeFromDB = async () => {
         try {
+            // Récupération de l'inventaire
             const inventory = await shopService.getInventory();
+            
+            // Recherche du skin équipé
             const equippedSkin = inventory?.find(i => i.shop_items.type === 'skin' && i.is_equipped);
-            if (equippedSkin?.shop_items?.asset_data) {
+
+            if (equippedSkin && equippedSkin.shop_items.asset_data) {
+                console.log("🎨 Thème chargé depuis BDD :", equippedSkin.shop_items.name);
                 updateCssVariables(equippedSkin.shop_items.asset_data);
+            } else {
+                console.log("🎨 Aucun thème équipé, retour défaut.");
+                resetTheme();
             }
-        } catch (e) { console.error("Erreur thème", e); }
+        } catch (e) { console.error("Erreur chargement thème", e); }
     };
 
     const updateCssVariables = (data) => {
@@ -28,7 +38,6 @@ const ThemeManager = ({ children }) => {
         if (data.primary) {
             root.style.setProperty('--neon-blue', data.primary);
             root.style.setProperty('--gradient-primary', `linear-gradient(135deg, ${data.primary} 0%, ${adjustColorBrightness(data.primary, -20)} 100%)`);
-            root.style.setProperty('--gradient-secondary', `linear-gradient(135deg, ${data.primary} 0%, ${adjustColorBrightness(data.primary, 20)} 100%)`);
         }
         if (data.secondary) {
             root.style.setProperty('--neon-purple', data.secondary);
@@ -38,8 +47,15 @@ const ThemeManager = ({ children }) => {
             root.style.setProperty('--bg-deep', data.bg);
             root.style.setProperty('--bg-card', adjustColorBrightness(data.bg, 10)); 
             root.style.setProperty('--bg-sidebar', adjustColorBrightness(data.bg, 5));
+            // Force l'application sur le body
             document.body.style.backgroundColor = data.bg;
         }
+    };
+
+    const resetTheme = () => {
+        const root = document.documentElement;
+        root.removeAttribute('style');
+        document.body.style.backgroundColor = '';
     };
 
     const adjustColorBrightness = (hex, percent) => {

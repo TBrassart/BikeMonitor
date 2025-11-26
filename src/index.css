@@ -224,11 +224,20 @@ button.secondary-btn {
 /* 9. NÉON PULSE */
 .frame-neon-pulse {
     border: 3px solid var(--neon-blue) !important;
-    animation: pulseBorder 1.5s infinite alternate;
+    /* On anime la couleur et l'ombre interne pour que ça ne soit pas coupé */
+    animation: pulseNeon 1.5s infinite alternate;
+    box-shadow: inset 0 0 20px var(--neon-blue);
 }
-@keyframes pulseBorder {
-    from { box-shadow: 0 0 10px var(--neon-blue), inset 0 0 10px var(--neon-blue); }
-    to { box-shadow: 0 0 25px var(--neon-blue), inset 0 0 20px var(--neon-blue); }
+
+@keyframes pulseNeon {
+    0% { 
+        border-color: var(--neon-blue); 
+        box-shadow: inset 0 0 10px var(--neon-blue); 
+    }
+    100% { 
+        border-color: white; 
+        box-shadow: inset 0 0 30px var(--neon-blue), 0 0 10px var(--neon-blue); 
+    }
 }
 
 /* 10. INVISIBLE GLASS */
@@ -237,5 +246,31 @@ button.secondary-btn {
     background: rgba(255, 255, 255, 0.05) !important;
     backdrop-filter: blur(20px) !important;
     box-shadow: none !important;
+}
+
+/* 11. GOLD */
+/* Assurez-vous que l'item en base a bien {"className": "frame-gold"} dans asset_data */
+.frame-gold {
+    border: 4px solid #ffd700 !important; /* Or Jaune */
+    background: linear-gradient(135deg, #000, #1a1a00) padding-box,
+                linear-gradient(45deg, #ffd700, #ffec8b, #b8860b, #ffd700) border-box !important;
+    box-shadow: inset 0 0 20px rgba(255, 215, 0, 0.3), 0 0 15px rgba(255, 215, 0, 0.5) !important;
+    position: relative;
+}
+
+/* Petit effet de brillance qui passe sur le cadre Gold */
+.frame-gold::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.4) 50%, transparent 60%);
+    background-size: 200% 200%;
+    animation: shineGold 3s infinite;
+    pointer-events: none;
+}
+
+@keyframes shineGold {
+    0% { background-position: 200% 200%; }
+    100% { background-position: -200% -200%; }
 }
 

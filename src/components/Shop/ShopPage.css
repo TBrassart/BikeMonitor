@@ -2,78 +2,91 @@
     padding-bottom: 80px;
 }
 
+/* HEADER */
 .shop-header {
     display: flex;
     justify-content: space-between;
-    align-items: center; /* Alignement vertical centré */
+    align-items: center;
     margin-bottom: 30px;
     flex-wrap: wrap;
     gap: 20px;
 }
 
-/* WALLET */
+/* WALLET CONTAINER */
 .wallet-display {
     display: flex;
     align-items: center;
-    padding: 10px 20px;
-    border-radius: 16px;
-    gap: 20px;
+    padding: 12px 25px;
+    border-radius: 50px; /* Pillule complète */
+    gap: 0; /* On gère l'espace avec les enfants */
     background: rgba(255,255,255,0.05);
     border: 1px solid var(--border-color);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
 
-.wallet-section {
+/* SECTION WATTS (Gauche) */
+.wallet-section-watts {
     display: flex;
     align-items: center;
-    gap: 15px; /* Espace entre le montant et le bouton */
+    gap: 15px;
+    padding-right: 20px;
+    border-right: 1px solid rgba(255,255,255,0.1);
 }
 
+/* SECTION CHIPS (Droite) */
+.wallet-section-chips {
+    display: flex;
+    align-items: center;
+    padding-left: 20px;
+}
+
+/* LES CHIFFRES */
 .wallet-item {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start; /* Alignement gauche */
     line-height: 1;
 }
 
 .wallet-item span {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
     font-weight: 800;
     color: white;
+    font-variant-numeric: tabular-nums; /* Chiffres alignés */
 }
 
 .wallet-item small {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     text-transform: uppercase;
     letter-spacing: 1px;
-    margin-top: 4px;
+    margin-top: 3px;
+    font-weight: 600;
 }
 
-.wallet-item.watts { color: #f59e0b; }
-.wallet-item.watts small { color: #f59e0b; }
+/* COULEURS */
+.wallet-item.watts span, .wallet-item.watts small, .watts-icon { color: #f59e0b; }
+.wallet-item.chips span, .wallet-item.chips small, .chips-icon { color: #0ea5e9; }
 
-.wallet-item.chips { color: #0ea5e9; }
-.wallet-item.chips small { color: #0ea5e9; }
-
-.wallet-divider {
-    width: 1px;
-    height: 30px;
-    background: rgba(255,255,255,0.1);
+/* ICONES PRINCIPALES */
+.watts-icon, .chips-icon {
+    font-size: 1.8rem;
+    margin-right: 10px;
 }
 
-/* BOUTON SYNCHRO (Petit et discret) */
-.icon-action-small {
+/* BOUTON SYNCHRO */
+.sync-btn {
     background: rgba(255,255,255,0.1);
     border: 1px solid rgba(255,255,255,0.1);
     color: var(--text-secondary);
-    width: 32px; height: 32px;
+    width: 35px; height: 35px;
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     cursor: pointer;
     transition: all 0.2s;
-    font-size: 0.9rem;
+    margin-left: 10px; /* Décalage du montant */
 }
 
-.icon-action-small:hover {
+.sync-btn:hover {
     background: var(--gradient-primary);
     color: white;
     border-color: transparent;
@@ -85,135 +98,26 @@
 }
 @keyframes spin { 100% { transform: rotate(360deg); } }
 
-/* TABS */
-.shop-tabs {
-    display: flex;
-    gap: 5px;
-    padding: 5px;
-    border-radius: 12px;
-    margin-bottom: 30px;
-    overflow-x: auto;
-}
+.shop-tabs { display: flex; gap: 5px; padding: 5px; border-radius: 12px; margin-bottom: 30px; overflow-x: auto; }
+.shop-tabs button { flex: 1; background: transparent; border: none; color: var(--text-secondary); padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; transition: all 0.2s; }
+.shop-tabs button.active { background: rgba(255,255,255,0.1); color: white; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
 
-.shop-tabs button {
-    flex: 1;
-    background: transparent;
-    border: none;
-    color: var(--text-secondary);
-    padding: 12px;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    white-space: nowrap;
-    transition: all 0.2s;
-}
+.shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 25px; }
+.shop-card { padding: 15px; display: flex; flex-direction: column; gap: 15px; transition: transform 0.2s; border-top: 4px solid transparent !important; }
+.shop-card:hover { transform: translateY(-5px); border-top-color: var(--neon-blue) !important; }
+.shop-card.owned { opacity: 0.8; border-color: var(--text-secondary) !important; }
+.shop-card.equipped { opacity: 1; border-color: var(--neon-green) !important; box-shadow: 0 0 20px rgba(16, 185, 129, 0.2) !important; }
 
-.shop-tabs button.active {
-    background: rgba(255,255,255,0.1);
-    color: white;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-}
+.item-preview { height: 120px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.2); font-size: 3rem; }
+.item-info h4 { margin: 0 0 5px 0; color: white; }
+.item-info p { margin: 0; font-size: 0.8rem; color: var(--text-secondary); height: 2.4em; overflow: hidden; }
 
-/* GRILLE */
-.shop-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 25px;
-}
-
-.shop-card {
-    padding: 15px;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    transition: transform 0.2s;
-    border-top: 4px solid transparent !important;
-}
-
-.shop-card:hover {
-    transform: translateY(-5px);
-    border-top-color: var(--neon-blue) !important;
-}
-
-.shop-card.owned {
-    opacity: 0.8;
-    border-color: var(--text-secondary) !important;
-}
-.shop-card.equipped {
-    opacity: 1;
-    border-color: var(--neon-green) !important;
-    box-shadow: 0 0 20px rgba(16, 185, 129, 0.2) !important;
-}
-
-/* VISUEL ITEM */
-.item-preview {
-    height: 120px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0,0,0,0.2);
-    font-size: 3rem;
-}
-
-.item-info h4 {
-    margin: 0 0 5px 0;
-    color: white;
-}
-
-.item-info p {
-    margin: 0;
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    height: 2.4em; /* Limite hauteur texte */
-    overflow: hidden;
-}
-
-/* BOUTONS ACHAT */
-.buy-buttons {
-    display: flex;
-    gap: 10px;
-}
-
-.buy-btn {
-    flex: 1;
-    border: none;
-    padding: 8px;
-    border-radius: 6px;
-    font-weight: 700;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center; gap: 5px;
-    font-size: 0.9rem;
-    transition: transform 0.1s;
-}
-
+.buy-buttons { display: flex; gap: 10px; }
+.buy-btn { flex: 1; border: none; padding: 8px; border-radius: 6px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 0.9rem; transition: transform 0.1s; }
 .buy-btn:active { transform: scale(0.95); }
 .buy-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-
 .buy-btn.watts { background: #f59e0b; color: #000; }
 .buy-btn.chips { background: #0ea5e9; color: #fff; }
-
-/* BOUTONS EQUIPER */
-.action-btn {
-    width: 100%;
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-    background: transparent;
-    color: white;
-    cursor: pointer;
-    font-weight: 600;
-}
-
-.action-btn.equip:hover {
-    background: var(--gradient-primary);
-    border-color: transparent;
-}
-
-.action-btn.equipped {
-    background: rgba(16, 185, 129, 0.1);
-    color: var(--neon-green);
-    border-color: var(--neon-green);
-    cursor: default;
-}
+.action-btn { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: transparent; color: white; cursor: pointer; font-weight: 600; }
+.action-btn.equip:hover { background: var(--gradient-primary); border-color: transparent; }
+.action-btn.equipped { background: rgba(16, 185, 129, 0.1); color: var(--neon-green); border-color: var(--neon-green); cursor: default; }

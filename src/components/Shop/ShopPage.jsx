@@ -84,31 +84,32 @@ function ShopPage() {
         <div className="shop-page">
             <header className="shop-header">
                 <h2 className="gradient-text">Le Marché</h2>
-                {/* PORTE-MONNAIE */}
+                
                 <div className="wallet-display glass-panel">
-                    <div className="wallet-section">
+                    {/* ZONE WATTS + BOUTON */}
+                    <div className="wallet-section-watts">
+                        <FaBolt className="watts-icon" />
                         <div className="wallet-item watts">
-                            <FaBolt />
                             <span>{profile?.watts || 0}</span>
                             <small>Watts</small>
                         </div>
-                        
                         <button 
                             onClick={handleSyncWatts} 
-                            className="icon-action-small" 
-                            title="Récupérer mes Watts historiques"
+                            className="sync-btn" 
+                            title="Sync Historique"
                             disabled={isSyncing}
                         >
                             <FaSync className={isSyncing ? 'spinning' : ''} />
                         </button>
                     </div>
-
-                    <div className="wallet-divider"></div>
                     
-                    <div className="wallet-item chips">
-                        <FaGem />
-                        <span>{profile?.neon_chips || 0}</span>
-                        <small>Chips</small>
+                    {/* ZONE CHIPS */}
+                    <div className="wallet-section-chips">
+                        <FaGem className="chips-icon" />
+                        <div className="wallet-item chips">
+                            <span>{profile?.neon_chips || 0}</span>
+                            <small>Chips</small>
+                        </div>
                     </div>
                 </div>
             </header>

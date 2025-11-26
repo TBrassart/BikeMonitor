@@ -4,18 +4,15 @@ import { shopService } from '../../services/api';
 const ThemeManager = ({ children }) => {
     
     useEffect(() => {
-        // 1. Chargement initial (au démarrage)
-        applyEquippedTheme();
-        
-        // 2. Écouteur d'événement (Quand on clique sur "Équiper")
+        // 1. Chargement au démarrage : ON INTERROGE LA BDD
+        syncThemeFromDB();
+
+        // 2. Écouteur pour changement immédiat (Preview instantanée lors du clic)
         const handleThemeChange = (e) => {
-            console.log("🎨 ThemeManager: Demande de changement reçue", e.detail);
             if (e.detail) {
-                // Si on reçoit les couleurs directement, on applique
                 updateCssVariables(e.detail);
             } else {
-                // Sinon on recharge depuis la base
-                applyEquippedTheme();
+                syncThemeFromDB();
             }
         };
 
@@ -23,24 +20,26 @@ const ThemeManager = ({ children }) => {
         return () => window.removeEventListener('themeChange', handleThemeChange);
     }, []);
 
-    const applyEquippedTheme = async () => {
+    const syncThemeFromDB = async () => {
         try {
+            // On récupère l'inventaire complet depuis le serveur
             const inventory = await shopService.getInventory();
+            
             if (!inventory) return;
 
-            // On cherche l'item 'skin' équipé
+            // On cherche l'item de type 'skin' qui est équipé
             const equippedSkin = inventory.find(i => i.shop_items.type === 'skin' && i.is_equipped);
 
             if (equippedSkin && equippedSkin.shop_items.asset_data) {
-                console.log("🎨 ThemeManager: Thème trouvé en base", equippedSkin.shop_items.name);
+                // Si trouvé en base, on l'applique
                 updateCssVariables(equippedSkin.shop_items.asset_data);
             } else {
-                console.log("🎨 ThemeManager: Aucun thème, reset.");
+                // Sinon, on remet le thème par défaut
                 resetTheme();
             }
         } catch (e) {
-            console.error("Erreur ThemeManager:", e);
-            resetTheme();
+            console.error("Erreur synchro thème:", e);
+            // En cas d'erreur (offline), on ne touche à rien pour ne pas casser l'affichage
         }
     };
 
@@ -48,36 +47,33 @@ const ThemeManager = ({ children }) => {
         const root = document.documentElement;
         if (!data) return;
 
-        // 1. Couleur Principale (Néon)
+        // Application des variables CSS
         if (data.primary) {
             root.style.setProperty('--neon-blue', data.primary);
+            // On recalcule les gradients basés sur la nouvelle couleur
             root.style.setProperty('--gradient-primary', `linear-gradient(135deg, ${data.primary} 0%, ${adjustColorBrightness(data.primary, -20)} 100%)`);
             root.style.setProperty('--gradient-secondary', `linear-gradient(135deg, ${data.primary} 0%, ${adjustColorBrightness(data.primary, 20)} 100%)`);
         }
 
-        // 2. Couleur Secondaire
         if (data.secondary) {
             root.style.setProperty('--neon-purple', data.secondary);
             root.style.setProperty('--neon-green', data.secondary);
         }
 
-        // 3. Arrière-plan (Dark Mode)
         if (data.bg) {
             root.style.setProperty('--bg-deep', data.bg);
             root.style.setProperty('--bg-card', adjustColorBrightness(data.bg, 10)); 
             root.style.setProperty('--bg-sidebar', adjustColorBrightness(data.bg, 5));
-            // Force le background du body immédiatement
             document.body.style.backgroundColor = data.bg;
         }
     };
 
     const resetTheme = () => {
         const root = document.documentElement;
-        root.removeAttribute('style'); // Nettoie tout les styles inline sur :root
-        document.body.style.backgroundColor = ''; // Reset body
+        root.removeAttribute('style'); // Nettoie tout les styles inline
+        document.body.style.backgroundColor = ''; 
     };
 
-    // Utilitaire couleur (Hex -> plus clair/foncé)
     const adjustColorBrightness = (hex, percent) => {
         if (!hex) return '#000000';
         let num = parseInt(hex.replace("#",""), 16),

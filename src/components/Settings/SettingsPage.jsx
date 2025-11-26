@@ -2,13 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { authService, supabase } from '../../services/api';
 import { stravaService } from '../../services/stravaService'; 
 import ProfilePage from './ProfilePage';
-import { FaSync, FaCheck, FaUnlink, FaLink } from 'react-icons/fa'; // Icônes
+import InventoryPage from './InventoryPage'; // Nouvel import
+import { FaSync, FaCheck, FaUnlink, FaLink } from 'react-icons/fa';
 import './SettingsPage.css';
 
 function SettingsPage() {
+    // 'profile' | 'inventory' | 'integrations'
     const [activeTab, setActiveTab] = useState('profile');
+    
     const [stravaStatus, setStravaStatus] = useState('loading');
-    const [syncing, setSyncing] = useState(false); // État du bouton sync
+    const [syncing, setSyncing] = useState(false);
 
     useEffect(() => {
         if (activeTab === 'integrations') {
@@ -51,37 +54,53 @@ function SettingsPage() {
     };
 
     const handleLogout = async () => {
-        await authService.signOut();
-        window.location.href = '/';
+        if(window.confirm("Se déconnecter ?")) {
+            await authService.signOut();
+            window.location.href = '/';
+        }
     };
 
     return (
         <div className="settings-page">
-            <h2 style={{ marginBottom: '20px' }} className="gradient-text">Paramètres</h2>
+            <h2 className="gradient-text" style={{ marginBottom: '20px' }}>Paramètres</h2>
 
-            <div className="settings-tabs" style={{ display:'flex', gap:'15px', marginBottom:'25px' }}>
+            {/* BARRE D'ONGLETS */}
+            <div className="settings-tabs" style={{ display:'flex', gap:'15px', marginBottom:'25px', overflowX:'auto', paddingBottom:'5px' }}>
                 <button 
                     onClick={() => setActiveTab('profile')}
                     className={activeTab === 'profile' ? 'primary-btn' : 'secondary-btn'}
-                    style={{ padding: '10px 25px', borderRadius: '50px', cursor: 'pointer', fontSize: '1rem' }}
+                    style={{ borderRadius: '50px', padding: '10px 20px', whiteSpace:'nowrap' }}
                 >
-                    Mon Profil
+                    Profil
                 </button>
+                
+                <button 
+                    onClick={() => setActiveTab('inventory')}
+                    className={activeTab === 'inventory' ? 'primary-btn' : 'secondary-btn'}
+                    style={{ borderRadius: '50px', padding: '10px 20px', whiteSpace:'nowrap' }}
+                >
+                    Inventaire
+                </button>
+                
                 <button 
                     onClick={() => setActiveTab('integrations')}
                     className={activeTab === 'integrations' ? 'primary-btn' : 'secondary-btn'}
-                    style={{ padding: '10px 25px', borderRadius: '50px', cursor: 'pointer', fontSize: '1rem' }}
+                    style={{ borderRadius: '50px', padding: '10px 20px', whiteSpace:'nowrap' }}
                 >
                     Intégrations
                 </button>
             </div>
 
-            <div className="settings-content glass-panel" style={{ padding:'20px', borderRadius:'16px' }}>
+            {/* CONTENU */}
+            <div className="settings-content glass-panel" style={{ padding:'20px', borderRadius:'16px', minHeight:'400px' }}>
+                
                 {activeTab === 'profile' && <ProfilePage />}
+                
+                {activeTab === 'inventory' && <InventoryPage />}
                 
                 {activeTab === 'integrations' && (
                     <div className="integrations">
-                        <div className="integration-card glass-panel" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px' }}>
+                        <div className="integration-card glass-panel" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px', background:'rgba(255,255,255,0.05)' }}>
                             <div>
                                 <h3 style={{ margin: '0 0 5px 0', color: '#fc4c02', display:'flex', alignItems:'center', gap:'10px' }}>
                                     Strava {stravaStatus === 'connected' && <FaCheck style={{fontSize:'0.8rem'}}/>}
@@ -105,7 +124,6 @@ function SettingsPage() {
                                 
                                 {stravaStatus === 'connected' && (
                                     <>
-                                        {/* BOUTON SYNCHRO MANUELLE */}
                                         <button 
                                             onClick={handleSync} 
                                             className="primary-btn"
@@ -113,13 +131,14 @@ function SettingsPage() {
                                             style={{ background: 'var(--gradient-success)', display:'flex', alignItems:'center', gap:'8px' }}
                                         >
                                             <FaSync className={syncing ? 'spinning' : ''} /> 
-                                            {syncing ? '...' : 'Synchroniser'}
+                                            <span className="desktop-only">{syncing ? '...' : 'Sync'}</span>
                                         </button>
 
                                         <button 
                                             onClick={() => stravaService.disconnect().then(checkStravaStatus)} 
                                             className="secondary-btn"
                                             style={{ borderColor:'#fc4c02', color:'#fc4c02' }}
+                                            title="Déconnecter"
                                         >
                                             <FaUnlink />
                                         </button>
@@ -132,7 +151,7 @@ function SettingsPage() {
             </div>
 
             <div style={{ marginTop: '40px', borderTop: '1px solid var(--border-color)', paddingTop: '20px' }}>
-                <button onClick={handleLogout} style={{ width:'100%', padding:'15px', background:'rgba(239, 68, 68, 0.2)', color:'#ef4444', border:'1px solid #ef4444', borderRadius:'8px', fontWeight:'bold', cursor:'pointer' }}>
+                <button onClick={handleLogout} style={{ width:'100%', padding:'15px', background:'rgba(239, 68, 68, 0.1)', color:'#ef4444', border:'1px solid #ef4444', borderRadius:'8px', fontWeight:'bold', cursor:'pointer' }}>
                     Se déconnecter
                 </button>
             </div>

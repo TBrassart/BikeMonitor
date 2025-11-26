@@ -85,7 +85,7 @@ function ShopPage() {
             <header className="shop-header">
                 <h2 className="gradient-text">Le Marché</h2>
                 
-                <div className="wallet-display glass-panel">
+                <div className="wallet-display">
                     {/* ZONE WATTS + BOUTON */}
                     <div className="wallet-section-watts">
                         <FaBolt className="watts-icon" />

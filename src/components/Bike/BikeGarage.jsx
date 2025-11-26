@@ -59,21 +59,6 @@ function BikeGarage() {
         return bike.parts.some(p => p.status === 'critical' || p.status === 'warning');
     };
 
-    const getFrameStyle = (bike) => {
-        const frame = Array.isArray(bike.frame_details) ? bike.frame_details[0] : bike.frame_details;
-        
-        if (frame && frame.asset_data) {
-            return {
-                border: `3px solid ${frame.asset_data.border}`,
-                boxShadow: `0 0 20px ${frame.asset_data.border}, inset 0 0 10px ${frame.asset_data.border}`,
-                transform: 'scale(1.02)',
-                transition: 'all 0.3s ease',
-                zIndex: 10
-            };
-        }
-        return {};
-    };
-
     if (loading) return <div className="loading-state">Ouverture du garage...</div>;
 
     return (
@@ -104,18 +89,26 @@ function BikeGarage() {
                     const isMine = bike.user_id === currentUser?.id;
                     const alert = hasAlerts(bike);
                     const ownerName = isMine ? 'Moi' : (bike.profiles?.name || 'Inconnu');
-                    const frameStyle = getFrameStyle(bike);
-                    const hasFrame = Object.keys(frameStyle).length > 0;
+                    
+                    // RÉCUPÉRATION DE LA CLASSE CSS DU CADRE
+                    let frameClass = '';
+                    // On gère le tableau ou l'objet
+                    const frame = Array.isArray(bike.frame_details) ? bike.frame_details[0] : bike.frame_details;
+                    
+                    if (frame && frame.asset_data && frame.asset_data.className) {
+                        frameClass = frame.asset_data.className;
+                    }
 
                     return (
                         <div 
                             key={bike.id} 
-                            className={`garage-bike-card ${!isMine ? 'friend-bike' : ''}`}
+                            // ON AJOUTE frameClass ICI
+                            className={`garage-bike-card ${!isMine ? 'friend-bike' : ''} ${frameClass}`}
                             onClick={() => isMine && navigate(`/app/bike/${bike.id}`)}
                             style={{ 
                                 cursor: isMine ? 'pointer' : 'default',
-                                opacity: isMine ? 1 : 0.85,
-                                ...frameStyle
+                                opacity: isMine ? 1 : 0.85
+                                // On retire le style inline getFrameStyle(bike) qui est remplacé par la classe CSS
                             }}
                         >
                             <div className="bike-image-placeholder">

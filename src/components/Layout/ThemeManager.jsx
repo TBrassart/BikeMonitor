@@ -4,80 +4,82 @@ import { shopService } from '../../services/api';
 const ThemeManager = ({ children }) => {
     
     useEffect(() => {
+        // 1. Chargement initial (au démarrage)
         applyEquippedTheme();
         
-        // On écoute un événement custom pour mettre à jour sans recharger la page
-        // (Utile quand on clique sur "Équiper" dans la boutique)
-        window.addEventListener('themeChange', applyEquippedTheme);
-        
-        return () => {
-            window.removeEventListener('themeChange', applyEquippedTheme);
+        // 2. Écouteur d'événement (Quand on clique sur "Équiper")
+        const handleThemeChange = (e) => {
+            console.log("🎨 ThemeManager: Demande de changement reçue", e.detail);
+            if (e.detail) {
+                // Si on reçoit les couleurs directement, on applique
+                updateCssVariables(e.detail);
+            } else {
+                // Sinon on recharge depuis la base
+                applyEquippedTheme();
+            }
         };
+
+        window.addEventListener('themeChange', handleThemeChange);
+        return () => window.removeEventListener('themeChange', handleThemeChange);
     }, []);
 
     const applyEquippedTheme = async () => {
         try {
-            // 1. On récupère l'inventaire
             const inventory = await shopService.getInventory();
             if (!inventory) return;
 
-            // 2. On cherche le skin équipé
+            // On cherche l'item 'skin' équipé
             const equippedSkin = inventory.find(i => i.shop_items.type === 'skin' && i.is_equipped);
 
-            // 3. Application ou Reset
             if (equippedSkin && equippedSkin.shop_items.asset_data) {
+                console.log("🎨 ThemeManager: Thème trouvé en base", equippedSkin.shop_items.name);
                 updateCssVariables(equippedSkin.shop_items.asset_data);
             } else {
+                console.log("🎨 ThemeManager: Aucun thème, reset.");
                 resetTheme();
             }
         } catch (e) {
-            console.error("Erreur chargement thème", e);
+            console.error("Erreur ThemeManager:", e);
             resetTheme();
         }
     };
 
     const updateCssVariables = (data) => {
         const root = document.documentElement;
+        if (!data) return;
 
-        // --- COULEUR PRINCIPALE (Néon) ---
+        // 1. Couleur Principale (Néon)
         if (data.primary) {
-            // Remplace le bleu par la couleur du thème
             root.style.setProperty('--neon-blue', data.primary);
-            // On force aussi le gradient principal
             root.style.setProperty('--gradient-primary', `linear-gradient(135deg, ${data.primary} 0%, ${adjustColorBrightness(data.primary, -20)} 100%)`);
             root.style.setProperty('--gradient-secondary', `linear-gradient(135deg, ${data.primary} 0%, ${adjustColorBrightness(data.primary, 20)} 100%)`);
         }
 
-        // --- COULEUR SECONDAIRE ---
+        // 2. Couleur Secondaire
         if (data.secondary) {
             root.style.setProperty('--neon-purple', data.secondary);
-            root.style.setProperty('--neon-green', data.secondary); // On harmonise
+            root.style.setProperty('--neon-green', data.secondary);
         }
 
-        // --- ARRIÈRE-PLAN (Dark Mode Custom) ---
+        // 3. Arrière-plan (Dark Mode)
         if (data.bg) {
             root.style.setProperty('--bg-deep', data.bg);
-            // On génère des variantes légèrement plus claires pour les cartes/sidebar
             root.style.setProperty('--bg-card', adjustColorBrightness(data.bg, 10)); 
             root.style.setProperty('--bg-sidebar', adjustColorBrightness(data.bg, 5));
+            // Force le background du body immédiatement
+            document.body.style.backgroundColor = data.bg;
         }
     };
 
     const resetTheme = () => {
         const root = document.documentElement;
-        // On retire les styles inline pour revenir aux valeurs de index.css
-        root.style.removeProperty('--neon-blue');
-        root.style.removeProperty('--neon-purple');
-        root.style.removeProperty('--neon-green');
-        root.style.removeProperty('--gradient-primary');
-        root.style.removeProperty('--gradient-secondary');
-        root.style.removeProperty('--bg-deep');
-        root.style.removeProperty('--bg-card');
-        root.style.removeProperty('--bg-sidebar');
+        root.removeAttribute('style'); // Nettoie tout les styles inline sur :root
+        document.body.style.backgroundColor = ''; // Reset body
     };
 
-    // Petit utilitaire pour éclaircir/assombrir une couleur Hex (pour générer les variantes)
+    // Utilitaire couleur (Hex -> plus clair/foncé)
     const adjustColorBrightness = (hex, percent) => {
+        if (!hex) return '#000000';
         let num = parseInt(hex.replace("#",""), 16),
         amt = Math.round(2.55 * percent),
         R = (num >> 16) + amt,
@@ -86,7 +88,6 @@ const ThemeManager = ({ children }) => {
         return "#" + (0x1000000 + (R<255?R<1?0:R:255)*0x10000 + (G<255?G<1?0:G:255)*0x100 + (B<255?B<1?0:B:255)).toString(16).slice(1);
     };
 
-    // Ce composant ne rend rien visuellement, il enveloppe juste l'app
     return <>{children}</>;
 };
 

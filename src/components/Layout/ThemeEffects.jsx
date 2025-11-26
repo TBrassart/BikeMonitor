@@ -10,7 +10,6 @@ const ThemeEffects = ({ effect }) => {
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d');
         
-        // Ajuster la taille
         const resize = () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
@@ -18,69 +17,275 @@ const ThemeEffects = ({ effect }) => {
         window.addEventListener('resize', resize);
         resize();
 
-        // --- MOTEUR D'EFFETS ---
+        // --- CLASSES D'EFFETS ---
+
+        // 1. LAVE (Cercles flous qui bougent)
+        const lavaBlobs = Array(15).fill().map(() => ({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            vx: (Math.random() - 0.5) * 2,
+            vy: (Math.random() - 0.5) * 2,
+            radius: Math.random() * 100 + 50,
+            color: `hsl(${Math.random() * 40}, 100%, 50%)` // Rouge/Orange
+        }));
+
+        const drawLava = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Le flou crée l'effet "Lave" quand les cercles se croisent
+            ctx.filter = 'blur(40px)'; 
+            lavaBlobs.forEach(blob => {
+                blob.x += blob.vx;
+                blob.y += blob.vy;
+                if (blob.x < 0 || blob.x > canvas.width) blob.vx *= -1;
+                if (blob.y < 0 || blob.y > canvas.height) blob.vy *= -1;
+                
+                ctx.beginPath();
+                ctx.arc(blob.x, blob.y, blob.radius, 0, Math.PI * 2);
+                ctx.fillStyle = blob.color;
+                ctx.fill();
+            });
+            ctx.filter = 'none';
+        };
+
+        // 2. MATRIX (Pluie binaire)
+        const letters = '01';
+        const fontSize = 14;
+        const columns = Math.floor(window.innerWidth / fontSize); // Fix crash resize
+        const drops = Array(columns).fill(1);
         
-        // 1. MATRIX RAIN
-        const matrixEffect = () => {
-            const letters = '0101010101010101010101010101'; // Binaire
-            const fontSize = 14;
-            const columns = canvas.width / fontSize;
-            const drops = Array(Math.ceil(columns)).fill(1);
+        const drawMatrix = () => {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#0F0';
+            ctx.font = `${fontSize}px monospace`;
+            for (let i = 0; i < drops.length; i++) {
+                const text = letters.charAt(Math.floor(Math.random() * letters.length));
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
+            }
+        };
 
-            const draw = () => {
-                // Fond noir semi-transparent pour l'effet de traînée
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // 3. VAPORWAVE (Briques + Néons)
+        const neons = Array(10).fill().map(() => ({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            w: Math.random() * 100 + 50,
+            h: 5,
+            color: Math.random() > 0.5 ? '#ff71ce' : '#01cdfe',
+            blinkSpeed: Math.random() * 0.1
+        }));
 
-                ctx.fillStyle = '#0F0'; // Vert Hacker
-                ctx.font = `${fontSize}px monospace`;
-
-                for (let i = 0; i < drops.length; i++) {
-                    const text = letters.charAt(Math.floor(Math.random() * letters.length));
-                    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-
-                    // Reset aléatoire ou fin d'écran
-                    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-                        drops[i] = 0;
-                    }
-                    drops[i]++;
+        const drawVaporwave = (time) => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Fond Briques (Dessiné procéduralement pour éviter chargement image)
+            ctx.strokeStyle = 'rgba(255, 113, 206, 0.1)';
+            ctx.lineWidth = 1;
+            for(let y=0; y<canvas.height; y+=30) {
+                for(let x=0; x<canvas.width; x+=60) {
+                    const offset = (y/30) % 2 === 0 ? 0 : 30;
+                    ctx.strokeRect(x + offset, y, 60, 30);
                 }
-                requestRef.current = requestAnimationFrame(draw);
-            };
-            draw();
+            }
+            // Néons
+            neons.forEach(n => {
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = n.color;
+                ctx.fillStyle = n.color;
+                // Clignotement
+                if (Math.sin(time * n.blinkSpeed) > 0) {
+                    ctx.fillRect(n.x, n.y, n.w, n.h);
+                }
+                ctx.shadowBlur = 0;
+            });
         };
 
-        // 2. SPACE WARP (Exemple pour un autre thème futur)
-        const spaceEffect = () => {
-            const stars = Array(200).fill().map(() => ({
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height,
-                z: Math.random() * 2
-            }));
+        // 4. STEALTH (Radar Scan)
+        let scanLineY = 0;
+        const drawStealth = () => {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'; // Trail
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Grille verte
+            ctx.strokeStyle = 'rgba(16, 185, 129, 0.1)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            for(let i=0; i<canvas.width; i+=50) { ctx.moveTo(i,0); ctx.lineTo(i,canvas.height); }
+            for(let i=0; i<canvas.height; i+=50) { ctx.moveTo(0,i); ctx.lineTo(canvas.width,i); }
+            ctx.stroke();
 
-            const draw = () => {
-                ctx.fillStyle = 'rgba(10, 10, 20, 0.2)';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = 'white';
-
-                stars.forEach(star => {
-                    star.y += star.z;
-                    if (star.y > canvas.height) {
-                        star.y = 0;
-                        star.x = Math.random() * canvas.width;
-                    }
-                    ctx.beginPath();
-                    ctx.arc(star.x, star.y, star.z, 0, Math.PI * 2);
-                    ctx.fill();
-                });
-                requestRef.current = requestAnimationFrame(draw);
-            };
-            draw();
+            // Barre de scan
+            scanLineY += 2;
+            if(scanLineY > canvas.height) scanLineY = 0;
+            
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#10b981';
+            ctx.fillStyle = '#10b981';
+            ctx.fillRect(0, scanLineY, canvas.width, 2);
+            ctx.shadowBlur = 0;
         };
 
-        // SÉLECTION DE L'EFFET
-        if (effect === 'matrix') matrixEffect();
-        if (effect === 'space') spaceEffect();
+        // 5. GRAND TOUR (Route qui défile)
+        let roadOffset = 0;
+        const drawRoad = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Texture Asphalte (Bruit gris)
+            // Pour perf, on fait juste un fond gris et des lignes
+            ctx.fillStyle = '#333';
+            ctx.fillRect(0,0,canvas.width, canvas.height);
+            
+            // Lignes jaunes centrales
+            ctx.fillStyle = '#facc15';
+            roadOffset += 5;
+            if(roadOffset > 100) roadOffset = 0;
+            
+            // Dessine ligne centrale
+            const centerX = canvas.width / 2;
+            for(let i = -100; i < canvas.height; i+=100) {
+                // Effet de perspective simple (trapèze)
+                ctx.fillRect(centerX - 5, i + roadOffset, 10, 60);
+            }
+        };
+
+        // 6. GIRO (Pétales Roses)
+        const petals = Array(50).fill().map(() => ({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height - canvas.height,
+            speed: Math.random() * 2 + 1,
+            sway: Math.random() * 2,
+            size: Math.random() * 5 + 2
+        }));
+        
+        const drawPetals = (time) => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#db2777';
+            
+            petals.forEach(p => {
+                p.y += p.speed;
+                const swayOffset = Math.sin(time * 0.002 + p.sway) * 20;
+                
+                if(p.y > canvas.height) p.y = -10;
+                
+                ctx.beginPath();
+                ctx.ellipse(p.x + swayOffset, p.y, p.size, p.size/2, Math.PI/4, 0, Math.PI*2);
+                ctx.fill();
+            });
+        };
+
+        // 7. OCEAN (Poissons + Algues)
+        const fish = Array(10).fill().map(() => ({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            speed: Math.random() * 2 + 0.5,
+            size: Math.random() * 10 + 5,
+            color: Math.random() > 0.5 ? '#0ea5e9' : '#14b8a6'
+        }));
+
+        const drawOcean = (time) => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Algues (Sinusoides en bas)
+            ctx.strokeStyle = '#0f766e';
+            ctx.lineWidth = 5;
+            const weedCount = Math.floor(canvas.width / 50);
+            for(let i=0; i<weedCount; i++) {
+                ctx.beginPath();
+                const baseX = i * 50;
+                ctx.moveTo(baseX, canvas.height);
+                const sway = Math.sin(time * 0.002 + i) * 30;
+                ctx.quadraticCurveTo(baseX + sway, canvas.height - 100, baseX + sway/2, canvas.height - 200);
+                ctx.stroke();
+            }
+
+            // Poissons
+            fish.forEach(f => {
+                f.x -= f.speed; // Nagent vers la gauche
+                if(f.x < -50) f.x = canvas.width + 50;
+                
+                ctx.fillStyle = f.color;
+                ctx.beginPath();
+                // Corps
+                ctx.ellipse(f.x, f.y, f.size*2, f.size, 0, 0, Math.PI*2);
+                // Queue
+                ctx.moveTo(f.x + f.size*1.5, f.y);
+                ctx.lineTo(f.x + f.size*3, f.y - f.size);
+                ctx.lineTo(f.x + f.size*3, f.y + f.size);
+                ctx.fill();
+            });
+        };
+
+        // 8. TOXIC (Fumée Verte)
+        const gasClouds = Array(10).fill().map(() => ({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            r: Math.random() * 200 + 100,
+            dx: (Math.random() - 0.5) * 0.5,
+            dy: (Math.random() - 0.5) * 0.5
+        }));
+
+        const drawToxic = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.filter = 'blur(60px)'; // Très flou
+            
+            gasClouds.forEach(c => {
+                c.x += c.dx; c.y += c.dy;
+                if(c.x < -c.r) c.x = canvas.width + c.r;
+                if(c.x > canvas.width + c.r) c.x = -c.r;
+                
+                const g = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, c.r);
+                g.addColorStop(0, 'rgba(74, 222, 128, 0.4)');
+                g.addColorStop(1, 'rgba(74, 222, 128, 0)');
+                ctx.fillStyle = g;
+                ctx.beginPath();
+                ctx.arc(c.x, c.y, c.r, 0, Math.PI*2);
+                ctx.fill();
+            });
+            ctx.filter = 'none';
+        };
+
+        // 9. GOLD (Scintillement)
+        const sparkles = Array(30).fill().map(() => ({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            size: Math.random() * 3,
+            alpha: Math.random(),
+            speed: Math.random() * 0.02 + 0.005
+        }));
+
+        const drawGold = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            sparkles.forEach(s => {
+                s.alpha += s.speed;
+                if(s.alpha >= 1 || s.alpha <= 0) s.speed *= -1;
+                
+                ctx.globalAlpha = Math.abs(s.alpha);
+                ctx.fillStyle = '#fbbf24';
+                ctx.beginPath();
+                // Forme étoile
+                ctx.arc(s.x, s.y, s.size, 0, Math.PI*2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+        };
+
+
+        // BOUCLE D'ANIMATION
+        const render = (time) => {
+            if (effect === 'lava') drawLava();
+            else if (effect === 'matrix') drawMatrix();
+            else if (effect === 'vaporwave') drawVaporwave(time);
+            else if (effect === 'stealth') drawStealth();
+            else if (effect === 'road') drawRoad();
+            else if (effect === 'petals') drawPetals(time);
+            else if (effect === 'ocean') drawOcean(time);
+            else if (effect === 'toxic') drawToxic();
+            else if (effect === 'gold') drawGold();
+            
+            requestRef.current = requestAnimationFrame(render);
+        };
+
+        requestRef.current = requestAnimationFrame(render);
 
         return () => {
             window.removeEventListener('resize', resize);
@@ -94,12 +299,8 @@ const ThemeEffects = ({ effect }) => {
         <canvas 
             ref={canvasRef}
             style={{
-                position: 'fixed',
-                top: 0, left: 0,
-                width: '100%', height: '100%',
-                zIndex: 0, // Derrière le contenu (App.css gère le z-index du main)
-                pointerEvents: 'none', // Laisse passer les clics
-                opacity: 0.4 // Subtil
+                position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+                zIndex: 0, pointerEvents: 'none', opacity: 0.6
             }}
         />
     );

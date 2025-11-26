@@ -1,16 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { shopService } from '../../services/api';
-import ThemeEffects from './ThemeEffects';
+import ThemeEffects from './ThemeEffects'; // <--- IMPORT
 
 const ThemeManager = ({ children }) => {
+    // Nouvel état pour stocker le nom de l'effet (ex: 'matrix')
     const [currentEffect, setCurrentEffect] = useState(null);
 
     useEffect(() => {
         syncThemeFromDB();
+
         const handleThemeChange = (e) => {
             if (e.detail) applyThemeData(e.detail);
             else syncThemeFromDB();
         };
+
         window.addEventListener('themeChange', handleThemeChange);
         return () => window.removeEventListener('themeChange', handleThemeChange);
     }, []);
@@ -19,20 +22,22 @@ const ThemeManager = ({ children }) => {
         try {
             const inventory = await shopService.getInventory();
             const equippedSkin = inventory?.find(i => i.shop_items.type === 'skin' && i.is_equipped);
+
             if (equippedSkin?.shop_items?.asset_data) {
                 applyThemeData(equippedSkin.shop_items.asset_data);
             } else {
                 resetTheme();
             }
-        } catch (e) { console.error("Erreur thème", e); }
+        } catch (e) { 
+            console.error(e);
+            resetTheme();
+        }
     };
 
     const applyThemeData = (data) => {
-        if (!data) return;
         updateCssVariables(data);
-        // Applique l'effet s'il y en a un
-        if (data.effect) setCurrentEffect(data.effect);
-        else setCurrentEffect(null);
+        // On applique l'effet s'il existe dans le JSON
+        setCurrentEffect(data.effect || null);
     };
 
     const updateCssVariables = (data) => {
@@ -40,6 +45,7 @@ const ThemeManager = ({ children }) => {
         if (data.primary) {
             root.style.setProperty('--neon-blue', data.primary);
             root.style.setProperty('--gradient-primary', `linear-gradient(135deg, ${data.primary} 0%, ${adjustColorBrightness(data.primary, -20)} 100%)`);
+            root.style.setProperty('--gradient-secondary', `linear-gradient(135deg, ${data.primary} 0%, ${adjustColorBrightness(data.primary, 20)} 100%)`);
         }
         if (data.secondary) {
             root.style.setProperty('--neon-purple', data.secondary);
@@ -57,7 +63,7 @@ const ThemeManager = ({ children }) => {
         const root = document.documentElement;
         root.removeAttribute('style');
         document.body.style.backgroundColor = '';
-        setCurrentEffect(null);
+        setCurrentEffect(null); // Reset effet
     };
 
     const adjustColorBrightness = (hex, percent) => {
@@ -68,11 +74,11 @@ const ThemeManager = ({ children }) => {
 
     return (
         <>
-            {/* Le Canvas d'effet en fond */}
+            {/* LE CANVAS DE FOND EST ICI */}
             <ThemeEffects effect={currentEffect} />
             
-            {/* Le contenu de l'application par-dessus */}
-            <div style={{ position: 'relative', zIndex: 1, minHeight: '100vh' }}>
+            {/* L'APPLICATION PAR DESSUS */}
+            <div style={{position: 'relative', zIndex: 1}}>
                 {children}
             </div>
         </>

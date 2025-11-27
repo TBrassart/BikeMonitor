@@ -355,6 +355,17 @@ const ThemeEffects = ({ effect }) => {
         };
 
         // 11. MOUNTAIN (Parallaxe) ---
+
+        const createPeaks = (count, minHeight, maxHeight) => {
+            const points = [];
+            const step = canvas.width / count;
+            for (let i = 0; i <= count; i++) {
+                // Hauteur aléatoire massive
+                const h = minHeight + Math.random() * (maxHeight - minHeight);
+                points.push({ x: i * step, y: canvas.height - h });
+            }
+            return points;
+        };
         // Génération des crêtes de montagne
         const m1 = createPeaks(3, 300, 500); // Premier plan (Sombre)
         const m2 = createPeaks(5, 400, 700); // Arrière plan (Plus clair, très haut)
@@ -633,22 +644,115 @@ const ThemeEffects = ({ effect }) => {
             });
         };
 
+        // 15. RETROWAVE (La Grille Infinie)
+        const drawRetrowave = (time) => {
+            const w = canvas.width;
+            const h = canvas.height;
+            const cx = w / 2;
+            const cy = h / 2; // Horizon au centre
+            
+            // 1. Ciel (Dégradé sombre)
+            const skyGrad = ctx.createLinearGradient(0, 0, 0, cy);
+            skyGrad.addColorStop(0, '#0f0c29');
+            skyGrad.addColorStop(0.5, '#302b63');
+            skyGrad.addColorStop(1, '#24243e');
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, w, cy);
+
+            // 2. Soleil (Gradient + Bandes)
+            const sunY = cy - 50;
+            const sunSize = Math.min(w, h) * 0.25;
+            const sunGrad = ctx.createLinearGradient(0, sunY - sunSize, 0, sunY + sunSize);
+            sunGrad.addColorStop(0, '#ffd700'); // Jaune
+            sunGrad.addColorStop(0.5, '#ff00c8'); // Rose
+            sunGrad.addColorStop(1, '#9900ff'); // Violet
+            
+            ctx.fillStyle = sunGrad;
+            ctx.beginPath(); ctx.arc(cx, sunY, sunSize, 0, Math.PI*2); ctx.fill();
+
+            // Bandes noires sur le soleil (Scanlines)
+            ctx.fillStyle = 'rgba(0,0,0,0.2)';
+            for(let i=0; i<10; i++) {
+                const bandY = sunY + (i * sunSize/5) - (time*0.02 % (sunSize/5));
+                const height = i * 2;
+                if (bandY > sunY - sunSize && bandY < sunY + sunSize) {
+                     ctx.fillRect(cx - sunSize, bandY, sunSize*2, height);
+                }
+            }
+
+            // 3. Sol (Noir profond)
+            ctx.fillStyle = '#0a0a12';
+            ctx.fillRect(0, cy, w, h/2);
+
+            // 4. Grille (Perspective 3D)
+            ctx.strokeStyle = '#d946ef'; // Rose Néon
+            ctx.lineWidth = 2;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#d946ef';
+
+            // Lignes Verticales (Fuyantes)
+            ctx.beginPath();
+            const fov = 300;
+            for (let i = -2000; i < 2000; i += 100) {
+                // Projection simple
+                // Point au sol (bas de l'écran)
+                const x1 = cx + i * 3;
+                const y1 = h;
+                // Point à l'horizon
+                const x2 = cx + i * 0.1;
+                const y2 = cy;
+                
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+            }
+            ctx.stroke();
+
+            // Lignes Horizontales (Qui avancent)
+            // Z va de l'horizon (loin) vers nous (proche)
+            const speed = 0.002;
+            const offset = (time * speed) % 1; // 0 à 1
+            
+            ctx.beginPath();
+            for (let z = 0; z < 1; z += 0.05) {
+                // Effet de perspective : y = horizon + (hauteur / z)
+                // On ajoute l'offset pour le mouvement
+                let currentZ = z - offset;
+                if (currentZ <= 0) currentZ += 1;
+                
+                // Plus Z est petit (proche), plus Y est grand (bas)
+                // Inversion : Z=0 est l'horizon, Z=1 est le bas de l'écran
+                // Formule "fake 3D"
+                const p = 1 - currentZ; // 1 (horizon) -> 0 (bas)
+                
+                // Fonction exponentielle pour tasser les lignes à l'horizon
+                const y = cy + (h/2) * Math.pow(currentZ, 4); // Puissance 4 pour l'effet de profondeur extrême
+                
+                if (y < h && y > cy) {
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(w, y);
+                }
+            }
+            ctx.stroke();
+            ctx.shadowBlur = 0; // Reset glow
+        };
+
         // BOUCLE D'ANIMATION
         const render = (time) => {
             if (effect === 'lava') drawLava();
-            else if (effect === 'matrix') drawMatrix();
-            else if (effect === 'vaporwave') drawVaporwave(time);
-            else if (effect === 'stealth') drawStealth();
-            else if (effect === 'road') drawRoad();
-            else if (effect === 'petals') drawPetals(time);
-            else if (effect === 'ocean') drawOcean(time);
-            else if (effect === 'toxic') drawToxic();
-            else if (effect === 'gold') drawGold();
-            else if (effect === 'space') drawSpace();
-            else if (effect === 'mountain') drawMountain(time);
-            else if (effect === 'nature') drawNature(time);
-            else if (effect === 'pinot') drawPinot(time);
-            else if (effect === 'sheep') drawSheep(time);
+            if (effect === 'matrix') drawMatrix();
+            if (effect === 'vaporwave') drawVaporwave(time);
+            if (effect === 'stealth') drawStealth();
+            if (effect === 'road') drawRoad();
+            if (effect === 'petals') drawPetals(time);
+            if (effect === 'ocean') drawOcean(time);
+            if (effect === 'toxic') drawToxic();
+            if (effect === 'gold') drawGold();
+            if (effect === 'space') drawSpace();
+            if (effect === 'mountain') drawMountain(time);
+            if (effect === 'nature') drawNature(time);
+            if (effect === 'pinot') drawPinot(time);
+            if (effect === 'sheep') drawSheep(time);
+            if (effect === 'retrowave') drawRetrowave(time);
             
             requestRef.current = requestAnimationFrame(render);
         };

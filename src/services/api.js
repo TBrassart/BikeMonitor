@@ -428,6 +428,34 @@ export const api = {
         const { error } = await supabase.from('nutrition').delete().eq('id', id);
         if (error) throw error;
     },
+    // NUTRITION AVANCÉE
+    async getNutritionHistory(itemId) {
+        const { data, error } = await supabase
+            .from('nutrition_history')
+            .select('*')
+            .eq('nutrition_id', itemId)
+            .order('purchase_date', { ascending: false });
+        if (error) throw error;
+        return data;
+    },
+
+    async addNutritionStock(itemId, quantity, pricePaid) {
+        // 1. Ajouter à l'historique
+        const unitPrice = quantity > 0 ? pricePaid / quantity : 0;
+        await supabase.from('nutrition_history').insert([{
+            nutrition_id: itemId,
+            quantity_added: quantity,
+            price_paid: pricePaid,
+            unit_price: unitPrice
+        }]);
+
+        // 2. Mettre à jour le stock actuel
+        // On récupère d'abord la qté actuelle pour incrémenter
+        const { data: item } = await supabase.from('nutrition').select('quantity').eq('id', itemId).single();
+        const newQty = (item?.quantity || 0) + parseInt(quantity);
+        
+        await supabase.from('nutrition').update({ quantity: newQty }).eq('id', itemId);
+    },
     // --- LIBRARY & KITS ---
     async getComponentLibrary() {
         const { data, error } = await supabase.from('component_library').select('*');
@@ -866,7 +894,14 @@ export const historyService = {
     delete: (id) => api.deleteHistory(id)
 };
 
-export const nutritionService = { getAll: () => api.getNutrition() };
+export const nutritionService = { 
+    getAll: () => api.getNutrition(),
+    add: (d) => api.addNutrition(d),
+    update: (id, d) => api.updateNutrition(id, d),
+    delete: (id) => api.deleteNutrition(id),
+    getHistory: (id) => api.getNutritionHistory(id),
+    addStock: (id, qty, price) => api.addNutritionStock(id, qty, price)
+};
 
 export const libraryService = { getAll: () => api.getComponentLibrary() };
 

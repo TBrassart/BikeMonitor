@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { nutritionService } from '../../services/api';
-import { FaSave, FaTimes, FaLeaf, FaCoffee, FaUtensils } from 'react-icons/fa';
+import { FaSave, FaTimes } from 'react-icons/fa';
 import './NutritionPage.css';
 
+// NOTE : On a retiré l'import de nutritionService ici.
+// C'est le parent (NutritionPage) qui gère l'appel API.
+
 const NutritionForm = ({ onClose, onSave, initialData }) => {
-    const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         name: '', brand: '', category_type: 'bar', 
         quantity: 0, min_quantity: 2,
         carbs: 0, proteins: 0, fat: 0,
         caffeine: false, 
         tags: [], 
-        timing: [], // 'pre', 'during', 'post'
+        timing: [], 
         recipe: ''
     });
 
@@ -33,7 +34,6 @@ const NutritionForm = ({ onClose, onSave, initialData }) => {
         }));
     };
 
-    // Gestion des arrays (Tags, Timing)
     const toggleArrayItem = (field, value) => {
         setFormData(prev => {
             const list = prev[field].includes(value)
@@ -43,30 +43,31 @@ const NutritionForm = ({ onClose, onSave, initialData }) => {
         });
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
-        setLoading(true);
-        try {
-            const dataToSave = {
-                ...formData,
-                carbs: parseFloat(formData.carbs),
-                proteins: parseFloat(formData.proteins),
-                fat: parseFloat(formData.fat),
-                quantity: parseInt(formData.quantity),
-                min_quantity: parseInt(formData.min_quantity)
-            };
+        
+        // Préparation des données propres
+        const dataToSave = {
+            ...formData,
+            // Si on modifie un item existant, on garde l'ID
+            id: initialData ? initialData.id : undefined, 
+            
+            // Conversion des chiffres
+            carbs: parseFloat(formData.carbs) || 0,
+            proteins: parseFloat(formData.proteins) || 0,
+            fat: parseFloat(formData.fat) || 0,
+            quantity: parseInt(formData.quantity) || 0,
+            min_quantity: parseInt(formData.min_quantity) || 0,
+            
+            // On s'assure que ces tableaux ne sont pas null
+            tags: formData.tags || [],
+            timing: formData.timing || []
+        };
 
-            if (initialData) {
-                await nutritionService.update(initialData.id, dataToSave);
-            } else {
-                await nutritionService.add(dataToSave);
-            }
-            if (onSave) onSave();
-            onClose();
-        } catch (err) {
-            alert("Erreur enregistrement");
-        } finally {
-            setLoading(false);
+        // CORRECTION CRITIQUE : On passe les données au parent
+        // On ne fait pas l'appel API ici
+        if (onSave) {
+            onSave(dataToSave);
         }
     };
 
@@ -102,15 +103,13 @@ const NutritionForm = ({ onClose, onSave, initialData }) => {
                         </select>
                     </div>
 
-                    {/* MACROS */}
-                    <div className="form-section-title">Macros (par unité/dose)</div>
+                    <div className="form-section-title">Macros (par unité)</div>
                     <div className="form-grid-3">
                         <div className="form-group"><label>Glucides</label><input type="number" name="carbs" step="0.1" value={formData.carbs} onChange={handleChange} /></div>
                         <div className="form-group"><label>Protéines</label><input type="number" name="proteins" step="0.1" value={formData.proteins} onChange={handleChange} /></div>
                         <div className="form-group"><label>Lipides</label><input type="number" name="fat" step="0.1" value={formData.fat} onChange={handleChange} /></div>
                     </div>
 
-                    {/* OPTIONS & TAGS */}
                     <div className="form-section-title">Propriétés</div>
                     <div className="tags-selector">
                         <button type="button" className={`chip ${formData.caffeine ? 'active' : ''}`} onClick={() => setFormData(p => ({...p, caffeine: !p.caffeine}))}>☕ Caféine</button>
@@ -119,11 +118,11 @@ const NutritionForm = ({ onClose, onSave, initialData }) => {
                         <button type="button" className={`chip ${formData.tags.includes('lactose_free') ? 'active' : ''}`} onClick={() => toggleArrayItem('tags', 'lactose_free')}>🥛 Sans Lactose</button>
                     </div>
 
-                    <div className="form-section-title">Moment de consommation</div>
+                    <div className="form-section-title">Moment</div>
                     <div className="tags-selector">
                         <button type="button" className={`chip blue ${formData.timing.includes('pre') ? 'active' : ''}`} onClick={() => toggleArrayItem('timing', 'pre')}>Avant</button>
                         <button type="button" className={`chip orange ${formData.timing.includes('during') ? 'active' : ''}`} onClick={() => toggleArrayItem('timing', 'during')}>Pendant</button>
-                        <button type="button" className={`chip green ${formData.timing.includes('post') ? 'active' : ''}`} onClick={() => toggleArrayItem('timing', 'post')}>Après (Récup)</button>
+                        <button type="button" className={`chip green ${formData.timing.includes('post') ? 'active' : ''}`} onClick={() => toggleArrayItem('timing', 'post')}>Après</button>
                     </div>
 
                     <div className="form-grid-2">
@@ -131,16 +130,15 @@ const NutritionForm = ({ onClose, onSave, initialData }) => {
                         <div className="form-group"><label>Alerte Min.</label><input type="number" name="min_quantity" value={formData.min_quantity} onChange={handleChange} /></div>
                     </div>
 
-                    {/* RECETTE (Si Maison) */}
                     {formData.tags.includes('homemade') && (
                         <div className="form-group">
-                            <label>Recette / Notes</label>
-                            <textarea name="recipe" value={formData.recipe} onChange={handleChange} rows="3" placeholder="Ingrédients, préparation..." />
+                            <label>Recette</label>
+                            <textarea name="recipe" value={formData.recipe} onChange={handleChange} rows="3" />
                         </div>
                     )}
 
-                    <button type="submit" className="primary-btn full-width" disabled={loading}>
-                        <FaSave /> {loading ? '...' : 'Enregistrer'}
+                    <button type="submit" className="primary-btn full-width">
+                        <FaSave /> {initialData ? 'Mettre à jour' : 'Enregistrer'}
                     </button>
                 </form>
             </div>

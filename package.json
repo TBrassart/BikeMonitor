@@ -13,14 +13,15 @@
     "@supabase/supabase-js": "^2.39.7",
     "chart.js": "^4.4.1",
     "chartjs-plugin-datalabels": "^2.2.0",
+    "leaflet": "^1.9.4",
     "rc-slider": "^10.5.0",
     "react": "^18.2.0",
     "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.2.0",
     "react-icons": "^5.0.1",
+    "react-leaflet": "^4.2.1",
     "react-router-dom": "^6.22.3",
-    "leaflet": "^1.9.4",
-    "react-leaflet": "^4.2.1"
+    "recharts": "^3.5.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",

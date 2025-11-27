@@ -3,15 +3,16 @@ import { FaPlus, FaMinus, FaAppleAlt, FaTint, FaCookieBite, FaExclamationTriangl
 // CORRECTION : On n'importe que nutritionService
 import { nutritionService } from '../../services/api';
 import NutritionForm from './NutritionForm';
+import NutritionDetail from './NutritionDetail';
 import './NutritionPage.css';
 import NutritionCalculator from './NutritionCalculator';
 
 const NutritionPage = () => {
     const [items, setItems] = useState([]);
-    const [filter, setFilter] = useState('solid'); // 'solid' ou 'liquid'
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [editingItem, setEditingItem] = useState(null);
+    const [detailItem, setDetailItem] = useState(null);
 
     useEffect(() => {
         loadData();
@@ -80,26 +81,30 @@ const NutritionPage = () => {
         }
     };
 
-    const openEdit = (item) => {
-        setEditingItem(item);
-        setIsFormOpen(true);
+    // --- OUVERTURE DES MODALES ---
+
+    // 1. Clic sur la carte -> Ouvre le Détail
+    const openDetail = (item) => {
+        setDetailItem(item);
     };
 
+    // 2. Clic sur "Modifier" depuis le Détail -> Ouvre le Formulaire
+    const openEditFromDetail = (item) => {
+        setDetailItem(null); // On ferme le détail
+        setEditingItem(item); // On prépare l'édition
+        setIsFormOpen(true);  // On ouvre le form
+    };
+
+    // 3. Clic sur "Ajouter" -> Ouvre le Formulaire vide
     const openNew = () => {
         setEditingItem(null);
         setIsFormOpen(true);
     };
 
-    // Filtrage (optionnel, ici on affiche tout ou on filtre par type si besoin)
-    // Pour l'instant on affiche tout, ou on peut filtrer par category_type si défini
-    const displayedItems = items; 
-
     if (isLoading) return <div className="loading">Chargement du garde-manger...</div>;
 
     return (
         <div className="nutrition-container">
-            
-            {/* HEADER */}
             <header className="page-header">
                 <div>
                     <h2 className="gradient-text">Nutrition</h2>
@@ -110,29 +115,30 @@ const NutritionPage = () => {
                 </button>
             </header>
 
-            {/* CALCULATEUR (On lui passe le stock) */}
             <NutritionCalculator inventory={items} onConsume={loadData} />
 
-            {/* LISTE */}
             <div className="nutrition-grid">
-                {displayedItems.length === 0 ? (
+                {items.length === 0 ? (
                     <div className="empty-state glass-panel">Stock vide.</div>
                 ) : (
-                    displayedItems.map(item => (
-                        <div key={item.id} className={`nutrition-card glass-panel ${item.quantity <= item.min_quantity ? 'low-stock' : ''}`} onClick={() => openEdit(item)}>
-
+                    items.map(item => (
+                        <div 
+                            key={item.id} 
+                            className={`nutrition-card glass-panel ${item.quantity <= item.min_quantity ? 'low-stock' : ''}`} 
+                            onClick={() => openDetail(item)} /* <--- MODIF ICI : on ouvre le détail */
+                            style={{cursor: 'pointer'}}
+                        >
                             <button className="delete-nutri-btn" onClick={(e) => handleDelete(e, item.id)}>
                                 <FaTrash />
                             </button>
 
                             <div className="card-icon">
-                                {/* Icône dynamique selon le type */}
                                 {item.category_type === 'drink' || item.category_type === 'gel' ? <FaTint /> : <FaCookieBite />}
                             </div>
                             
                             <div className="card-content">
                                 <h3>{item.name}</h3>
-                                <p className="brand">{item.brand} {item.caffeine ? '• ⚡ Caféine' : ''}</p>
+                                <p className="brand">{item.brand} {item.caffeine ? '• ⚡' : ''}</p>
                                 
                                 {item.quantity <= item.min_quantity && (
                                     <p className="stock-alert"><FaExclamationTriangle /> Stock bas</p>
@@ -149,7 +155,18 @@ const NutritionPage = () => {
                 )}
             </div>
 
-            {/* MODALE FORMULAIRE */}
+            {/* --- MODALES --- */}
+
+            {/* 1. FICHE DÉTAIL */}
+            {detailItem && (
+                <NutritionDetail 
+                    item={detailItem} 
+                    onClose={() => setDetailItem(null)}
+                    onEdit={openEditFromDetail} // On passe la fonction pour basculer vers l'édition
+                />
+            )}
+
+            {/* 2. FORMULAIRE (AJOUT / MODIF) */}
             {isFormOpen && (
                 <NutritionForm 
                     onClose={() => setIsFormOpen(false)} 

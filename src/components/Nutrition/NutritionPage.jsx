@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { FaPlus, FaMinus, FaAppleAlt, FaTint, FaCookieBite, FaExclamationTriangle, FaTrash } from 'react-icons/fa';
-import { bikeService } from '../../services/api';
-import NutritionForm from './NutritionForm'; // On va le créer juste après
+// CORRECTION : On n'importe que nutritionService
+import { nutritionService } from '../../services/api';
+import NutritionForm from './NutritionForm';
 import './NutritionPage.css';
 import NutritionCalculator from './NutritionCalculator';
 
@@ -19,8 +20,8 @@ const NutritionPage = () => {
     const loadData = async () => {
         setIsLoading(true);
         try {
-            const data = await bikeService.getNutrition();
-            setItems(data);
+            const data = await nutritionService.getAll();
+            setItems(data || []);
         } catch (e) {
             console.error(e);
         } finally {
@@ -29,22 +30,53 @@ const NutritionPage = () => {
     };
 
     const handleSaveItem = async (itemData) => {
-        if (editingItem) {
-            // UPDATE LOCAL
-            setItems(prev => prev.map(i => i.id === itemData.id ? itemData : i));
-        } else {
-            // CREATE
-            const added = await bikeService.addNutritionItem(itemData);
-            setItems(prev => [...prev, added]);
+        try {
+            if (editingItem) {
+                // UPDATE (CORRIGÉ : Appel API réel)
+                await nutritionService.update(itemData.id, itemData);
+            } else {
+                // CREATE (CORRIGÉ : Utilisation de nutritionService)
+                await nutritionService.add(itemData);
+            }
+            // On recharge pour être sûr d'avoir les données fraîches
+            loadData();
+            setIsFormOpen(false);
+            setEditingItem(null);
+        } catch (e) {
+            console.error("Erreur sauvegarde", e);
+            alert("Erreur lors de la sauvegarde");
         }
-        setEditingItem(null);
     };
 
-    const handleDelete = (e, id) => {
-        e.stopPropagation(); // Empêche d'ouvrir le formulaire
-        if(window.confirm("Supprimer ce produit ?")) {
-            setItems(prev => prev.filter(i => i.id !== id));
-            // Appel API delete si elle existait
+    const handleDelete = async (e, id) => {
+        e.stopPropagation(); // Empêche le clic sur la carte
+        if (window.confirm("Supprimer cet aliment ?")) {
+            try {
+                // CORRIGÉ : Utilisation de nutritionService
+                await nutritionService.delete(id);
+                loadData();
+            } catch (e) {
+                alert("Erreur suppression");
+            }
+        }
+    };
+
+    const handleStockChange = async (id, delta) => {
+        const item = items.find(i => i.id === id);
+        if (!item) return;
+
+        const newQty = Math.max(0, item.quantity + delta);
+        
+        // Optimiste UI update (pour la réactivité)
+        setItems(prev => prev.map(i => i.id === id ? { ...i, quantity: newQty } : i));
+
+        try {
+            // CORRIGÉ : Mise à jour simple du stock via update
+            // (Pour l'historique d'achat complet avec prix, on passera par la fiche détail plus tard)
+            await nutritionService.update(id, { quantity: newQty });
+        } catch (e) {
+            console.error(e);
+            loadData(); // Revert en cas d'erreur
         }
     };
 
@@ -53,83 +85,78 @@ const NutritionPage = () => {
         setIsFormOpen(true);
     };
 
-    const handleStockChange = async (id, change) => {
-        // Mise à jour optimiste (instantanée dans l'UI)
-        setItems(prev => prev.map(item => 
-            item.id === id ? { ...item, quantity: Math.max(0, item.quantity + change) } : item
-        ));
-        // Appel API silencieux
-        await bikeService.updateStock(id, change);
+    const openNew = () => {
+        setEditingItem(null);
+        setIsFormOpen(true);
     };
 
-    const handleAddItem = async (newItem) => {
-        const added = await bikeService.addNutritionItem(newItem);
-        setItems(prev => [...prev, added]);
-    };
+    // Filtrage (optionnel, ici on affiche tout ou on filtre par type si besoin)
+    // Pour l'instant on affiche tout, ou on peut filtrer par category_type si défini
+    const displayedItems = items; 
 
-    // Filtrage
-    const filteredItems = items.filter(item => item.category === filter);
-
-    if (isFormOpen) {
-        return <NutritionForm onClose={() => {setIsFormOpen(false); setEditingItem(null);}} onSave={handleSaveItem} initialData={editingItem} />;    }
+    if (isLoading) return <div className="loading">Chargement du garde-manger...</div>;
 
     return (
         <div className="nutrition-container">
+            
+            {/* HEADER */}
             <header className="page-header">
-                <h1>Nutrition & Hydratation</h1>
-                <button className="cta-add-standard" onClick={() => setIsFormOpen(true)}>
-                    <FaPlus /> Ajouter un produit
+                <div>
+                    <h2 className="gradient-text">Nutrition</h2>
+                    <p className="subtitle">Gère ton carburant</p>
+                </div>
+                <button className="add-btn primary-btn" onClick={openNew}>
+                    <FaPlus /> <span className="desktop-only">Ajouter</span>
                 </button>
             </header>
 
-            {/* On passe l'inventaire complet et la fonction pour déduire le stock */}
-            <NutritionCalculator inventory={items} onConsume={handleStockChange} />
+            {/* CALCULATEUR (On lui passe le stock) */}
+            <NutritionCalculator inventory={items} onConsume={loadData} />
 
-            {/* Navigation Onglets Interne */}
-            <div className="nutrition-tabs">
-                <button 
-                    className={`nutri-tab ${filter === 'solid' ? 'active' : ''}`}
-                    onClick={() => setFilter('solid')}
-                >
-                    <FaCookieBite /> Solide (Barres/Gels)
-                </button>
-                <button 
-                    className={`nutri-tab ${filter === 'liquid' ? 'active' : ''}`}
-                    onClick={() => setFilter('liquid')}
-                >
-                    <FaTint /> Hydratation (Boissons)
-                </button>
-            </div>
-
+            {/* LISTE */}
             <div className="nutrition-grid">
-                {filteredItems.map(item => (
-                    <div key={item.id} className={`nutrition-card ...`} onClick={() => openEdit(item)}>
+                {displayedItems.length === 0 ? (
+                    <div className="empty-state glass-panel">Stock vide.</div>
+                ) : (
+                    displayedItems.map(item => (
+                        <div key={item.id} className={`nutrition-card glass-panel ${item.quantity <= item.min_quantity ? 'low-stock' : ''}`} onClick={() => openEdit(item)}>
 
-                        <button className="delete-nutri-btn" onClick={(e) => handleDelete(e, item.id)}>
-                            <FaTrash />
-                        </button>
+                            <button className="delete-nutri-btn" onClick={(e) => handleDelete(e, item.id)}>
+                                <FaTrash />
+                            </button>
 
-                        <div className="card-icon">
-                            {item.category === 'solid' ? <FaCookieBite /> : <FaTint />}
-                        </div>
-                        
-                        <div className="card-content">
-                            <h3>{item.name}</h3>
-                            <p className="brand">{item.brand} • {item.flavor}</p>
+                            <div className="card-icon">
+                                {/* Icône dynamique selon le type */}
+                                {item.category_type === 'drink' || item.category_type === 'gel' ? <FaTint /> : <FaCookieBite />}
+                            </div>
                             
-                            {item.quantity <= item.minStock && (
-                                <p className="stock-alert"><FaExclamationTriangle /> Stock bas</p>
-                            )}
-                        </div>
+                            <div className="card-content">
+                                <h3>{item.name}</h3>
+                                <p className="brand">{item.brand} {item.caffeine ? '• ⚡ Caféine' : ''}</p>
+                                
+                                {item.quantity <= item.min_quantity && (
+                                    <p className="stock-alert"><FaExclamationTriangle /> Stock bas</p>
+                                )}
+                            </div>
 
-                        <div className="stock-controls" onClick={(e) => e.stopPropagation()}>
-                            <button onClick={() => handleStockChange(item.id, -1)}><FaMinus /></button>
-                            <span className="stock-value">{item.quantity}</span>
-                            <button onClick={() => handleStockChange(item.id, 1)}><FaPlus /></button>
+                            <div className="stock-controls" onClick={(e) => e.stopPropagation()}>
+                                <button onClick={() => handleStockChange(item.id, -1)}><FaMinus /></button>
+                                <span className="stock-value">{item.quantity}</span>
+                                <button onClick={() => handleStockChange(item.id, 1)}><FaPlus /></button>
+                            </div>
                         </div>
-                    </div>
-                ))}
+                    ))
+                )}
             </div>
+
+            {/* MODALE FORMULAIRE */}
+            {isFormOpen && (
+                <NutritionForm 
+                    onClose={() => setIsFormOpen(false)} 
+                    onSave={handleSaveItem} 
+                    initialData={editingItem}
+                />
+            )}
         </div>
     );
 };

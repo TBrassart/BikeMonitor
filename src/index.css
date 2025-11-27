@@ -274,3 +274,69 @@ button.secondary-btn {
     100% { background-position: -200% -200%; }
 }
 
+/* --- EFFETS DE TITRES --- */
+
+/* Base */
+.title-basic { color: var(--text-secondary); }
+
+/* Grimpeur (Vert Forêt) */
+.title-climber { color: #10b981; font-weight: 700; }
+
+/* Puissance (Rouge/Gras) */
+.title-power { color: #ef4444; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+
+/* Aéro (Italique Rapide) */
+.title-aero { color: #0ea5e9; font-style: italic; letter-spacing: 2px; }
+
+/* 1. NÉON (Clignotement lent) */
+.title-neon {
+    color: #fff;
+    text-shadow: 0 0 5px #00e5ff, 0 0 10px #00e5ff, 0 0 20px #00e5ff;
+    animation: textPulse 2s infinite alternate;
+}
+@keyframes textPulse {
+    from { text-shadow: 0 0 5px #00e5ff, 0 0 10px #00e5ff; }
+    to { text-shadow: 0 0 10px #00e5ff, 0 0 20px #00e5ff, 0 0 30px #00e5ff; }
+}
+
+/* 2. GLITCH (Tremblement) */
+.title-glitch {
+    color: #fff;
+    position: relative;
+    animation: textGlitch 3s infinite;
+}
+@keyframes textGlitch {
+    0% { text-shadow: 2px 0 #ff00c8, -2px 0 #00e5ff; transform: translate(0); }
+    2% { text-shadow: 2px 0 #ff00c8, -2px 0 #00e5ff; transform: translate(-2px, 1px); }
+    4% { text-shadow: 2px 0 #ff00c8, -2px 0 #00e5ff; transform: translate(0); }
+    100% { text-shadow: 2px 0 #ff00c8, -2px 0 #00e5ff; transform: translate(0); }
+}
+
+/* 3. FIRE (Feu/Orange) */
+.title-fire {
+    background: linear-gradient(0deg, #ff0000, #ffff00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 2px #ff4500);
+    font-weight: 800;
+}
+
+/* 4. GOLD SHINE (Brillance qui passe) */
+.title-gold-shine {
+    background: linear-gradient(to right, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-size: 200% auto;
+    animation: shine 3s linear infinite;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+@keyframes shine { to { background-position: 200% center; } }
+
+/* 5. MATRIX (Vert Code) */
+.title-matrix {
+    color: #0f0;
+    font-family: 'Courier New', monospace;
+    text-shadow: 0 0 5px #0f0;
+    font-weight: bold;
+}

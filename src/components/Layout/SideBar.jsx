@@ -36,7 +36,7 @@ function SideBar() {
                 const title = invData.find(i => i.shop_items.type === 'title' && i.is_equipped);
                 
                 if (badge) setEquippedBadge(badge.shop_items.asset_data);
-                if (title) setEquippedTitle(title.shop_items.name);
+                if (title) setEquippedTitle(title.shop_items);
             }
         } catch (e) {
             console.error("Erreur chargement sidebar", e);
@@ -78,7 +78,12 @@ function SideBar() {
                     
                     {/* AFFICHAGE DU TITRE */}
                     {equippedTitle ? (
-                        <span className="app-name" style={{color: 'var(--neon-purple)'}}>{equippedTitle}</span>
+                        <span 
+                            className={`app-name ${equippedTitle.asset_data?.className || ''}`}
+                            style={!equippedTitle.asset_data?.className ? {color: 'var(--neon-purple)'} : {}}
+                        >
+                            {equippedTitle.name}
+                        </span>
                     ) : (
                         <span className="app-name">BikeMonitor</span>
                     )}

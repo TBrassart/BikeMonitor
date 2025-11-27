@@ -408,26 +408,59 @@ export const api = {
         }
         return data;
     },
-    // --- NUTRITION ---
+    // --- NUTRITION v2 ---
     async getNutrition() {
-        const { data, error } = await supabase.from('nutrition').select('*');
+        const { data, error } = await supabase
+            .from('nutrition')
+            .select('*')
+            .order('quantity', { ascending: true }); // C'est mieux de trier par stock
         if (error) throw error;
         return data || [];
     },
     async addNutrition(item) {
         const user = await authService.getCurrentUser();
-        const { data, error } = await supabase.from('nutrition').insert([{ ...item, user_id: user.id }]).select();
+        
+        const cleanItem = {
+            ...item,
+            user_id: user.id,
+            type: item.category_type || 'other', 
+            
+            // On s'assure que les chiffres ne sont pas null/NaN
+            carbs: parseFloat(item.carbs) || 0,
+            proteins: parseFloat(item.proteins) || 0,
+            fat: parseFloat(item.fat) || 0,
+            quantity: parseInt(item.quantity) || 0,
+            min_quantity: parseInt(item.min_quantity) || 0
+        };
+        
+        // On retire l'ID si c'est une création pour laisser Supabase le générer
+        delete cleanItem.id; 
+        
+        const { data, error } = await supabase.from('nutrition').insert([cleanItem]).select();
         if (error) throw error;
         return data;
     },
     async updateNutrition(id, updates) {
-        const { error } = await supabase.from('nutrition').update(updates).eq('id', id);
+        const cleanUpdates = { ...updates };
+        
+        if (cleanUpdates.category_type) {
+            cleanUpdates.type = cleanUpdates.category_type;
+        }
+        delete cleanUpdates.id;
+
+        const { error } = await supabase
+            .from('nutrition')
+            .update(cleanUpdates)
+            .eq('id', id);
+            
         if (error) throw error;
     },
+
     async deleteNutrition(id) {
         const { error } = await supabase.from('nutrition').delete().eq('id', id);
         if (error) throw error;
     },
+    
     // NUTRITION AVANCÉE
     async getNutritionHistory(itemId) {
         const { data, error } = await supabase

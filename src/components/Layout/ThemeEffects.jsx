@@ -354,193 +354,6 @@ const ThemeEffects = ({ effect }) => {
             });
         };
 
-        // 11. MOUNTAIN (Parallaxe) ---
-
-        const createPeaks = (count, minHeight, maxHeight) => {
-            const points = [];
-            const step = canvas.width / count;
-            for (let i = 0; i <= count; i++) {
-                // Hauteur aléatoire massive
-                const h = minHeight + Math.random() * (maxHeight - minHeight);
-                points.push({ x: i * step, y: canvas.height - h });
-            }
-            return points;
-        };
-        // Génération des crêtes de montagne
-        const m1 = createPeaks(3, 300, 500); // Premier plan (Sombre)
-        const m2 = createPeaks(5, 400, 700); // Arrière plan (Plus clair, très haut)
-        
-        let snowY = 0;
-
-        const drawMountain = (time) => {
-            // Ciel Dégradé (Nuit étoilée)
-            const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            grad.addColorStop(0, '#020617'); 
-            grad.addColorStop(1, '#1e293b');
-            ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Lune (Monte lentement)
-            const moonY = canvas.height * 0.2 + Math.sin(time * 0.00005) * 50;
-            ctx.fillStyle = '#f8fafc';
-            ctx.shadowBlur = 30; ctx.shadowColor = 'rgba(255,255,255,0.5)';
-            ctx.beginPath(); ctx.arc(canvas.width * 0.8, moonY, 60, 0, Math.PI*2); ctx.fill();
-            ctx.shadowBlur = 0;
-
-            const drawPoly = (points, color) => {
-                ctx.fillStyle = color;
-                ctx.beginPath();
-                ctx.moveTo(0, canvas.height);
-                // Lissage des courbes (Bézier) pour faire moins "dents de scie"
-                for (let i = 0; i < points.length - 1; i++) {
-                    const xc = (points[i].x + points[i + 1].x) / 2;
-                    const yc = (points[i].y + points[i + 1].y) / 2;
-                    ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
-                }
-                ctx.lineTo(canvas.width, canvas.height);
-                ctx.fill();
-            };
-
-            // Montagnes (Fixes pour majesté, ou déplacement imperceptible)
-            drawPoly(m2, '#334155'); // Lointain
-            drawPoly(m1, '#1e293b'); // Proche
-
-            // Neige (Douce)
-            ctx.fillStyle = 'rgba(255,255,255,0.2)';
-            snowY += 0.2;
-            for(let i=0; i<80; i++) {
-                const x = (i * 137) % canvas.width;
-                const y = (snowY + i * 97) % canvas.height;
-                ctx.beginPath(); ctx.arc(x, y, Math.random()*2, 0, Math.PI*2); ctx.fill();
-            }
-        };
-
-        // 12. NATURE (Forêt & Lucioles) ---
-        const trees = Array(8).fill().map((_, i) => ({
-            x: i * (canvas.width/6) + Math.random()*50,
-            width: Math.random() * 60 + 80, // Troncs larges
-        }));
-        
-        const drawNature = (time) => {
-            // Fond vert profond
-            const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            grad.addColorStop(0, '#022c22'); grad.addColorStop(1, '#064e3b');
-            ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Rayons de lumière (God Rays) qui bougent
-            ctx.save();
-            ctx.globalCompositeOperation = 'screen';
-            const rayGrad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-            rayGrad.addColorStop(0, 'rgba(250, 204, 21, 0.08)');
-            rayGrad.addColorStop(1, 'transparent');
-            ctx.fillStyle = rayGrad;
-            ctx.beginPath();
-            const sway = Math.sin(time * 0.0002) * 100;
-            ctx.moveTo(0, 0); 
-            ctx.lineTo(canvas.width/2 + sway, canvas.height);
-            ctx.lineTo(canvas.width/2 + 400 + sway, canvas.height);
-            ctx.lineTo(300, 0);
-            ctx.fill();
-            ctx.restore();
-
-            // Troncs d'arbres (Silhouettes massives au premier plan)
-            ctx.fillStyle = '#022c22';
-            trees.forEach(t => {
-                ctx.fillRect(t.x, 0, t.width, canvas.height);
-            });
-            
-            // Lucioles / Spores (Particules)
-            for(let i=0; i<30; i++) {
-                const x = (Math.sin(time*0.0003 + i)*canvas.width/2) + canvas.width/2;
-                const y = (Math.cos(time*0.0002 + i * 13)*canvas.height/2) + canvas.height/2;
-                ctx.fillStyle = 'rgba(250, 204, 21, 0.4)';
-                ctx.beginPath(); ctx.arc(x, y, Math.random()*3, 0, Math.PI*2); ctx.fill();
-            }
-        };
-
-        // 13. PINOT (Fumigènes & Chèvre) ---
-        let pinotRoadOffset = 0;
-        // Supporters statiques sur les côtés (Foule dense)
-        const supporters = [];
-        const sideMargin = 150;
-        for(let i=0; i<50; i++) {
-            supporters.push({
-                x: Math.random() > 0.5 ? Math.random()*(canvas.width/2-sideMargin) : canvas.width/2+sideMargin+Math.random()*(canvas.width/2-sideMargin),
-                y: Math.random() * canvas.height,
-                color: `hsl(${Math.random()*360}, 70%, 50%)`,
-                jumpOffset: Math.random() * 100,
-                hasFlare: Math.random() > 0.85
-            });
-        }
-        const pinotSmoke = [];
-        let goat = { x: -100, active: false }; // Kimberley
-        let nextAttack = 0;
-
-        const drawPinot = (time) => {
-            const cx = canvas.width / 2;
-            ctx.fillStyle = '#333'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Foule
-            supporters.forEach(s => {
-                const jump = Math.abs(Math.sin(time * 0.008 + s.jumpOffset)) * 8;
-                ctx.fillStyle = s.color;
-                ctx.beginPath(); ctx.arc(s.x, s.y - jump, 8, 0, Math.PI*2); ctx.fill();
-                ctx.fillRect(s.x - 8, s.y + 8 - jump, 16, 20);
-
-                if (s.hasFlare && Math.random() > 0.8) {
-                    pinotSmoke.push({
-                        x: s.x, y: s.y - jump - 10,
-                        vx: (cx - s.x)*0.002, vy: -2, life: 1, size: 10,
-                        color: Math.random() > 0.6 ? 'rgba(0,85,164,0.3)' : (Math.random() > 0.5 ? 'rgba(255,255,255,0.3)' : 'rgba(239,65,53,0.3)')
-                    });
-                }
-            });
-
-            // Route
-            ctx.fillStyle = '#222'; ctx.fillRect(cx - sideMargin, 0, sideMargin * 2, canvas.height);
-            pinotRoadOffset += 4; if (pinotRoadOffset > 600) pinotRoadOffset = 0;
-
-            // Textes au sol
-            ctx.save(); ctx.textAlign = 'center'; ctx.font = 'bold 40px Arial'; ctx.fillStyle = 'rgba(255,255,255,0.4)';
-            ["ALLEZ", "THIBAUT", "PINOT", "🐐"].forEach((word, i) => {
-                const y = (i * 200 + pinotRoadOffset) % 1000;
-                if(y < canvas.height) ctx.fillText(word, cx, y);
-            });
-            ctx.restore();
-
-            // Thibaut & Kim
-            const bikeY = canvas.height - 150;
-            
-            // Thibaut (En danseuse)
-            ctx.save(); ctx.translate(cx - 20, bikeY);
-            const sway = Math.sin(time * 0.01) * 20; // Danseuse
-            ctx.translate(sway, 0);
-            ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.beginPath(); ctx.ellipse(5, 10, 15, 30, 0, 0, Math.PI*2); ctx.fill(); // Ombre
-            ctx.fillStyle = '#0055a4'; ctx.beginPath(); ctx.ellipse(0, 0, 12, 25, 0, 0, Math.PI*2); ctx.fill(); // Maillot
-            ctx.fillStyle = '#fff'; ctx.fillRect(-8, -10, 16, 5); ctx.fillStyle = '#ef4135'; ctx.fillRect(-8, -5, 16, 5);
-            ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, -15, 8, 0, Math.PI*2); ctx.fill(); // Casque
-            ctx.restore();
-
-            // Kim (La chèvre qui court)
-            ctx.save(); 
-            ctx.translate(cx + 40, bikeY + 30);
-            const goatJump = Math.abs(Math.sin(time * 0.015)) * 10;
-            ctx.translate(0, -goatJump);
-            ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(0, 0, 12, 8, 0, 0, Math.PI*2); ctx.fill(); // Corps
-            ctx.beginPath(); ctx.arc(10, -5, 6, 0, Math.PI*2); ctx.fill(); // Tête
-            ctx.restore();
-
-            // Fumée (Premier plan)
-            pinotSmoke.forEach((p, i) => {
-                p.x += p.vx; p.y += p.vy; p.life -= 0.005; p.size += 0.5;
-                if (p.life <= 0) pinotSmoke.splice(i, 1);
-                else {
-                    ctx.fillStyle = p.color; ctx.globalAlpha = p.life;
-                    ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
-                }
-            });
-            ctx.globalAlpha = 1;
-        };
-
         // 14. MOUTONS (IA) ---
         // Initialisation du troupeau
         const sheepHerd = Array(12).fill().map(() => ({
@@ -710,7 +523,7 @@ const ThemeEffects = ({ effect }) => {
             // Lignes Horizontales (Qui avancent)
             // Z va de l'horizon (loin) vers nous (proche)
             const speed = 0.002;
-            const offset = (time * speed) % 1; // 0 à 1
+            const offset = (time * speed) % 0.5; // 0 à 1
             
             ctx.beginPath();
             for (let z = 0; z < 1; z += 0.05) {
@@ -753,7 +566,7 @@ const ThemeEffects = ({ effect }) => {
             if (effect === 'pinot') drawPinot(time);
             if (effect === 'sheep') drawSheep(time);
             if (effect === 'retrowave') drawRetrowave(time);
-            
+
             requestRef.current = requestAnimationFrame(render);
         };
 

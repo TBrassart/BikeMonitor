@@ -1,154 +1,208 @@
 import React, { useState, useEffect } from 'react';
-import { FaSave, FaTimes, FaTshirt, FaAppleAlt } from 'react-icons/fa';
-import { bikeService } from '../../services/api';
-import '../Bike/BikeForm.css'; // Réutilisation style form global
+import { kitService, equipmentService, nutritionService } from '../../services/api';
+import { FaSave, FaTimes, FaPlus, FaTrash, FaBoxOpen, FaPen, FaSmile } from 'react-icons/fa';
+import './KitsPage.css';
 
-const KitForm = ({ onClose, onSave }) => {
-    const [kitName, setKitName] = useState('');
-    const [inventory, setInventory] = useState({ equipment: [], nutrition: [] });
-    const [selectedItems, setSelectedItems] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
+const KitForm = ({ onClose, onSave, initialData }) => {
+    const [loading, setLoading] = useState(false);
+    const [formData, setFormData] = useState({
+        name: '', description: '', icon: '🎒', items: []
+    });
+
+    // Données pour la sélection
+    const [stockEquipment, setStockEquipment] = useState([]);
+    const [stockNutrition, setStockNutrition] = useState([]);
+    
+    // État de l'ajout
+    const [addMode, setAddMode] = useState('stock'); // 'stock' | 'manual'
+    const [selectedStockId, setSelectedStockId] = useState('');
+    const [newItem, setNewItem] = useState({ label: '', category: 'gear' });
+
+    // État Modale Icône
+    const [showIconPicker, setShowIconPicker] = useState(false);
+    const iconsList = ['🎒', '🌧️', '☀️', '🏔️', '🏁', '🚴', '🛠️', '🚑', '🌙', '🏕️', '🥶', '🔥', '🌊', '🔋', '🥪'];
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [equip, nutri] = await Promise.all([
-                    bikeService.getEquipment(),
-                    bikeService.getNutrition()
-                ]);
-                setInventory({ equipment: equip, nutrition: nutri });
-            } catch (e) {
-                console.error(e);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchData();
-    }, []);
+        loadResources();
+        if (initialData) setFormData(initialData);
+    }, [initialData]);
 
-    const toggleItem = (item, category) => {
-        const exists = selectedItems.find(i => i.id === item.id);
-        if (exists) {
-            // Retirer
-            setSelectedItems(prev => prev.filter(i => i.id !== item.id));
+    const loadResources = async () => {
+        const [equip, nutri] = await Promise.all([
+            equipmentService.getAll(),
+            nutritionService.getAll()
+        ]);
+        setStockEquipment(equip || []);
+        setStockNutrition(nutri || []);
+    };
+
+    // --- GESTION AJOUT ---
+    
+    const handleStockSelect = (e) => {
+        const id = e.target.value;
+        setSelectedStockId(id);
+        
+        if (!id) return;
+
+        // On cherche dans l'équipement
+        let found = stockEquipment.find(i => i.id === id);
+        let cat = 'gear';
+
+        if (found) {
+            // Mapping catégorie Equipement -> Kit
+            if (found.type === 'textile') cat = 'wear';
+            if (found.type === 'tech') cat = 'tech';
         } else {
-            // Ajouter
-            setSelectedItems(prev => [...prev, { 
-                id: item.id, 
-                name: item.name, 
-                category, 
-                quantity: 1 // Par défaut
-            }]);
+            // Sinon on cherche dans la nutrition
+            found = stockNutrition.find(i => i.id === id);
+            if (found) cat = 'nutrition';
+        }
+
+        if (found) {
+            setNewItem({ label: found.name, category: cat });
         }
     };
 
-    const handleSubmit = (e) => {
+    const addItem = (e) => {
         e.preventDefault();
-        if (!kitName || selectedItems.length === 0) return;
-        onSave({ name: kitName, items: selectedItems });
+        if (!newItem.label) return;
+        
+        setFormData(prev => ({
+            ...prev,
+            items: [...prev.items, { ...newItem, checked: false }]
+        }));
+        
+        // Reset
+        setNewItem({ label: '', category: 'gear' });
+        setSelectedStockId('');
+    };
+
+    const removeItem = (index) => {
+        const updated = [...formData.items];
+        updated.splice(index, 1);
+        setFormData({ ...formData, items: updated });
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            if (initialData) await kitService.update(initialData.id, formData);
+            else await kitService.add(formData);
+            if (onSave) onSave();
+            onClose();
+        } catch(e) { alert("Erreur sauvegarde"); } 
+        finally { setLoading(false); }
     };
 
     return (
-        <div className="bike-form-container">
-            <header className="form-header">
-                <h2>Nouveau Kit</h2>
-                <button onClick={onClose} className="close-btn"><FaTimes /></button>
-            </header>
-
-            <form onSubmit={handleSubmit} className="bike-form">
-                {/* Partie Gauche : Nom et Résumé */}
-                <section className="form-section">
-                    <h3>Détails du Kit</h3>
-                    <div className="input-group full-width">
-                        <label>Nom du kit *</label>
-                        <input 
-                            type="text" 
-                            value={kitName} 
-                            onChange={(e) => setKitName(e.target.value)} 
-                            placeholder="Ex: Sortie Pluie, Sortie Longue..." 
-                            required
-                        />
-                    </div>
-                    
-                    <div className="selected-summary" style={{ marginTop: '20px' }}>
-                        <h4>{selectedItems.length} éléments sélectionnés</h4>
-                        <ul style={{ listStyle: 'none', padding: 0, color: '#aaa' }}>
-                            {selectedItems.map(i => <li key={i.id}>• {i.name}</li>)}
-                        </ul>
-                    </div>
-                </section>
-
-                {/* Partie Droite : Sélecteur d'items */}
-                <section className="form-section advanced-section">
-                    <h3>Contenu du Kit</h3>
-                    {isLoading ? <p>Chargement inventaire...</p> : (
-                        <div className="inventory-selector">
-                            {/* 1. NUTRITION SOLIDE */}
-                            <h4 style={{ color: 'var(--color-neon-primary)', marginTop:'10px' }}>Barres & Gels</h4>
-                            <div className="selector-grid">
-                                {inventory.nutrition.filter(i => i.category === 'solid').map(item => (
-                                    <div 
-                                        key={item.id} 
-                                        className={`chip selector-chip ${selectedItems.find(i=>i.id===item.id) ? 'active' : ''}`}
-                                        onClick={() => toggleItem(item, 'nutrition')}
-                                    >
-                                        {item.name}
-                                    </div>
-                                ))}
-                            </div>
-
-                            {/* 2. NUTRITION LIQUIDE */}
-                            <h4 style={{ color: 'var(--color-neon-primary)', marginTop:'20px' }}>Hydratation</h4>
-                            <div className="selector-grid">
-                                {inventory.nutrition.filter(i => i.category === 'liquid').map(item => (
-                                    <div 
-                                        key={item.id} 
-                                        className={`chip selector-chip ${selectedItems.find(i=>i.id===item.id) ? 'active' : ''}`}
-                                        onClick={() => toggleItem(item, 'nutrition')}
-                                    >
-                                        {item.name}
-                                    </div>
-                                ))}
-                            </div>
-
-                            {/* 3. TEXTILE */}
-                            <h4 style={{ color: 'var(--color-neon-primary)', marginTop:'20px' }}>Textile</h4>
-                            <div className="selector-grid">
-                                {inventory.equipment.filter(i => i.category === 'textile').map(item => (
-                                    <div 
-                                        key={item.id} 
-                                        className={`chip selector-chip ${selectedItems.find(i=>i.id===item.id) ? 'active' : ''}`}
-                                        onClick={() => toggleItem(item, 'equipment')}
-                                    >
-                                        {item.name}
-                                    </div>
-                                ))}
-                            </div>
-
-                            {/* 4. TECH / ACCESSOIRES */}
-                            <h4 style={{ color: 'var(--color-neon-primary)', marginTop:'20px' }}>Tech & Accessoires</h4>
-                            <div className="selector-grid">
-                                {inventory.equipment.filter(i => i.category === 'tech').map(item => (
-                                    <div 
-                                        key={item.id} 
-                                        className={`chip selector-chip ${selectedItems.find(i=>i.id===item.id) ? 'active' : ''}`}
-                                        onClick={() => toggleItem(item, 'equipment')}
-                                    >
-                                        {item.name}
-                                    </div>
-                                ))}
-                            </div>
-
+        <div className="modal-overlay">
+            {/* MODALE SÉLECTION ICONE (Z-INDEX SUPÉRIEUR) */}
+            {showIconPicker && (
+                <div className="icon-picker-overlay" onClick={() => setShowIconPicker(false)}>
+                    <div className="glass-panel icon-picker-modal" onClick={e => e.stopPropagation()}>
+                        <h4>Choisir une icône</h4>
+                        <div className="icons-grid">
+                            {iconsList.map(ico => (
+                                <button key={ico} onClick={() => { setFormData({...formData, icon: ico}); setShowIconPicker(false); }} className="icon-option">
+                                    {ico}
+                                </button>
+                            ))}
                         </div>
-                    )}
-                </section>
-
-                <div className="form-actions">
-                    <button type="submit" className="save-btn" disabled={!kitName || selectedItems.length === 0}>
-                        <FaSave /> Créer le Kit
-                    </button>
+                    </div>
                 </div>
-            </form>
+            )}
+
+            <div className="glass-panel modal-content kit-form-modal">
+                <div className="form-header">
+                    <h3>{initialData ? 'Modifier' : 'Nouveau'} Kit</h3>
+                    <button onClick={onClose} className="close-btn"><FaTimes /></button>
+                </div>
+
+                <form onSubmit={handleSubmit}>
+                    <div className="form-group">
+                        <label>Identité du Kit</label>
+                        <div style={{display:'flex', gap:'10px'}}>
+                            <button 
+                                type="button" 
+                                className="icon-select-btn" 
+                                onClick={() => setShowIconPicker(true)}
+                            >
+                                {formData.icon}
+                            </button>
+                            <input 
+                                style={{flex:1}} 
+                                value={formData.name} 
+                                onChange={e => setFormData({...formData, name: e.target.value})} 
+                                placeholder="Nom (ex: Sortie Pluie)" 
+                                required 
+                            />
+                        </div>
+                    </div>
+
+                    {/* ZONE D'AJOUT INTELLIGENTE */}
+                    <div className="add-item-box glass-panel">
+                        <div className="add-tabs">
+                            <button type="button" className={addMode === 'stock' ? 'active' : ''} onClick={() => setAddMode('stock')}><FaBoxOpen /> Depuis Stock</button>
+                            <button type="button" className={addMode === 'manual' ? 'active' : ''} onClick={() => setAddMode('manual')}><FaPen /> Manuel</button>
+                        </div>
+
+                        <div className="add-inputs">
+                            {addMode === 'stock' ? (
+                                <select className="neon-select full-width" value={selectedStockId} onChange={handleStockSelect}>
+                                    <option value="">-- Choisir un objet --</option>
+                                    <optgroup label="Nutrition">
+                                        {stockNutrition.map(n => <option key={n.id} value={n.id}>{n.name} ({n.brand})</option>)}
+                                    </optgroup>
+                                    <optgroup label="Équipement">
+                                        {stockEquipment.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+                                    </optgroup>
+                                </select>
+                            ) : (
+                                <input 
+                                    value={newItem.label} 
+                                    onChange={e => setNewItem({...newItem, label: e.target.value})} 
+                                    placeholder="Nom de l'objet..." 
+                                    className="full-width"
+                                />
+                            )}
+
+                            <div style={{display:'flex', gap:'10px', marginTop:'10px'}}>
+                                <select 
+                                    value={newItem.category} 
+                                    onChange={e => setNewItem({...newItem, category: e.target.value})}
+                                    className="neon-select"
+                                    style={{width:'140px'}}
+                                >
+                                    <option value="gear">Matos 🔧</option>
+                                    <option value="wear">Vêtements 🧢</option>
+                                    <option value="nutrition">Nutrition 🍎</option>
+                                    <option value="tech">Tech 📱</option>
+                                </select>
+                                <button onClick={addItem} className="add-action-btn">
+                                    <FaPlus /> Ajouter
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* LISTE */}
+                    <div className="items-preview-list">
+                        {formData.items.length === 0 && <p className="empty-text">Liste vide.</p>}
+                        {formData.items.map((it, i) => (
+                            <div key={i} className="preview-item">
+                                <span className={`cat-dot ${it.category}`}></span>
+                                <span style={{flex:1}}>{it.label}</span>
+                                <FaTrash className="trash-icon" onClick={() => removeItem(i)} />
+                            </div>
+                        ))}
+                    </div>
+
+                    <button type="submit" className="primary-btn full-width" style={{marginTop:'20px'}} disabled={loading}>
+                        <FaSave /> Enregistrer le Kit
+                    </button>
+                </form>
+            </div>
         </div>
     );
 };

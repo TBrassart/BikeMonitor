@@ -1,160 +1,105 @@
 import React, { useState, useEffect } from 'react';
-import { FaPlus, FaListAlt, FaCheckSquare, FaTrash, FaArrowLeft } from 'react-icons/fa';
-import { bikeService } from '../../services/api';
+import { kitService } from '../../services/api';
+import { FaPlus, FaPlay, FaPen, FaTrash } from 'react-icons/fa';
 import KitForm from './KitForm';
+import KitPlayer from './KitPlayer';
 import './KitsPage.css';
 
-const KitsPage = () => {
+function KitsPage() {
     const [kits, setKits] = useState([]);
-    const [view, setView] = useState('list'); // 'list', 'form', 'checklist'
-    const [activeKit, setActiveKit] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isConsuming, setIsConsuming] = useState(false);
+    const [loading, setLoading] = useState(true);
+    
+    // Modales
+    const [showForm, setShowForm] = useState(false);
+    const [editingKit, setEditingKit] = useState(null);
+    const [playingKit, setPlayingKit] = useState(null); // Kit en cours de vérification
 
     useEffect(() => {
         loadKits();
     }, []);
 
     const loadKits = async () => {
-        setIsLoading(true);
-        const data = await bikeService.getKits();
-        setKits(data);
-        setIsLoading(false);
-    };
-
-    const handleSaveKit = async (newKit) => {
-        const saved = await bikeService.createKit(newKit);
-        setKits(prev => [...prev, saved]);
-        setView('list');
+        setLoading(true);
+        try {
+            const data = await kitService.getAll();
+            setKits(data || []);
+        } catch (e) { console.error(e); } 
+        finally { setLoading(false); }
     };
 
     const handleDelete = async (e, id) => {
         e.stopPropagation();
         if(window.confirm("Supprimer ce kit ?")) {
-            await bikeService.deleteKit(id);
-            setKits(prev => prev.filter(k => k.id !== id));
+            await kitService.delete(id);
+            loadKits();
         }
     };
 
-    const openChecklist = (kit) => {
-        // Créer une copie locale pour l'état des cases à cocher
-        setActiveKit(JSON.parse(JSON.stringify(kit))); 
-        setView('checklist');
+    const handleEdit = (e, kit) => {
+        e.stopPropagation();
+        setEditingKit(kit);
+        setShowForm(true);
     };
 
-    const toggleCheckItem = (index) => {
-        if (!activeKit) return;
-        const updatedItems = [...activeKit.items];
-        updatedItems[index].checked = !updatedItems[index].checked;
-        setActiveKit({ ...activeKit, items: updatedItems });
+    const openNew = () => {
+        setEditingKit(null);
+        setShowForm(true);
     };
 
-    const handleReadyToGo = async () => {
-        if (!activeKit) return;
-        
-        // On demande confirmation pour éviter les clics accidentels
-        if (window.confirm("Bonne sortie ! 🚴\nDéduire la nutrition utilisée de ton stock ?")) {
-            setIsConsuming(true);
-            try {
-                // On récupère les items cochés (ou tous, selon ta logique. Ici on prend tout le kit par défaut)
-                // Si tu veux déduire SEULEMENT ce qui est coché : 
-                // const itemsToConsume = activeKit.items.filter(i => i.checked);
-                const itemsToConsume = activeKit.items; 
+    if (loading) return <div className="loading">Chargement des checklists...</div>;
 
-                await bikeService.consumeKitItems(itemsToConsume);
-                alert("Stock mis à jour. Bon ride !");
-            } catch (e) {
-                console.error(e);
-                alert("Erreur lors de la mise à jour du stock.");
-            } finally {
-                setIsConsuming(false);
-                setView('list'); // Retour à la liste
-                setActiveKit(null);
-            }
-        } else {
-            // Si l'utilisateur annule la déduction, on ferme juste
-            setView('list');
-            setActiveKit(null);
-        }
-    };
-
-    // --- VUE FORMULAIRE ---
-    if (view === 'form') {
-        return <KitForm onClose={() => setView('list')} onSave={handleSaveKit} />;
-    }
-
-    // --- VUE CHECKLIST (AVANT SORTIE) ---
-    if (view === 'checklist' && activeKit) {
-        const progress = Math.round((activeKit.items.filter(i => i.checked).length / activeKit.items.length) * 100);
-        
-        return (
-            <div className="kits-container checklist-mode">
-                <header className="checklist-header">
-                    <button onClick={() => setView('list')} className="back-btn"><FaArrowLeft /></button>
-                    <h2>{activeKit.name}</h2>
-                </header>
-                
-                <div className="progress-bar-container">
-                    <div className="progress-bar" style={{ width: `${progress}%` }}></div>
-                </div>
-                <p className="progress-text">{progress}% Prêt</p>
-
-                <div className="checklist-items">
-                    {activeKit.items.map((item, index) => (
-                        <div 
-                            key={index} 
-                            className={`checklist-item ${item.checked ? 'checked' : ''}`}
-                            onClick={() => toggleCheckItem(index)}
-                        >
-                            <div className="check-box">
-                                {item.checked && <FaCheckSquare />}
-                            </div>
-                            <div className="item-name">
-                                {item.name} {item.quantity > 1 && `(x${item.quantity})`}
-                            </div>
-                        </div>
-                    ))}
-                </div>
-                
-                {progress === 100 && (
-                    <button 
-                        className="cta-ready" 
-                        onClick={handleReadyToGo} // <--- NOUVELLE FONCTION
-                        disabled={isConsuming}
-                    >
-                        {isConsuming ? 'Mise à jour stock...' : '🚀 Je suis prêt !'}
-                    </button>
-                )}
-            </div>
-        );
-    }
-
-    // --- VUE LISTE DES KITS ---
     return (
-        <div className="kits-container">
+        <div className="kits-page">
             <header className="page-header">
-                <h1>Mes Kits de Sortie</h1>
-                <button className="cta-add-standard" onClick={() => setView('form')}>
-                    <FaPlus /> Créer un kit
+                <div>
+                    <h2 className="gradient-text">Checklists</h2>
+                    <p className="subtitle">Ne rien oublier avant le départ</p>
+                </div>
+                <button className="add-btn primary-btn" onClick={openNew}>
+                    <FaPlus /> <span className="desktop-only">Créer</span>
                 </button>
             </header>
 
             <div className="kits-grid">
-                {kits.map(kit => (
-                    <div key={kit.id} className="kit-card" onClick={() => openChecklist(kit)}>
-                        <div className="kit-icon"><FaListAlt /></div>
-                        <div className="kit-info">
-                            <h3>{kit.name}</h3>
-                            <p>{kit.items.length} objets</p>
+                {kits.length === 0 ? (
+                    <div className="empty-state glass-panel">Crée ton premier kit de départ !</div>
+                ) : (
+                    kits.map(kit => (
+                        <div key={kit.id} className="kit-card glass-panel" onClick={() => setPlayingKit(kit)}>
+                            <div className="kit-icon-large">{kit.icon}</div>
+                            <div className="kit-info">
+                                <h3>{kit.name}</h3>
+                                <p>{kit.items?.length || 0} objets</p>
+                            </div>
+                            <div className="kit-actions">
+                                <button className="play-btn"><FaPlay /> LANCER</button>
+                                <div className="mini-actions">
+                                    <button onClick={(e) => handleEdit(e, kit)}><FaPen /></button>
+                                    <button onClick={(e) => handleDelete(e, kit.id)} className="del"><FaTrash /></button>
+                                </div>
+                            </div>
                         </div>
-                        <button className="delete-btn" onClick={(e) => handleDelete(e, kit.id)}>
-                            <FaTrash />
-                        </button>
-                    </div>
-                ))}
+                    ))
+                )}
             </div>
+
+            {/* MODALES */}
+            {showForm && (
+                <KitForm 
+                    initialData={editingKit} 
+                    onClose={() => setShowForm(false)} 
+                    onSave={loadKits} 
+                />
+            )}
+
+            {playingKit && (
+                <KitPlayer 
+                    kit={playingKit} 
+                    onClose={() => setPlayingKit(null)} 
+                />
+            )}
         </div>
     );
-};
+}
 
 export default KitsPage;

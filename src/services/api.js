@@ -500,19 +500,35 @@ export const api = {
         if (error) throw error;
         return data;
     },
-    async getKits() {
+async getKits() {
         const user = await authService.getCurrentUser();
-        try {
-            const { data, error } = await supabase.from('kits').select('*').eq('user_id', user.id);
-            if (error) return [];
-            return data || [];
-        } catch (e) { return []; }
+        const { data, error } = await supabase
+            .from('kits')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        return data || [];
     },
-    async addKit(item) {
+
+    async addKit(kitData) {
         const user = await authService.getCurrentUser();
-        const { data, error } = await supabase.from('kits').insert([{ ...item, user_id: user.id }]).select();
+        const { data, error } = await supabase
+            .from('kits')
+            .insert([{ ...kitData, user_id: user.id }])
+            .select();
         if (error) throw error;
         return data;
+    },
+
+    async updateKit(id, updates) {
+        const { error } = await supabase.from('kits').update(updates).eq('id', id);
+        if (error) throw error;
+    },
+
+    async deleteKit(id) {
+        const { error } = await supabase.from('kits').delete().eq('id', id);
+        if (error) throw error;
     },
     // --- ÉQUIPEMENTS (NOUVEAU) ---
     async getEquipment() {
@@ -940,7 +956,9 @@ export const libraryService = { getAll: () => api.getComponentLibrary() };
 
 export const kitService = {
     getAll: () => api.getKits(),
-    add: (data) => api.addKit(data)
+    add: (d) => api.addKit(d),
+    update: (id, d) => api.updateKit(id, d),
+    delete: (id) => api.deleteKit(id)
 };
 
 export const equipmentService = {

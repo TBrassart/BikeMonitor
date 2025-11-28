@@ -522,7 +522,7 @@ const ThemeEffects = ({ effect }) => {
 
             // Lignes Horizontales (Qui avancent)
             // Z va de l'horizon (loin) vers nous (proche)
-            const speed = 0.0005;
+            const speed = 0.0001;
             const offset = (time * speed) % 0.1; // 0 à 1
             
             ctx.beginPath();

@@ -23,7 +23,8 @@ function BikeForm() {
         type: 'Route',
         total_km: 0,
         weight: '',
-        size: ''
+        size: '',
+        serial_number: ''
     });
 
     useEffect(() => {
@@ -41,12 +42,12 @@ function BikeForm() {
                     name: data.name || '',
                     brand: data.brand || '',
                     model: data.model || '',
-                    // CORRECTION ICI : On s'assure que l'année est bien prise
                     model_year: data.model_year || new Date().getFullYear(),
                     type: data.type || 'Route',
                     total_km: data.total_km || 0,
                     weight: data.weight || '',
-                    size: data.size || ''
+                    size: data.size || '',
+                    serial_number: data.serial_number || ''
                 });
                 if (data.photo_url) setPreview(data.photo_url);
             }
@@ -147,7 +148,17 @@ function BikeForm() {
                         <input type="text" name="model" value={formData.model} onChange={handleChange} placeholder="Ex: Helios A8" />
                     </div>
 
-                    {/* CHAMP ANNÉE CORRIGÉ */}
+                    <div className="form-group">
+                        <label>Numéro de Série</label>
+                        <input 
+                            type="text" 
+                            name="serial_number" 
+                            value={formData.serial_number} 
+                            onChange={handleChange} 
+                            placeholder="Ex: SN123456789" 
+                        />
+                    </div>
+
                     <div className="form-group">
                         <label>Année (Millésime)</label>
                         <div className="input-icon-wrapper">

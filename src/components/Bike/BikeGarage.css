@@ -190,3 +190,92 @@
     color: white;
     border-color: #ef4444;
 }
+
+/* BOUTONS TOGGLE VUE */
+.view-toggle {
+    display: flex;
+    padding: 4px;
+    border-radius: 8px;
+    gap: 5px;
+    height: fit-content;
+}
+.view-toggle button {
+    background: transparent; border: none; color: var(--text-secondary);
+    padding: 8px; border-radius: 6px; cursor: pointer; display: flex;
+}
+.view-toggle button.active {
+    background: rgba(255,255,255,0.1); color: white;
+}
+
+/* CONTENEUR PRINCIPAL (Grid par défaut) */
+.bikes-container.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 25px;
+}
+
+/* MODE LISTE */
+.bikes-container.list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.bikes-container.list .garage-bike-card {
+    flex-direction: row; /* Image à gauche, texte à droite */
+    height: 120px;
+    align-items: center;
+}
+
+.bikes-container.list .bike-image-placeholder {
+    width: 150px;
+    height: 100%;
+    border-right: 1px solid rgba(255,255,255,0.1);
+}
+
+.bikes-container.list .bike-info {
+    flex: 1;
+    padding: 10px 20px;
+    justify-content: center;
+}
+
+.bikes-container.list .list-details {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin: 5px 0;
+    display: flex; gap: 15px;
+}
+
+.bikes-container.list .serial {
+    font-family: monospace;
+    background: rgba(0,0,0,0.3);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+/* EFFET SURVOL CADRE (Preview Cosmétique) */
+.garage-bike-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+/* Quand on survole, on accentue l'effet du cadre s'il existe */
+.garage-bike-card:hover {
+    transform: scale(1.02); /* Léger zoom global */
+    /* Si le cadre est présent, le CSS inline gère la couleur, 
+       mais on peut ajouter une ombre plus forte ici si on le souhaite */
+}
+
+/* Mobile : on cache le texte du bouton ajouter */
+@media (max-width: 600px) {
+    .add-btn .desktop-only {
+        display: none;
+    }
+    /* On garde juste l'icône */
+    .add-btn {
+        padding: 10px !important;
+        width: 40px; 
+        height: 40px;
+        border-radius: 50% !important; /* Rond sur mobile */
+        justify-content: center;
+    }
+}

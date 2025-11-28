@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { bikeService, authService, shopService } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
-import { FaExclamationTriangle, FaPlus, FaUsers, FaEraser } from 'react-icons/fa';
+import { FaExclamationTriangle, FaPlus, FaUsers, FaEraser, FaThLarge, FaList } from 'react-icons/fa';
 import './BikeGarage.css';
 
 function BikeGarage() {
@@ -11,6 +11,9 @@ function BikeGarage() {
     const [selectedOwner, setSelectedOwner] = useState('Tous');
     const [loading, setLoading] = useState(true);
     const [currentUser, setCurrentUser] = useState(null);
+    
+    // NOUVEAU : Mode d'affichage (Grid ou List)
+    const [viewMode, setViewMode] = useState('grid'); 
     
     const navigate = useNavigate();
 
@@ -43,7 +46,7 @@ function BikeGarage() {
 
     const handleRemoveFrame = async (e, bike) => {
         e.stopPropagation();
-        if(window.confirm(`Retirer le cadre ?`)) {
+        if(window.confirm(`Retirer le cadre spécial ?`)) {
             try { await shopService.unequipBike(bike.id); loadData(); } 
             catch (err) { alert("Erreur"); }
         }
@@ -56,23 +59,12 @@ function BikeGarage() {
 
     const getFrameStyle = (bike) => {
         const frame = Array.isArray(bike.frame_details) ? bike.frame_details[0] : bike.frame_details;
-        
         if (frame && frame.asset_data) {
-            // Si c'est un nouveau cadre avec une classe CSS, on ne met pas de style inline
-            if (frame.asset_data.className) {
-                return {}; 
-            }
-
-            // Fallback pour les cadres Gold/Anciens qui utilisent des styles directs
-            if (frame.asset_data.border) {
-                return {
-                    border: `3px solid ${frame.asset_data.border}`,
-                    boxShadow: `0 0 20px ${frame.asset_data.border}, inset 0 0 10px ${frame.asset_data.border}`,
-                    transform: 'scale(1.02)',
-                    transition: 'all 0.3s ease',
-                    zIndex: 10
-                };
-            }
+            return {
+                border: `3px solid ${frame.asset_data.border}`,
+                boxShadow: `0 0 20px ${frame.asset_data.border}, inset 0 0 10px ${frame.asset_data.border}`,
+                zIndex: 10
+            };
         }
         return {};
     };
@@ -84,9 +76,24 @@ function BikeGarage() {
             <header className="garage-header">
                 <div>
                     <h2 className="gradient-text">Garage</h2>
-                    <p style={{color:'#94a3b8', margin:0}}>Gère ton écurie et celle de ton Turlag</p>
+                    <p style={{color:'#94a3b8', margin:0}}>Gère ton écurie</p>
                 </div>
-                <button className="add-btn" onClick={() => navigate('/app/add-bike')}><FaPlus /></button>
+                
+                <div style={{display:'flex', gap:'10px'}}>
+                    {/* TOGGLE VIEW */}
+                    <div className="view-toggle glass-panel">
+                        <button className={viewMode === 'grid' ? 'active' : ''} onClick={() => setViewMode('grid')}><FaThLarge /></button>
+                        <button className={viewMode === 'list' ? 'active' : ''} onClick={() => setViewMode('list')}><FaList /></button>
+                    </div>
+
+                    <button 
+                        className="add-btn primary-btn" 
+                        onClick={() => navigate('/app/add-bike')}
+                        style={{display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '12px'}}
+                    >
+                        <FaPlus /> <span className="desktop-only">Ajouter un vélo</span>
+                    </button>
+                </div>
             </header>
 
             <div className="filters-section">
@@ -100,35 +107,31 @@ function BikeGarage() {
                 </div>
             </div>
 
-            <div className="bikes-grid">
+            {/* GRILLE MODIFIABLE */}
+            <div className={`bikes-container ${viewMode}`}>
                 {filteredBikes.map(bike => {
                     const isMine = bike.user_id === currentUser?.id;
                     const alert = hasAlerts(bike);
                     const ownerName = isMine ? 'Moi' : (bike.profiles?.name || 'Inconnu');
-                    
-                    let frameClass = '';
-                    const frame = Array.isArray(bike.frame_details) ? bike.frame_details[0] : bike.frame_details;
-                    if (frame && frame.asset_data && frame.asset_data.className) {
-                        frameClass = frame.asset_data.className;
-                    }
-
                     const frameStyle = getFrameStyle(bike);
+                    const hasFrame = Object.keys(frameStyle).length > 0;
 
                     return (
                         <div 
                             key={bike.id} 
-                            // ON AJOUTE LA CLASSE ICI
-                            className={`garage-bike-card ${!isMine ? 'friend-bike' : ''} ${frameClass}`}
+                            className={`garage-bike-card ${!isMine ? 'friend-bike' : ''}`}
                             onClick={() => isMine && navigate(`/app/bike/${bike.id}`)}
-                            style={{ cursor: isMine ? 'pointer' : 'default', opacity: isMine ? 1 : 0.85, ...frameStyle }}
+                            style={{ 
+                                cursor: isMine ? 'pointer' : 'default',
+                                opacity: isMine ? 1 : 0.85,
+                                ...frameStyle
+                            }}
                         >
                             <div className="bike-image-placeholder">
                                 {bike.photo_url ? <img src={bike.photo_url} alt={bike.name} loading="lazy" /> : <span style={{fontSize: '4rem', opacity:0.5}}>🚲</span>}
-                                {alert && <div className="alert-badge"><FaExclamationTriangle /></div>}
-                                {isMine && frameClass && (
-                                    <button className="remove-frame-btn" onClick={(e) => handleRemoveFrame(e, bike)} title="Retirer le cadre">
-                                        <FaEraser />
-                                    </button>
+                                {alert && <div className="alert-badge" title="Maintenance !"><FaExclamationTriangle /></div>}
+                                {isMine && hasFrame && (
+                                    <button className="remove-frame-btn" onClick={(e) => handleRemoveFrame(e, bike)}><FaEraser /></button>
                                 )}
                             </div>
 
@@ -137,6 +140,15 @@ function BikeGarage() {
                                     <h3>{bike.name}</h3>
                                     <span className="bike-km">{bike.total_km.toLocaleString()} km</span>
                                 </div>
+                                
+                                {/* Affichage supplémentaire en mode liste */}
+                                {viewMode === 'list' && (
+                                    <div className="list-details">
+                                        <span>{bike.brand} {bike.model}</span>
+                                        {bike.serial_number && <span className="serial">S/N: {bike.serial_number}</span>}
+                                    </div>
+                                )}
+
                                 <div className="owner-row">
                                     <div className="owner-avatar">{ownerName.charAt(0).toUpperCase()}</div>
                                     <span className="owner-name">{isMine ? 'Mon vélo' : `Vélo de ${ownerName}`}</span>

@@ -292,6 +292,109 @@
 .kpi-label { font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; }
 .kpi-value { font-size: 1.8rem; font-weight: 700; color: white; }
 
+/* BOUTON EDIT MODE */
+.edit-dashboard-btn {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.edit-dashboard-btn.active {
+    background: var(--neon-blue);
+    color: black;
+    box-shadow: 0 0 15px var(--neon-blue);
+    animation: pulse 2s infinite;
+}
+
+/* MODE ÉDITION KPI */
+.kpi-grid.edit-mode .kpi-card {
+    border: 2px dashed var(--text-secondary);
+    animation: shake 0.3s;
+}
+
+.kpi-card.hidden-item {
+    opacity: 0.4;
+    filter: grayscale(1);
+}
+
+.kpi-edit-controls {
+    position: absolute;
+    top: 5px; right: 5px;
+    display: flex; gap: 5px;
+    z-index: 10;
+}
+
+.drag-handle {
+    color: white; cursor: grab; font-size: 1.2rem;
+}
+
+.vis-btn {
+    background: rgba(0,0,0,0.5); border: none; color: white;
+    padding: 4px; border-radius: 4px; cursor: pointer;
+}
+
+@keyframes shake {
+    0% { transform: rotate(0deg); }
+    25% { transform: rotate(1deg); }
+    75% { transform: rotate(-1deg); }
+    100% { transform: rotate(0deg); }
+}
+
+/* CSS POUR LE SÉLECTEUR DE COMPARAISON */
+.chart-header-row {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;
+}
+.compare-select {
+    background: rgba(0,0,0,0.3); border: 1px solid var(--border-color);
+    color: white; padding: 5px 10px; border-radius: 8px; font-size: 0.8rem;
+}
+.compare-select option { background: #1e1e2d; }
+
+/* --- GRILLE GRAPHIQUES --- */
+.charts-grid-dynamic {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 2 colonnes de base */
+    gap: 20px;
+}
+
+.chart-card {
+    background: var(--bg-card);
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    padding: 20px;
+    display: flex; flex-direction: column;
+    position: relative;
+}
+
+/* Mode Édition Graphiques */
+.charts-grid-dynamic.edit-mode .chart-card {
+    border: 2px dashed var(--text-secondary);
+    animation: shake 0.3s;
+    cursor: grab;
+}
+
+/* TAILLES */
+.chart-card.full-width {
+    grid-column: 1 / -1; /* Prend toute la largeur */
+}
+.chart-card.half-width {
+    grid-column: span 1; /* Prend 1 colonne */
+}
+
+/* RESPONSIVE */
+@media (max-width: 1000px) {
+    .charts-grid-dynamic {
+        grid-template-columns: 1fr; /* Tout en une colonne sur mobile */
+    }
+    .chart-card.half-width {
+        grid-column: 1 / -1;
+    }
+}
+
 /* MOBILE */
 @media (max-width: 1000px) {
     .dashboard-layout {

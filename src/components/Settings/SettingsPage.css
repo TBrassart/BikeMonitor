@@ -1,144 +1,39 @@
-.profile-page {
-    max-width: 800px;
-    margin: 0 auto;
-    padding-bottom: 40px;
-}
-
-/* --- HEADER AVATAR --- */
-.profile-header {
-    display: flex;
-    align-items: center;
-    gap: 25px;
-    padding: 30px;
-    margin-bottom: 30px;
-}
-
-.profile-avatar-large {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    background: var(--gradient-primary); /* Dégradé défini dans index.css */
-    color: white;
-    font-size: 3rem;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
-    border: 4px solid rgba(255,255,255,0.1);
-}
-
-.profile-title h3 {
-    margin: 0;
-    font-size: 1.8rem;
-    color: var(--text-primary);
-}
-
-.profile-title .subtitle {
-    margin: 5px 0 0 0;
-    color: var(--text-secondary);
-    font-size: 1rem;
-}
-
-/* --- SECTIONS DU FORMULAIRE --- */
-.form-section {
-    padding: 25px;
-    margin-bottom: 25px;
-}
-
-.form-section h4 {
-    margin-top: 0;
-    margin-bottom: 20px;
-    color: var(--neon-blue, #3b82f6);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    font-size: 0.9rem;
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 10px;
-}
-
-/* --- GRILLE RESPONSIVE --- */
-.form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr; /* 2 colonnes par défaut */
-    gap: 20px;
-}
-
-.full-width {
-    grid-column: 1 / -1; /* Prend toute la largeur */
-}
-
-/* --- INPUTS STYLÉS --- */
-.form-group {
+.settings-page {
+    width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 8px;
 }
 
-.form-group label {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-
-.form-group input {
-    background-color: rgba(0, 0, 0, 0.2); /* Fond sombre transparent */
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
-    padding: 12px 15px;
-    border-radius: 8px;
-    font-size: 1rem;
-    transition: all 0.3s ease;
-}
-
-.form-group input:focus {
-    outline: none;
-    border-color: var(--neon-blue, #3b82f6);
-    background-color: rgba(59, 130, 246, 0.05);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-/* --- BOUTON D'ACTION --- */
-.form-actions {
+/* ONGLETS */
+.settings-tabs {
     display: flex;
-    justify-content: flex-end;
-    margin-top: 20px;
+    gap: 15px;
+    margin-bottom: 25px;
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 5px;
+    border-bottom: 1px solid var(--border-color);
 }
 
-.save-btn {
-    padding: 12px 30px !important;
-    font-size: 1rem !important;
+/* CONTENU */
+.settings-content {
+    width: 100%;
+    box-sizing: border-box;
+    /* Pas de max-width ici pour laisser le profil s'étaler */
+    flex: 1;
 }
 
-/* --- MESSAGES FEEDBACK --- */
-.message-box {
-    padding: 15px;
-    border-radius: 8px;
+.integrations {
+    width: 100%;
+}
+
+.integration-card {
+    width: 100%;
+    box-sizing: border-box;
     margin-bottom: 20px;
-    font-weight: 500;
-    text-align: center;
 }
 
-.message-box.success {
-    background: rgba(16, 185, 129, 0.1);
-    border: 1px solid #10b981;
-    color: #10b981;
-}
-
-.message-box.error {
-    background: rgba(239, 68, 68, 0.1);
-    border: 1px solid #ef4444;
-    color: #ef4444;
-}
-
-/* MOBILE */
-@media (max-width: 600px) {
-    .form-grid {
-        grid-template-columns: 1fr; /* 1 colonne sur mobile */
-    }
-    
-    .profile-header {
-        flex-direction: column;
-        text-align: center;
-    }
+/* Pour les autres sections (pas profil) */
+.settings-content > div:not(.profile-page) {
+    max-width: 800px; /* On garde une limite lisible pour les petits formulaires */
 }

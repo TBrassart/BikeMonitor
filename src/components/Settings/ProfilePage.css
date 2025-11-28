@@ -1,11 +1,7 @@
-/* src/components/Settings/ProfilePage.css */
-
 .profile-page {
-    /* On prend toute la largeur disponible */
     width: 100%;
-    max-width: 100%; 
+    max-width: 100%; /* CORRECTION : On autorise toute la largeur */
     padding-bottom: 40px;
-    /* On retire les marges auto qui centraient le contenu */
     margin: 0;
 }
 
@@ -16,373 +12,96 @@
     gap: 25px;
     padding: 30px;
     margin-bottom: 30px;
-}
-
-.profile-avatar-large {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    background: var(--gradient-primary);
-    color: white;
-    font-size: 3rem;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
-    border: 4px solid rgba(255,255,255,0.1);
-}
-
-.profile-title h3 {
-    margin: 0;
-    font-size: 1.8rem;
-    color: var(--text-primary);
-}
-
-.profile-title .subtitle {
-    margin: 5px 0 0 0;
-    color: var(--text-secondary);
-    font-size: 1rem;
-}
-
-/* --- LAYOUT EN COLONNES (Modifié pour Full Width) --- */
-.profile-layout {
-    display: grid;
-    /* On équilibre l'espace : 50% Formulaire / 50% Zones */
-    /* Sur très grand écran, on peut même donner plus aux zones si besoin */
-    grid-template-columns: 1fr 1fr; 
-    gap: 40px; /* Plus d'espace entre les deux blocs */
-}
-
-/* --- ZONES (Adaptation à la largeur) --- */
-.zones-column {
-    display: flex;
-    flex-direction: column;
-    gap: 25px;
-}
-
-.zones-grid {
-    display: grid;
-    /* On force 2 colonnes minimum, mais elles seront plus larges */
-    grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
-}
-
-.zone-card {
-    background: rgba(255, 255, 255, 0.03);
-    padding: 15px 20px; /* Un peu plus de padding interne */
-    border-radius: 8px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    transition: transform 0.2s ease;
-}
-
-.zone-card:hover {
-    background: rgba(255, 255, 255, 0.05);
-    transform: translateX(5px);
-}
-
-.zone-name {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    font-weight: 700;
-    letter-spacing: 1px;
-    margin-bottom: 5px;
-}
-
-.zone-value {
-    font-size: 1.4rem; /* Texte plus gros car on a de la place */
-    color: white;
-    font-weight: 700;
-}
-
-.empty-zones {
-    color: var(--text-secondary);
-    font-style: italic;
-    font-size: 0.9rem;
-    padding: 20px;
-    text-align: center;
-}
-
-/* --- SECTIONS DU FORMULAIRE --- */
-.form-section {
-    padding: 30px; /* Plus aéré */
-    margin-bottom: 30px;
-    height: fit-content; /* Évite que la colonne s'étire inutilement */
-}
-
-.form-section h4 {
-    margin-top: 0;
-    margin-bottom: 25px;
-    color: var(--neon-blue, #3b82f6);
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    font-size: 0.9rem;
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 15px;
-}
-
-/* --- GRILLE RESPONSIVE --- */
-.form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr; 
-    gap: 25px;
-}
-
-.full-width {
-    grid-column: 1 / -1;
-}
-
-/* --- INPUTS STYLÉS --- */
-.form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.form-group label {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-
-.form-group input {
-    background-color: rgba(0, 0, 0, 0.3);
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
-    padding: 14px 18px; /* Inputs plus confortables */
-    border-radius: 10px;
-    font-size: 1rem;
-    transition: all 0.3s ease;
-    width: 100%;
+    /* On s'assure que le header prend toute la largeur */
+    width: 100%; 
     box-sizing: border-box;
 }
 
-.form-group input:focus {
-    outline: none;
-    border-color: var(--neon-blue, #3b82f6);
-    background-color: rgba(59, 130, 246, 0.05);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+.profile-avatar-large {
+    width: 100px; height: 100px; border-radius: 50%;
+    background: var(--gradient-primary); color: white; font-size: 3rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); border: 4px solid rgba(255,255,255,0.1);
 }
+.profile-avatar-large.clickable { cursor: pointer; transition: all 0.2s ease; border: 4px solid transparent; }
+.profile-avatar-large.clickable:hover { transform: scale(1.05); border-color: var(--neon-blue); }
 
-/* --- BOUTON D'ACTION --- */
-.form-actions {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 20px;
-}
+.profile-title h3 { margin: 0; font-size: 1.8rem; color: var(--text-primary); }
+.profile-title .subtitle { margin: 5px 0 0 0; color: var(--text-secondary); font-size: 1rem; }
 
-.save-btn {
-    padding: 14px 40px !important;
-    font-size: 1.1rem !important;
-}
-
-/* --- MESSAGES FEEDBACK --- */
-.message-box {
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    font-weight: 500;
-    text-align: center;
-}
-
-.message-box.success {
-    background: rgba(16, 185, 129, 0.1);
-    border: 1px solid #10b981;
-    color: #10b981;
-}
-
-.message-box.error {
-    background: rgba(239, 68, 68, 0.1);
-    border: 1px solid #ef4444;
-    color: #ef4444;
-}
-
-/* Rendre l'avatar cliquable et lui donner un état au survol */
-.profile-avatar-large.clickable {
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border: 4px solid transparent;
-}
-
-.profile-avatar-large.clickable:hover {
-    transform: scale(1.05);
-    border-color: var(--neon-blue);
-}
-
-/* --- AVATAR SELECTION MODAL --- */
-.avatar-selection-overlay {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(8px);
-    z-index: 2000; /* Très haut pour être au-dessus de tout */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.avatar-selection-modal {
-    width: 380px;
-    max-width: 90%;
-    padding: 20px 25px;
-}
-
-.selection-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 15px;
-}
-
-.selection-header h4 {
-    margin: 0;
-    color: white;
-    font-size: 1.2rem;
-}
-
-.selection-header .close-btn {
-    background: none;
-    border: none;
-    color: var(--text-secondary);
-    cursor: pointer;
-    font-size: 1.5rem;
-    transition: color 0.2s;
-}
-.selection-header .close-btn:hover { color: #ef4444; }
-
-/* Grille des options d'avatars */
-.grid-list-wrapper {
-    max-height: 300px;
-    overflow-y: auto;
-    padding-right: 5px;
-}
-
-.avatar-selection-grid {
+/* --- LAYOUT PRINCIPAL (Pleine Largeur) --- */
+.profile-layout {
     display: grid;
-    grid-template-columns: repeat(7, 1fr); /* 7 colonnes de 1.8rem */
-    gap: 10px;
-    padding: 10px 0;
+    /* 70% pour le formulaire, 30% pour les zones */
+    grid-template-columns: 7fr 3fr; 
+    gap: 30px;
+    width: 100%;
 }
 
-.avatar-option {
-    font-size: 1.6rem;
-    padding: 10px;
-    text-align: center;
-    cursor: pointer;
-    border-radius: 10px;
-    transition: all 0.2s;
-    background: rgba(255,255,255,0.05);
-    border: 2px solid transparent;
+/* --- FORMULAIRE --- */
+.form-section {
+    padding: 30px;
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 25px;
 }
 
-.avatar-option:hover {
-    background: rgba(255,255,255,0.1);
+.form-section h4 {
+    margin-top: 0; margin-bottom: 25px;
+    color: var(--neon-blue); text-transform: uppercase; letter-spacing: 1px; font-size: 0.9rem;
+    border-bottom: 1px solid var(--border-color); padding-bottom: 10px;
 }
 
-.avatar-option.active {
-    border-color: var(--neon-purple);
-    box-shadow: 0 0 10px rgba(217, 70, 239, 0.5);
-    background: rgba(217, 70, 239, 0.1);
-    transform: scale(1.05);
-}
-
-/* NOUVEAUX STYLES COSMÉTIQUES */
-.equipped-badge {
-    margin-left: 10px;
-    font-size: 1.5rem;
-    vertical-align: middle;
-    filter: drop-shadow(0 0 5px var(--neon-blue));
-}
-
-.equipped-title {
-    color: var(--neon-purple);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    border: 1px solid var(--neon-purple);
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 0.7rem;
-    background: rgba(217, 70, 239, 0.1);
-}
-
-/* SECTION CASIER */
-.locker-section {
-    display: flex;
-    flex-direction: column;
+/* GRILLE INTELLIGENTE */
+.form-grid {
+    display: grid;
+    /* CRUCIAL : Crée autant de colonnes que possible (min 200px) */
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
     gap: 20px;
+    width: 100%;
 }
 
-.locker-group label {
-    display: block;
-    color: var(--text-secondary);
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    margin-bottom: 8px;
+.full-width { grid-column: 1 / -1; }
+
+/* INPUTS */
+.form-group { display: flex; flex-direction: column; gap: 8px; }
+.form-group label { color: var(--text-secondary); font-size: 0.9rem; font-weight: 500; }
+.form-group input, .form-group select {
+    background-color: rgba(0, 0, 0, 0.3) !important; /* Fond sombre forcé */
+    border: 1px solid var(--border-color) !important;
+    color: white !important;
+    padding: 12px 15px; border-radius: 10px; font-size: 1rem;
+    width: 100%; box-sizing: border-box;
+    transition: all 0.3s ease;
+}
+.form-group input:focus, .form-group select:focus {
+    outline: none; border-color: var(--neon-blue) !important;
+    background-color: rgba(59, 130, 246, 0.1) !important;
 }
 
-.locker-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-}
+.form-actions { display: flex; justify-content: flex-end; margin-top: 20px; }
+.save-btn { padding: 12px 40px !important; font-size: 1rem !important; }
 
-.locker-item {
-    background: rgba(0,0,0,0.3);
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
-    padding: 8px 15px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-size: 0.9rem;
+/* --- ZONES --- */
+.zones-column { display: flex; flex-direction: column; gap: 25px; width: 100%; }
+.zones-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.zone-item {
+    background: rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 6px;
+    display: flex; flex-direction: column;
 }
+.zone-name { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; }
+.zone-value { font-size: 1.1rem; color: white; font-weight: 600; margin-top: 2px; }
 
-.locker-item:hover {
-    background: rgba(255,255,255,0.1);
-}
+/* MODALES */
+.avatar-selection-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 2000; display: flex; align-items: center; justify-content: center; }
+.avatar-selection-modal { width: 400px; max-width: 90%; padding: 20px; }
+.selection-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+.avatar-selection-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+.avatar-option { font-size: 2rem; padding: 10px; text-align: center; cursor: pointer; border-radius: 10px; transition: all 0.2s; }
+.avatar-option:hover { background: rgba(255,255,255,0.1); }
+.avatar-option.active { border: 2px solid var(--neon-purple); background: rgba(217, 70, 239, 0.1); }
 
-.locker-item.active {
-    background: var(--gradient-secondary);
-    border-color: transparent;
-    color: white;
-    box-shadow: 0 0 10px rgba(14, 165, 233, 0.3);
-}
-
-.empty-locker {
-    color: #666;
-    font-style: italic;
-}
-
-/* --- MOBILE & TABLETTE --- */
-@media (max-width: 1200px) {
-    .profile-layout {
-        grid-template-columns: 1fr; /* Empilement si l'écran est moyen */
-        gap: 30px;
-    }
-    
-    .zones-grid {
-        /* Sur tablette, on peut mettre 3 zones par ligne pour gagner de la place verticale */
-        grid-template-columns: repeat(3, 1fr); 
-    }
-}
-
-@media (max-width: 768px) {
-    .form-grid {
-        grid-template-columns: 1fr; 
-    }
-    
-    .zones-grid {
-        grid-template-columns: 1fr 1fr; /* 2 par ligne sur mobile */
-    }
-    
-    .profile-header {
-        flex-direction: column;
-        text-align: center;
-    }
+/* MOBILE */
+@media (max-width: 1000px) {
+    .profile-layout { grid-template-columns: 1fr; } /* Empilement */
 }

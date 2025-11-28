@@ -20,10 +20,10 @@
 
 /* --- CONTENU PRINCIPAL --- */
 .main-content {
-  flex: 1;
+  flex: 1; 
   margin-left: 260px;
   padding: 30px;
-  width: calc(100% - 260px);
+  min-width: 0;
 }
 
 /* Override des cartes pour le thème sombre */

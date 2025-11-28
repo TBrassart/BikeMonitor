@@ -1,6 +1,11 @@
 /* src/index.css */
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
 
+/* RESET GLOBAL INDISPENSABLE */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 :root {
   font-family: 'Outfit', sans-serif;
   
@@ -272,6 +277,41 @@ button.secondary-btn {
 @keyframes shineGold {
     0% { background-position: 200% 200%; }
     100% { background-position: -200% -200%; }
+}
+
+/* --- STYLES COSMÉTIQUES GLOBAUX (Badges & Titres) --- */
+
+/* L'icône (Badge) à côté du nom */
+.equipped-badge {
+    margin-left: 10px;
+    font-size: 1.5rem;
+    vertical-align: middle;
+    filter: drop-shadow(0 0 5px var(--neon-blue));
+    display: inline-block;
+}
+
+/* Le Titre (La boite autour du texte) */
+.equipped-title {
+    display: inline-block;
+    color: var(--neon-purple);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border: 1px solid var(--neon-purple);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    background: rgba(217, 70, 239, 0.1);
+    margin-top: 4px;
+}
+
+/* Si le titre a un effet spécial (ex: .title-neon), on enlève la bordure par défaut 
+   pour laisser l'effet briller, ou on l'ajuste */
+.equipped-title[class*="title-"] {
+    border: none;
+    background: transparent;
+    padding: 0;
+    font-size: 0.8rem; /* Un peu plus grand pour les effets */
 }
 
 /* --- EFFETS DE TITRES --- */

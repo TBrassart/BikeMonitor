@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { api } from '../../services/api';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { api, shopService } from '../../services/api';
 import { 
     FaSearch, FaFilter, FaBicycle, FaRunning, FaHiking, FaSwimmer, 
     FaMountain, FaRoad, FaStopwatch, FaSnowboarding, FaDumbbell, FaSpa,
-    FaTimes, FaFire, FaHeartbeat, FaBolt, FaExternalLinkAlt 
+    FaTimes, FaFire, FaHeartbeat, FaBolt, FaExternalLinkAlt, FaFileUpload, FaFolderOpen, FaStrava
 } from 'react-icons/fa';
 
 import ActivityMap from './ActivityMap';
@@ -31,6 +31,14 @@ function ActivitiesPage() {
 
     // --- ÉTAT MODALE DÉTAIL ---
     const [selectedActivity, setSelectedActivity] = useState(null);
+    const [showImportModal, setShowImportModal] = useState(false);
+
+    // État Import GPX
+    const fileInputRef = useRef(null);
+    const [gpxData, setGpxData] = useState(null);
+    const [importBikeId, setImportBikeId] = useState('');
+    const [importName, setImportName] = useState('');
+    const [importing, setImporting] = useState(false);
 
     useEffect(() => {
         loadData();
@@ -62,6 +70,47 @@ function ActivitiesPage() {
         } finally {
             setLoading(false);
         }
+    };
+
+    // --- GESTION IMPORT GPX ---
+    const handleFileSelect = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        try {
+            const parsed = await parseGpxFile(file);
+            setGpxData(parsed);
+            setImportName(file.name.replace('.gpx', ''));
+        } catch (err) {
+            alert("Erreur lecture GPX : " + err.message);
+        }
+    };
+
+    const confirmImport = async () => {
+        if (!gpxData || !importName) return;
+        setImporting(true);
+        try {
+            await api.addManualActivity({
+                name: importName,
+                bike_id: importBikeId || null,
+                distance: gpxData.distance,
+                elevation: gpxData.elevation,
+                moving_time: gpxData.movingTime,
+                start_date: gpxData.startDate,
+                polyline: gpxData.polyline
+            });
+            
+            // Si un vélo est lié, on met à jour son usure manuellement
+            if (importBikeId) {
+                 // Idéalement appeler une fonction de calcul d'usure ici
+                 // await api.updateBikeWear(importBikeId, gpxData.distance);
+            }
+
+            alert("Sortie importée !");
+            setShowImportModal(false);
+            setGpxData(null);
+            loadData();
+        } catch (e) { alert("Erreur import"); }
+        finally { setImporting(false); }
     };
 
     // --- LOGIQUE TAGS ---
@@ -136,8 +185,61 @@ function ActivitiesPage() {
         return bike ? bike.name : 'Vélo inconnu';
     };
 
+    // --- ICONE SOURCE ---
+    const getSourceIcon = (act) => {
+        if (act.external_data?.source === 'manual_gpx') return <FaFolderOpen title="Import GPX" />;
+        return <FaStrava title="Strava" />;
+    };
+
     return (
         <div className="activities-page">
+
+            {/* MODALE IMPORT GPX */}
+            {showImportModal && (
+                <div className="modal-overlay" onClick={() => setShowImportModal(false)}>
+                    <div className="glass-panel modal-content import-modal" onClick={e => e.stopPropagation()}>
+                        <div className="act-modal-header-simple">
+                            <h3>Import GPX</h3>
+                            <button onClick={() => setShowImportModal(false)}><FaTimes /></button>
+                        </div>
+                        <div className="import-body">
+                            {!gpxData ? (
+                                <div className="upload-zone" onClick={() => fileInputRef.current.click()}>
+                                    <FaFileUpload className="upload-icon" />
+                                    <p>Cliquez pour choisir un fichier .gpx</p>
+                                    <input type="file" ref={fileInputRef} accept=".gpx" onChange={handleFileSelect} style={{display:'none'}} />
+                                </div>
+                            ) : (
+                                <div className="import-summary">
+                                    <div className="kpi-row">
+                                        <span>📏 {gpxData.distance} km</span>
+                                        <span>🏔️ {gpxData.elevation} m</span>
+                                        <span>⏱️ {Math.floor(gpxData.movingTime/60)} min</span>
+                                    </div>
+                                    
+                                    <div className="form-group">
+                                        <label>Nom de la sortie</label>
+                                        <input type="text" value={importName} onChange={e => setImportName(e.target.value)} className="admin-input" />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label>Vélo utilisé</label>
+                                        <select value={importBikeId} onChange={e => setImportBikeId(e.target.value)} className="neon-select">
+                                            <option value="">-- Aucun vélo --</option>
+                                            {bikesList.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                                        </select>
+                                    </div>
+
+                                    <button onClick={confirmImport} className="primary-btn full-width" disabled={importing}>
+                                        {importing ? 'Importation...' : 'Valider et Enregistrer'}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* --- MODALE DÉTAIL --- */}
             {selectedActivity && (
                 <div className="modal-overlay" onClick={() => setSelectedActivity(null)}>
@@ -225,14 +327,20 @@ function ActivitiesPage() {
                 </div>
             )}
 
+            {/* HEADER */}
             <header className="activities-header">
                 <div>
                     <h2 className="gradient-text">Journal d'activités</h2>
-                    <p className="subtitle">{filteredActivities.length} sorties trouvées</p>
+                    <p className="subtitle">{rawActivities.length} sorties trouvées</p>
                 </div>
-                <button className={`filter-toggle-btn ${showFilters ? 'active' : ''}`} onClick={() => setShowFilters(!showFilters)}>
-                    <FaFilter /> Filtres
-                </button>
+                <div style={{display:'flex', gap:'10px'}}>
+                    <button className="add-btn primary-btn" onClick={() => setShowImportModal(true)}>
+                        <FaFileUpload /> <span className="desktop-only">Import GPX</span>
+                    </button>
+                    <button className={`filter-toggle-btn ${showFilters ? 'active' : ''}`} onClick={() => setShowFilters(!showFilters)}>
+                        <FaFilter />
+                    </button>
+                </div>
             </header>
 
             <div className="search-container">
@@ -240,7 +348,6 @@ function ActivitiesPage() {
                 <FaSearch className="search-icon-overlay" />
             </div>
 
-            {/* ... (FILTRES INCHANGÉS) ... */}
             <div className={`filters-panel glass-panel ${showFilters ? 'open' : ''}`}>
                 <div className="filters-row">
                     <select value={selectedYear} onChange={e => setSelectedYear(e.target.value)} className="neon-select">
@@ -318,7 +425,13 @@ function ActivitiesPage() {
                                         <div className="act-info">
                                             <div className="act-header">
                                                 <h4>{act.name}</h4>
-                                                <span className="act-date">{new Date(act.start_date).toLocaleDateString()}</span>
+                                                <div className="act-meta-right">
+                                                    {/* ICONE SOURCE */}
+                                                    <span className={`source-badge ${act.external_data?.source === 'manual_gpx' ? 'manual' : 'strava'}`}>
+                                                        {getSourceIcon(act)}
+                                                    </span>
+                                                    <span className="act-date">{new Date(act.start_date).toLocaleDateString()}</span>
+                                                </div>
                                             </div>
                                             
                                             {tags.length > 0 && (

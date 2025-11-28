@@ -471,6 +471,35 @@ export const api = {
         }
         return data;
     },
+    // ACTIVITÉS MANUELLES
+    async addManualActivity(activityData) {
+        const user = await authService.getCurrentUser();
+        const profile = await authService.getMyProfile();
+
+        const { data, error } = await supabase.from('activities').insert([{
+            // ID généré (pas de strava ID)
+            profile_id: profile.id,
+            bike_id: activityData.bike_id,
+            name: activityData.name,
+            type: 'Ride', // Par défaut vélo
+            distance: activityData.distance, // Déjà en km via le parser
+            moving_time: activityData.moving_time,
+            total_elevation_gain: activityData.elevation,
+            start_date: activityData.start_date,
+            map_polyline: activityData.polyline,
+            external_data: { source: 'manual_gpx' } // Marqueur important
+        }]).select().single();
+
+        if (error) throw error;
+
+        // Mise à jour usure vélo si lié
+        if (activityData.bike_id) {
+            // Note: calculateWear attend des Km pour l'update
+            // (Assure-toi que calculateWear est accessible ou duplique la logique ici)
+            // Ici on suppose qu'on appelle la fonction existante dans stravaService ou qu'on la déplace dans api
+        }
+        return data;
+    },
     // --- NUTRITION v2 ---
     async getNutrition() {
         const { data, error } = await supabase

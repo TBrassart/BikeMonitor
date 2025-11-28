@@ -276,3 +276,26 @@
     /* Optionnel : police monospace pour faire "Tech" */
     font-family: 'Courier New', Courier, monospace; 
 }
+
+/* IMPORT MODAL */
+.import-modal { width: 400px; padding: 20px; }
+.act-modal-header-simple { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+.act-modal-header-simple h3 { margin: 0; color: white; }
+
+.upload-zone {
+    border: 2px dashed var(--border-color); border-radius: 12px;
+    padding: 40px; text-align: center; cursor: pointer; transition: all 0.3s;
+    background: rgba(255,255,255,0.02);
+}
+.upload-zone:hover { border-color: var(--neon-blue); background: rgba(14, 165, 233, 0.1); }
+.upload-icon { font-size: 3rem; color: var(--text-secondary); margin-bottom: 10px; }
+
+.import-summary { display: flex; flex-direction: column; gap: 15px; }
+
+/* BADGE SOURCE */
+.source-badge {
+    font-size: 1rem; margin-right: 10px; display: flex; align-items: center;
+}
+.source-badge.strava { color: #fc4c02; }
+.source-badge.manual { color: var(--neon-purple); }
+.act-meta-right { display: flex; align-items: center; }

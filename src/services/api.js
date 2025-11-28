@@ -412,8 +412,8 @@ export const api = {
     async getNutrition() {
         const { data, error } = await supabase
             .from('nutrition')
-            .select('*')
-            .order('quantity', { ascending: true }); // C'est mieux de trier par stock
+            .select('*, turlags ( id, name )') 
+            .order('quantity', { ascending: true });
         if (error) throw error;
         return data || [];
     },

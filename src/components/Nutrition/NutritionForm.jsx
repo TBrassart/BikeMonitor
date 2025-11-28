@@ -1,22 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { FaSave, FaTimes } from 'react-icons/fa';
+import { authService } from '../../services/api';
 import './NutritionPage.css';
 
 // NOTE : On a retiré l'import de nutritionService ici.
 // C'est le parent (NutritionPage) qui gère l'appel API.
 
 const NutritionForm = ({ onClose, onSave, initialData }) => {
+    const [turlags, setTurlags] = useState([]);
+
     const [formData, setFormData] = useState({
         name: '', brand: '', category_type: 'bar', 
         quantity: 0, min_quantity: 2,
         carbs: 0, proteins: 0, fat: 0,
         caffeine: false, 
-        tags: [], 
-        timing: [], 
-        recipe: ''
+        expiration_date: '',
+        turlag_id: '',
+        tags: [], timing: [], recipe: ''
     });
 
     useEffect(() => {
+        authService.getMyTurlags().then(data => setTurlags(data || []));
         if (initialData) {
             setFormData({
                 ...initialData,
@@ -45,30 +49,21 @@ const NutritionForm = ({ onClose, onSave, initialData }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        
-        // Préparation des données propres
         const dataToSave = {
             ...formData,
-            // Si on modifie un item existant, on garde l'ID
-            id: initialData ? initialData.id : undefined, 
-            
-            // Conversion des chiffres
+            id: initialData ? initialData.id : undefined,
             carbs: parseFloat(formData.carbs) || 0,
             proteins: parseFloat(formData.proteins) || 0,
             fat: parseFloat(formData.fat) || 0,
             quantity: parseInt(formData.quantity) || 0,
             min_quantity: parseInt(formData.min_quantity) || 0,
-            
-            // On s'assure que ces tableaux ne sont pas null
+            turlag_id: formData.turlag_id || null,
+            expiration_date: formData.expiration_date || null,
             tags: formData.tags || [],
             timing: formData.timing || []
         };
-
-        // CORRECTION CRITIQUE : On passe les données au parent
-        // On ne fait pas l'appel API ici
-        if (onSave) {
-            onSave(dataToSave);
-        }
+        
+        if (onSave) onSave(dataToSave);
     };
 
     return (
@@ -103,6 +98,25 @@ const NutritionForm = ({ onClose, onSave, initialData }) => {
                         </select>
                     </div>
 
+                    {/* PARTAGE & DATE */}
+                    <div className="form-grid-2">
+                        <div className="form-group">
+                            <label>Péremption</label>
+                            <input type="date" name="expiration_date" value={formData.expiration_date} onChange={handleChange} />
+                        </div>
+                        
+                        {/* SÉLECTEUR DE GROUPE */}
+                        <div className="form-group">
+                            <label>Visibilité</label>
+                            <select name="turlag_id" value={formData.turlag_id} onChange={handleChange} className="neon-select">
+                                <option value="">🔒 Privé (Moi uniquement)</option>
+                                {turlags.map(t => (
+                                    <option key={t.id} value={t.id}>👥 {t.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+                    
                     <div className="form-section-title">Macros (par unité)</div>
                     <div className="form-grid-3">
                         <div className="form-group"><label>Glucides</label><input type="number" name="carbs" step="0.1" value={formData.carbs} onChange={handleChange} /></div>

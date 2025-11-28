@@ -150,9 +150,13 @@ function ShopPage() {
                     return (
                         <div key={item.id} className={`shop-card glass-panel ${ownedInv ? 'is-owned' : ''} ${isGlobalEquipped && item.type !== 'frame' ? 'is-equipped' : ''}`}>
                             <div className="card-visual">
-                                {item.type === 'skin' ? <div className="preview-skin" style={{background: item.asset_data?.primary}}>Aa</div> : 
-                                item.type === 'frame' ? <div className={`preview-frame ${item.asset_data?.className}`}></div> :
-                                item.type === 'badge' ? <span style={{fontSize:'3rem'}}>{item.asset_data?.icon}</span> : <FaMagic />}
+                                {
+                                    item.type === 'skin' ? <div className="preview-skin" style={{background: item.asset_data?.primary}}>Aa</div> : 
+                                    item.type === 'frame' ? <div className={`preview-frame ${item.asset_data?.className}`}></div> :
+                                    item.type === 'badge' ? <span style={{fontSize:'3rem'}}>{item.asset_data?.icon}</span> : 
+                                    item.type === 'title' ? <span className={item.asset_data?.className || ''} style={{fontSize: '0.9rem', textAlign: 'center', padding: '5px'}}>{item.name}</span> :
+                                    <FaMagic />
+                                }
                             </div>
 
                             <div className="card-details">

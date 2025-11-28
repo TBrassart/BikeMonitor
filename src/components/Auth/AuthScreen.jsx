@@ -1,21 +1,44 @@
-import React, { useState } from 'react';
-import { authService } from '../../services/api';
-import { FaEnvelope, FaLock, FaUserPlus, FaSignInAlt, FaCheckSquare, FaSquare, FaPaperPlane, FaArrowLeft } from 'react-icons/fa';
-import Logo from '../Layout/Logo'; 
+import React, { useState, useEffect } from 'react';
+import { FaEnvelope, FaLock, FaUserPlus, FaSignInAlt, FaCheckSquare, FaSquare, FaPaperPlane, FaArrowLeft, FaGoogle, FaShieldAlt } from 'react-icons/fa';
+import { authService, supabase } from '../../services/api'; // Besoin de supabase direct pour certaines vérifs
 import './AuthScreen.css';
+import Logo from '../Layout/Logo';
 
 const AuthScreen = ({ onLogin, isInviteFlow = false, inviteToken = null, forceSignUp = false }) => {
     const [isLoginMode, setIsLoginMode] = useState(!forceSignUp);
-    const [isForgotMode, setIsForgotMode] = useState(false); // Nouveau mode
+    const [isForgotMode, setIsForgotMode] = useState(false);
     
+    // États Formulaire
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [rememberMe, setRememberMe] = useState(true);
     
+    // États 2FA
+    const [needsMfa, setNeedsMfa] = useState(false);
+    const [mfaCode, setMfaCode] = useState('');
+
     const [isPending, setIsPending] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
     const [successMsg, setSuccessMsg] = useState('');
+    const [cooldown, setCooldown] = useState(0);
+
+    // Anti-spam timer
+    useEffect(() => {
+        let timer;
+        if (cooldown > 0) timer = setTimeout(() => setCooldown(c => c - 1), 1000);
+        return () => clearTimeout(timer);
+    }, [cooldown]);
+
+    const handleSocialLogin = async (provider) => {
+        setIsPending(true);
+        try {
+            await authService.signInWithProvider(provider);
+        } catch (e) {
+            setErrorMsg(`Erreur connexion ${provider}.`);
+            setIsPending(false);
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -24,18 +47,51 @@ const AuthScreen = ({ onLogin, isInviteFlow = false, inviteToken = null, forceSi
         setSuccessMsg('');
 
         try {
-            if (isForgotMode) {
-                // --- MOT DE PASSE OUBLIÉ ---
-                await authService.resetPasswordForEmail(email);
-                setSuccessMsg("Email de récupération envoyé ! Vérifie ta boîte de réception.");
-                // On ne change pas de mode tout de suite pour laisser lire le message
-            } 
-            else if (isLoginMode) {
-                // --- CONNEXION ---
-                await authService.signInWithEmail(email, password);
+            // --- CAS 1 : VALIDATION CODE 2FA ---
+            if (needsMfa) {
+                // Récupérer les facteurs disponibles
+                const factors = await authService.listMfaFactors();
+                const totpFactor = factors.find(f => f.factor_type === 'totp');
+                
+                if (!totpFactor) throw new Error("Erreur technique MFA.");
+
+                // Tenter de valider le code
+                await authService.challengeAndVerifyMfa(totpFactor.id, mfaCode);
+                
+                // Si ça passe, on finalise la connexion
                 if (onLogin) await onLogin();
-            } else {
-                // --- INSCRIPTION ---
+                return;
+            }
+
+            // --- CAS 2 : MOT DE PASSE OUBLIÉ ---
+            if (isForgotMode) {
+                if (cooldown > 0) return;
+                await authService.resetPasswordForEmail(email);
+                setSuccessMsg("Email envoyé ! Vérifie tes spams.");
+                setCooldown(60);
+            } 
+            // --- CAS 3 : CONNEXION CLASSIQUE ---
+            else if (isLoginMode) {
+                // 1. Connexion Email/MDP
+                const { error } = await authService.signInWithEmail(email, password);
+                if (error) throw error;
+
+                // 2. Vérification : Est-ce que la 2FA est active ?
+                const mfaLevel = await authService.getMfaAssuranceLevel();
+                
+                // Si le niveau actuel (aal1) est inférieur au niveau suivant (aal2), 
+                // c'est qu'une 2FA est configurée et requise.
+                if (mfaLevel && mfaLevel.nextLevel === 'aal2' && mfaLevel.currentLevel !== 'aal2') {
+                    setNeedsMfa(true); // On bascule l'interface
+                    setIsPending(false);
+                    return; // On s'arrête là, on attend le code
+                }
+
+                // Sinon, connexion directe
+                if (onLogin) await onLogin();
+            } 
+            // --- CAS 4 : INSCRIPTION ---
+            else {
                 if (password.length < 6) throw new Error("Le mot de passe doit faire au moins 6 caractères.");
                 if (password !== confirmPassword) throw new Error("Les mots de passe ne correspondent pas.");
 
@@ -46,8 +102,7 @@ const AuthScreen = ({ onLogin, isInviteFlow = false, inviteToken = null, forceSi
                 if (data.user && !data.session) {
                     setSuccessMsg("Compte créé ! 📧 Vérifie tes emails pour valider.");
                     setIsLoginMode(true);
-                    setPassword('');
-                    setConfirmPassword('');
+                    setPassword(''); setConfirmPassword('');
                 } else if (data.user && data.session) {
                     window.location.reload();
                 }
@@ -55,18 +110,20 @@ const AuthScreen = ({ onLogin, isInviteFlow = false, inviteToken = null, forceSi
         } catch (error) {
             console.error(error);
             let msg = error.message || "Une erreur est survenue.";
-            if (msg.includes("Invalid login")) msg = "Email ou mot de passe incorrect.";
             if (msg.includes("User already registered")) msg = "Cet email est déjà utilisé.";
+            if (msg.includes("Invalid login")) msg = "Identifiants incorrects.";
+            if (msg.includes("Invalid code")) msg = "Code de sécurité incorrect.";
             setErrorMsg(msg);
         } finally {
-            setIsPending(false);
+            // On ne coupe le loading que si on n'a pas basculé en mode MFA
+            if (!needsMfa || errorMsg) setIsPending(false);
         }
     };
 
-    // Titre dynamique
     let title = "Heureux de vous revoir";
-    if (!isLoginMode) title = "Créez votre écurie";
-    if (isForgotMode) title = "Récupération";
+    if (needsMfa) title = "Sécurité requise"; // Titre mode 2FA
+    else if (!isLoginMode) title = "Créez votre écurie";
+    else if (isForgotMode) title = "Récupération";
 
     return (
         <div className="auth-screen">
@@ -83,71 +140,113 @@ const AuthScreen = ({ onLogin, isInviteFlow = false, inviteToken = null, forceSi
                 {successMsg && <div className="auth-message success">{successMsg}</div>}
                 {errorMsg && <div className="auth-message error">{errorMsg}</div>}
 
+                {/* SECTION SOCIALE (Masquée en MFA ou Forgot) */}
+                {!isForgotMode && !needsMfa && (
+                    <div className="social-login-section">
+                        <button className="social-btn google" onClick={() => handleSocialLogin('google')} title="Continuer avec Google">
+                            <FaGoogle /> Google
+                        </button>
+                    </div>
+                )}
+
+                {!isForgotMode && !needsMfa && <div className="divider"><span>OU</span></div>}
+
                 <form className="login-form" onSubmit={handleSubmit}>
                     
-                    <div className="input-group">
-                        <div className="input-icon"><FaEnvelope /></div>
-                        <input 
-                            type="email" placeholder="Email" 
-                            value={email} onChange={(e) => setEmail(e.target.value)}
-                            required disabled={isPending}
-                        />
-                    </div>
-
-                    {!isForgotMode && (
-                        <div className="input-group slide-in">
-                            <div className="input-icon"><FaLock /></div>
-                            <input 
-                                type="password" placeholder="Mot de passe" 
-                                value={password} onChange={(e) => setPassword(e.target.value)}
-                                required disabled={isPending} minLength={6}
-                            />
-                        </div>
-                    )}
-
-                    {!isLoginMode && !isForgotMode && (
-                        <div className="input-group slide-in">
-                            <div className="input-icon"><FaLock /></div>
-                            <input 
-                                type="password" placeholder="Confirmer le mot de passe" 
-                                value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
-                                required disabled={isPending}
-                            />
-                        </div>
-                    )}
-
-                    {/* OPTIONS DE CONNEXION */}
-                    {isLoginMode && !isForgotMode && (
-                        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:'5px'}}>
-                            <div className="remember-me" onClick={() => setRememberMe(!rememberMe)}>
-                                {rememberMe ? <FaCheckSquare className="check-icon active" /> : <FaSquare className="check-icon" />}
-                                <span>Se souvenir</span>
+                    {/* --- VUE SAISIE CODE 2FA --- */}
+                    {needsMfa ? (
+                        <div className="mfa-input-container slide-in">
+                            <p style={{color:'#ccc', fontSize:'0.9rem', marginBottom:'15px'}}>
+                                Entrez le code à 6 chiffres de votre application d'authentification.
+                            </p>
+                            <div className="input-group">
+                                <div className="input-icon"><FaShieldAlt /></div>
+                                <input 
+                                    type="text" 
+                                    placeholder="000 000" 
+                                    value={mfaCode} 
+                                    onChange={(e) => setMfaCode(e.target.value.replace(/\D/g,'').slice(0,6))}
+                                    autoFocus
+                                    className="code-input"
+                                    required 
+                                    disabled={isPending}
+                                />
                             </div>
-                            <button type="button" className="forgot-link" onClick={() => {setIsForgotMode(true); setErrorMsg(''); setSuccessMsg('');}}>
-                                Mot de passe oublié ?
-                            </button>
                         </div>
+                    ) : (
+                        /* --- VUE NORMALE EMAIL/MDP --- */
+                        <>
+                            <div className="input-group">
+                                <div className="input-icon"><FaEnvelope /></div>
+                                <input 
+                                    type="email" placeholder="Email" 
+                                    value={email} onChange={(e) => setEmail(e.target.value)}
+                                    required disabled={isPending}
+                                />
+                            </div>
+
+                            {!isForgotMode && (
+                                <div className="input-group slide-in">
+                                    <div className="input-icon"><FaLock /></div>
+                                    <input 
+                                        type="password" placeholder="Mot de passe" 
+                                        value={password} onChange={(e) => setPassword(e.target.value)}
+                                        required disabled={isPending} minLength={6}
+                                    />
+                                </div>
+                            )}
+
+                            {!isLoginMode && !isForgotMode && (
+                                <div className="input-group slide-in">
+                                    <div className="input-icon"><FaLock /></div>
+                                    <input 
+                                        type="password" placeholder="Confirmer le mot de passe" 
+                                        value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
+                                        required disabled={isPending}
+                                    />
+                                </div>
+                            )}
+
+                            {isLoginMode && !isForgotMode && (
+                                <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:'5px'}}>
+                                    <div className="remember-me" onClick={() => setRememberMe(!rememberMe)}>
+                                        {rememberMe ? <FaCheckSquare className="check-icon active" /> : <FaSquare className="check-icon" />}
+                                        <span>Se souvenir</span>
+                                    </div>
+                                    <button type="button" className="forgot-link" onClick={() => {setIsForgotMode(true); setErrorMsg(''); setSuccessMsg('');}}>
+                                        Mot de passe oublié ?
+                                    </button>
+                                </div>
+                            )}
+                        </>
                     )}
 
-                    {/* BOUTON D'ACTION PRINCIPAL */}
                     <button type="submit" className="login-btn" disabled={isPending}>
                         {isPending ? <span className="loader"></span> : (
-                            isForgotMode ? <><FaPaperPlane /> Envoyer le lien</> :
+                            needsMfa ? "Vérifier le code" :
+                            isForgotMode ? (cooldown > 0 ? `Attendre ${cooldown}s` : <><FaPaperPlane /> Envoyer le lien</>) :
                             isLoginMode ? <><FaSignInAlt /> Se connecter</> : 
                             <><FaUserPlus /> {isInviteFlow ? "Rejoindre" : "S'inscrire"}</>
                         )}
                     </button>
 
-                    {/* BOUTON RETOUR (Mode Forgot) */}
-                    {isForgotMode && (
-                        <button type="button" className="switch-btn" style={{marginTop:'15px'}} onClick={() => setIsForgotMode(false)}>
-                            <FaArrowLeft /> Retour à la connexion
+                    {/* BOUTONS RETOUR */}
+                    {(isForgotMode || needsMfa) && (
+                        <button 
+                            type="button" 
+                            className="switch-btn" 
+                            style={{marginTop:'15px'}} 
+                            onClick={() => {
+                                if(needsMfa) { setNeedsMfa(false); setMfaCode(''); }
+                                else setIsForgotMode(false);
+                            }}
+                        >
+                            <FaArrowLeft /> Retour
                         </button>
                     )}
                 </form>
 
-                {/* LIEN DE BASCULE LOGIN/REGISTER */}
-                {!forceSignUp && !isForgotMode && (
+                {!forceSignUp && !isForgotMode && !needsMfa && (
                     <p className="signup-link">
                         {isLoginMode ? "Pas encore de compte ?" : "Déjà un compte ?"}
                         <button 

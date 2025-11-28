@@ -216,7 +216,6 @@ export const authService = {
         if (error) throw error;
     },
 
-    // --- AJOUTER CES DEUX LIGNES ICI : ---
     updateMemberRole: (tid, uid, role) => api.updateMemberRole(tid, uid, role),
     kickMember: (tid, uid) => api.kickMember(tid, uid),
 
@@ -232,6 +231,70 @@ export const authService = {
     // 2. Mettre à jour le mot de passe (Une fois l'utilisateur revenu via le lien)
     async updateUserPassword(newPassword) {
         const { data, error } = await supabase.auth.updateUser({ password: newPassword });
+        if (error) throw error;
+        return data;
+    },
+
+    // Changer l'email
+    async updateUserEmail(newEmail) {
+        const { data, error } = await supabase.auth.updateUser({ email: newEmail });
+        if (error) throw error;
+        return data;
+    },
+
+    // --- MFA (2FA) ---
+    
+    // 1. Vérifier le statut
+    async getMfaAssuranceLevel() {
+        const { data, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+        if (error) throw error;
+        return data; // { currentLevel, nextLevel }
+    },
+
+    // 2. Générer un QR Code (Enrôlement)
+    async enrollMfa() {
+        const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp' });
+        if (error) throw error;
+        return data; 
+    },
+
+    // 3. Valider un défi (Connexion ou Activation)
+    async challengeAndVerifyMfa(factorId, code) {
+        // Créer le défi
+        const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({ factorId });
+        if (challengeError) throw challengeError;
+
+        // Vérifier le code
+        const { data, error } = await supabase.auth.mfa.verify({
+            factorId,
+            challengeId: challengeData.id,
+            code
+        });
+        if (error) throw error;
+        return data;
+    },
+
+    // 4. Désactiver (Supprimer)
+    async unenrollMfa(factorId) {
+        const { error } = await supabase.auth.mfa.unenroll({ factorId });
+        if (error) throw error;
+    },
+
+    // 5. Lister les facteurs
+    async listMfaFactors() {
+        const { data, error } = await supabase.auth.mfa.listFactors();
+        if (error) throw error;
+        return data.all;
+    },
+    
+    // CONNEXION SOCIALE (OAuth)
+    async signInWithProvider(provider) {
+        const { data, error } = await supabase.auth.signInWithOAuth({
+            provider: provider,
+            options: {
+                redirectTo: window.location.origin, // Redirige vers le dashboard après succès
+            }
+        });
         if (error) throw error;
         return data;
     },

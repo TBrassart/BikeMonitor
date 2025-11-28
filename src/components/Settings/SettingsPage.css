@@ -37,3 +37,60 @@
 .settings-content > div:not(.profile-page) {
     max-width: 800px; /* On garde une limite lisible pour les petits formulaires */
 }
+
+/* MFA STYLES */
+.mfa-active-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid #10b981;
+    padding: 20px;
+    border-radius: 12px;
+}
+
+.mfa-status {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+.success-icon { color: #10b981; font-size: 2rem; }
+.mfa-status p { margin: 5px 0 0; color: #ccc; font-size: 0.9rem; }
+
+.danger-border { border-color: #ef4444 !important; color: #ef4444 !important; }
+.danger-border:hover { background: rgba(239, 68, 68, 0.1) !important; }
+
+.mfa-qr-step {
+    display: flex;
+    gap: 30px;
+    align-items: center;
+    background: rgba(0,0,0,0.2);
+    padding: 20px;
+    border-radius: 12px;
+}
+
+.qr-wrapper {
+    background: white;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.qr-instructions h5 { margin: 15px 0 5px; color: white; }
+.qr-instructions p { margin: 0 0 15px; color: #aaa; font-size: 0.9rem; }
+
+.pin-input-small {
+    width: 120px !important;
+    text-align: center;
+    letter-spacing: 5px;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.text-btn {
+    background: transparent; border: none; color: #aaa; 
+    text-decoration: underline; cursor: pointer; margin-top: 10px;
+}
+
+@media (max-width: 600px) {
+    .mfa-qr-step, .mfa-active-box { flex-direction: column; text-align: center; }
+}

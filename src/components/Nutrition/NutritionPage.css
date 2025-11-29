@@ -160,6 +160,15 @@
     overflow-y: auto; max-height: 70vh;
 }
 
+/* SCAN SECTION */
+.scan-section {
+    background: rgba(0, 229, 255, 0.05);
+}
+.scan-section input:focus {
+    border-color: var(--neon-blue);
+    outline: none;
+}
+
 /* TAGS */
 .tags-container { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
 .nutri-tag { padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; display: flex; align-items: center; gap: 5px; }
@@ -187,11 +196,90 @@
 .edit-btn-full:hover { background: rgba(14, 165, 233, 0.1); }
 
 /* FORMULAIRE */
-.nutri-form-modal { width: 500px; padding: 30px; }
+.nutri-form-modal {
+    width: 600px;
+    max-width: 95vw;
+    /* On fixe la hauteur max à 90% de l'écran pour ne jamais dépasser */
+    max-height: 90vh; 
+    display: flex;
+    flex-direction: column;
+    padding: 0; /* Le padding sera géré par les enfants */
+    overflow: hidden; /* Important pour le sticky footer */
+}
+.form-header {
+    flex-shrink: 0;
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-card); /* Assure que ce n'est pas transparent */
+}
+.nutri-form-scroll-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px; /* Espacement global réduit */
+}
+
+/* Pied de page (Bouton Sauvegarder) fixe en bas */
+.form-footer {
+    flex-shrink: 0;
+    padding: 15px 20px;
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-card);
+    z-index: 10;
+}
 .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.form-grid-3-tight {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 10px;
+}
 .form-section-title { font-size: 0.9rem; color: var(--text-secondary); margin: 15px 0 10px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border-color); }
 .tags-selector { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; }
+/* Ligne Macros (Petits inputs) */
+.macros-row {
+    display: flex;
+    gap: 10px;
+    background: rgba(0,0,0,0.2);
+    padding: 10px;
+    border-radius: 8px;
+    align-items: center;
+}
+.macros-row .form-group {
+    margin-bottom: 0; /* Enlève la marge par défaut */
+    flex: 1;
+}
+.macros-row label {
+    font-size: 0.7rem; /* Labels plus petits */
+    margin-bottom: 2px;
+}
+
+/* Section visuellement plus compacte */
+.form-section-compact {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-top: 5px;
+}
+.form-section-compact h4 {
+    margin: 0;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    min-width: 80px;
+}
+.compact-tags {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+/* Réduire la taille des chips (boutons tags) */
+.chip {
+    padding: 4px 10px;
+    font-size: 0.75rem;
+}
 
 /* MOBILE */
 @media (max-width: 768px) {

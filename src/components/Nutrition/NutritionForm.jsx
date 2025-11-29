@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { FaSave, FaTimes } from 'react-icons/fa';
-import { authService } from '../../services/api';
+import { FaSave, FaTimes, FaBarcode, FaSearch } from 'react-icons/fa';
+import { authService, nutritionService } from '../../services/api';
 import './NutritionPage.css';
 
 // NOTE : On a retiré l'import de nutritionService ici.
@@ -8,6 +8,8 @@ import './NutritionPage.css';
 
 const NutritionForm = ({ onClose, onSave, initialData }) => {
     const [turlags, setTurlags] = useState([]);
+    const [barcode, setBarcode] = useState('');
+    const [isScanning, setIsScanning] = useState(false);
 
     const [formData, setFormData] = useState({
         name: '', brand: '', category_type: 'bar', 
@@ -36,6 +38,30 @@ const NutritionForm = ({ onClose, onSave, initialData }) => {
             ...prev,
             [name]: type === 'checkbox' ? checked : value
         }));
+    };
+
+    const handleScan = async (e) => {
+        e.preventDefault(); // Empêcher submit formulaire global
+        if (!barcode) return;
+        
+        setIsScanning(true);
+        const result = await nutritionService.fetchOpenFoodFacts(barcode);
+        setIsScanning(false);
+
+        if (result.found) {
+            setFormData(prev => ({
+                ...prev,
+                name: result.name,
+                brand: result.brand,
+                category_type: result.category_type,
+                carbs: result.carbs || 0,
+                proteins: result.proteins || 0,
+                fat: result.fat || 0,
+            }));
+            alert(`Produit trouvé !\nValeurs importées pour : ${result.serving_size || '100g'}.\nVérifiez les macros.`);
+        } else {
+            alert("Produit non trouvé sur OpenFoodFacts ou code invalide.");
+        }
     };
 
     const toggleArrayItem = (field, value) => {
@@ -69,92 +95,129 @@ const NutritionForm = ({ onClose, onSave, initialData }) => {
     return (
         <div className="modal-overlay">
             <div className="glass-panel modal-content nutri-form-modal">
+                
+                {/* 1. HEADER FIXE */}
                 <div className="form-header">
-                    <h3>{initialData ? 'Modifier' : 'Ajouter'} Nutrition</h3>
+                    <h3 style={{margin:0}}>{initialData ? 'Modifier' : 'Ajouter'} Nutrition</h3>
                     <button onClick={onClose} className="close-btn"><FaTimes /></button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="nutri-form">
-                    <div className="form-grid-2">
+                {/* 2. ZONE SCROLLABLE (Contenu) */}
+                <form onSubmit={handleSubmit} className="nutri-form-scroll-area">
+                    
+                    {/* ZONE DE SCAN (Seulement si création) */}
+                    {!initialData && (
+                        <div className="scan-section glass-panel" style={{padding: '10px', display:'flex', gap:'10px', alignItems:'center'}}>
+                            <div style={{color:'var(--neon-blue)', fontSize:'1.2rem'}}><FaBarcode /></div>
+                            <input 
+                                type="text" 
+                                placeholder="Scanner EAN..." 
+                                value={barcode}
+                                onChange={(e) => setBarcode(e.target.value)}
+                                className="admin-input"
+                                style={{flex: 1, padding:'6px', fontSize:'0.9rem'}}
+                                autoFocus
+                            />
+                            <button type="button" onClick={handleScan} disabled={isScanning} className="primary-btn small">
+                                {isScanning ? '...' : <FaSearch />}
+                            </button>
+                        </div>
+                    )}
+
+                    {/* LIGNE 1 : Nom (Grand), Marque, Type -> Tout sur une ligne */}
+                    <div className="form-grid-3-tight">
                         <div className="form-group">
                             <label>Nom</label>
-                            <input name="name" value={formData.name} onChange={handleChange} required placeholder="Ex: Gel Caféine" />
+                            <input name="name" value={formData.name} onChange={handleChange} required placeholder="Ex: Gel" />
                         </div>
                         <div className="form-group">
                             <label>Marque</label>
                             <input name="brand" value={formData.brand} onChange={handleChange} placeholder="Ex: Maurten" />
                         </div>
-                    </div>
-
-                    <div className="form-group">
-                        <label>Type</label>
-                        <select name="category_type" value={formData.category_type} onChange={handleChange} className="neon-select">
-                            <option value="bar">Barre</option>
-                            <option value="gel">Gel</option>
-                            <option value="drink">Boisson / Poudre</option>
-                            <option value="compote">Compote / Purée</option>
-                            <option value="meal">Repas lyophilisé</option>
-                            <option value="other">Autre</option>
-                        </select>
-                    </div>
-
-                    {/* PARTAGE & DATE */}
-                    <div className="form-grid-2">
                         <div className="form-group">
-                            <label>Péremption</label>
-                            <input type="date" name="expiration_date" value={formData.expiration_date} onChange={handleChange} />
-                        </div>
-                        
-                        {/* SÉLECTEUR DE GROUPE */}
-                        <div className="form-group">
-                            <label>Visibilité</label>
-                            <select name="turlag_id" value={formData.turlag_id} onChange={handleChange} className="neon-select">
-                                <option value="">🔒 Privé (Moi uniquement)</option>
-                                {turlags.map(t => (
-                                    <option key={t.id} value={t.id}>👥 {t.name}</option>
-                                ))}
+                            <label>Type</label>
+                            <select name="category_type" value={formData.category_type} onChange={handleChange} className="neon-select">
+                                <option value="bar">Barre</option>
+                                <option value="gel">Gel</option>
+                                <option value="drink">Boisson</option>
+                                <option value="compote">Compote</option>
+                                <option value="meal">Repas</option>
+                                <option value="other">Autre</option>
                             </select>
                         </div>
                     </div>
-                    
-                    <div className="form-section-title">Macros (par unité)</div>
-                    <div className="form-grid-3">
-                        <div className="form-group"><label>Glucides</label><input type="number" name="carbs" step="0.1" value={formData.carbs} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Protéines</label><input type="number" name="proteins" step="0.1" value={formData.proteins} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Lipides</label><input type="number" name="fat" step="0.1" value={formData.fat} onChange={handleChange} /></div>
-                    </div>
 
-                    <div className="form-section-title">Propriétés</div>
-                    <div className="tags-selector">
-                        <button type="button" className={`chip ${formData.caffeine ? 'active' : ''}`} onClick={() => setFormData(p => ({...p, caffeine: !p.caffeine}))}>☕ Caféine</button>
-                        <button type="button" className={`chip ${formData.tags.includes('vegan') ? 'active' : ''}`} onClick={() => toggleArrayItem('tags', 'vegan')}>🌱 Vegan</button>
-                        <button type="button" className={`chip ${formData.tags.includes('homemade') ? 'active' : ''}`} onClick={() => toggleArrayItem('tags', 'homemade')}>🏠 Maison</button>
-                        <button type="button" className={`chip ${formData.tags.includes('lactose_free') ? 'active' : ''}`} onClick={() => toggleArrayItem('tags', 'lactose_free')}>🥛 Sans Lactose</button>
-                    </div>
-
-                    <div className="form-section-title">Moment</div>
-                    <div className="tags-selector">
-                        <button type="button" className={`chip blue ${formData.timing.includes('pre') ? 'active' : ''}`} onClick={() => toggleArrayItem('timing', 'pre')}>Avant</button>
-                        <button type="button" className={`chip orange ${formData.timing.includes('during') ? 'active' : ''}`} onClick={() => toggleArrayItem('timing', 'during')}>Pendant</button>
-                        <button type="button" className={`chip green ${formData.timing.includes('post') ? 'active' : ''}`} onClick={() => toggleArrayItem('timing', 'post')}>Après</button>
-                    </div>
-
-                    <div className="form-grid-2">
-                        <div className="form-group"><label>Stock Actuel</label><input type="number" name="quantity" value={formData.quantity} onChange={handleChange} /></div>
-                        <div className="form-group"><label>Alerte Min.</label><input type="number" name="min_quantity" value={formData.min_quantity} onChange={handleChange} /></div>
-                    </div>
-
-                    {formData.tags.includes('homemade') && (
+                    {/* LIGNE 2 : Macros (Compacté dans une boite) */}
+                    <div className="macros-row">
+                        <div style={{fontSize:'0.8rem', fontWeight:'bold', color:'#888', marginRight:'5px'}}>MACROS</div>
                         <div className="form-group">
-                            <label>Recette</label>
-                            <textarea name="recipe" value={formData.recipe} onChange={handleChange} rows="3" />
+                            <label>Glucides</label>
+                            <input type="number" name="carbs" step="0.1" value={formData.carbs} onChange={handleChange} />
                         </div>
-                    )}
+                        <div className="form-group">
+                            <label>Protéines</label>
+                            <input type="number" name="proteins" step="0.1" value={formData.proteins} onChange={handleChange} />
+                        </div>
+                        <div className="form-group">
+                            <label>Lipides</label>
+                            <input type="number" name="fat" step="0.1" value={formData.fat} onChange={handleChange} />
+                        </div>
+                    </div>
 
-                    <button type="submit" className="primary-btn full-width">
+                    {/* LIGNE 3 : Stock & Dates */}
+                    <div className="form-grid-3-tight">
+                         <div className="form-group">
+                            <label>Stock</label>
+                            <input type="number" name="quantity" value={formData.quantity} onChange={handleChange} />
+                        </div>
+                        <div className="form-group">
+                            <label>Alerte Min.</label>
+                            <input type="number" name="min_quantity" value={formData.min_quantity} onChange={handleChange} />
+                        </div>
+                        <div className="form-group">
+                            <label>Péremption</label>
+                            <input type="date" name="expiration_date" value={formData.expiration_date} onChange={handleChange} style={{fontSize:'0.8rem'}}/>
+                        </div>
+                    </div>
+
+                    {/* LIGNES COMPACTES POUR TAGS & MOMENT */}
+                    <div className="form-section-compact">
+                        <h4>Propriétés</h4>
+                        <div className="compact-tags">
+                            <button type="button" className={`chip ${formData.caffeine ? 'active' : ''}`} onClick={() => setFormData(p => ({...p, caffeine: !p.caffeine}))}>☕ Caféine</button>
+                            <button type="button" className={`chip ${formData.tags.includes('vegan') ? 'active' : ''}`} onClick={() => toggleArrayItem('tags', 'vegan')}>🌱 Vegan</button>
+                            <button type="button" className={`chip ${formData.tags.includes('homemade') ? 'active' : ''}`} onClick={() => toggleArrayItem('tags', 'homemade')}>🏠 Maison</button>
+                        </div>
+                    </div>
+
+                    <div className="form-section-compact">
+                        <h4>Moment</h4>
+                        <div className="compact-tags">
+                            <button type="button" className={`chip blue ${formData.timing.includes('pre') ? 'active' : ''}`} onClick={() => toggleArrayItem('timing', 'pre')}>Avant</button>
+                            <button type="button" className={`chip orange ${formData.timing.includes('during') ? 'active' : ''}`} onClick={() => toggleArrayItem('timing', 'during')}>Pendant</button>
+                            <button type="button" className={`chip green ${formData.timing.includes('post') ? 'active' : ''}`} onClick={() => toggleArrayItem('timing', 'post')}>Après</button>
+                        </div>
+                    </div>
+                    
+                    <div className="form-group" style={{marginTop:'5px'}}>
+                        <label>Visibilité</label>
+                        <select name="turlag_id" value={formData.turlag_id} onChange={handleChange} className="neon-select">
+                            <option value="">🔒 Privé (Moi uniquement)</option>
+                            {turlags.map(t => (
+                                <option key={t.id} value={t.id}>👥 {t.name}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                </form>
+
+                {/* 3. FOOTER FIXE (Bouton Sauvegarder) */}
+                <div className="form-footer">
+                    <button type="button" onClick={handleSubmit} className="primary-btn full-width">
                         <FaSave /> {initialData ? 'Mettre à jour' : 'Enregistrer'}
                     </button>
-                </form>
+                </div>
+
             </div>
         </div>
     );

@@ -1074,7 +1074,53 @@ export const nutritionService = {
     update: (id, d) => api.updateNutrition(id, d),
     delete: (id) => api.deleteNutrition(id),
     getHistory: (id) => api.getNutritionHistory(id),
-    addStock: (id, qty, price) => api.addNutritionStock(id, qty, price)
+    addStock: (id, qty, price) => api.addNutritionStock(id, qty, price),
+    fetchOpenFoodFacts: async (barcode) => {
+        try {
+            const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
+            const data = await response.json();
+            
+            if (data.status === 1) {
+                const p = data.product;
+                const n = p.nutriments;
+                
+                // Essayer de déterminer le type
+                let type = 'other';
+                const lowerName = (p.product_name || '').toLowerCase();
+                if (lowerName.includes('gel')) type = 'gel';
+                else if (lowerName.includes('bar')) type = 'bar';
+                else if (lowerName.includes('boisson') || lowerName.includes('drink') || lowerName.includes('poudre')) type = 'drink';
+                else if (lowerName.includes('compote') || lowerName.includes('purée')) type = 'compote';
+
+                // Essayer de récupérer les valeurs "par portion" si dispo, sinon 100g
+                // OFF stocke souvent sous 'carbohydrates_serving' si la portion est définie
+                // Sinon on prend _100g
+                
+                // Petite logique : si c'est un gel/barre, on veut la valeur par unité.
+                // Souvent OFF a "serving_size".
+                
+                const isPerServingAvailable = n.carbohydrates_serving !== undefined;
+                
+                return {
+                    found: true,
+                    name: p.product_name || '',
+                    brand: p.brands || '',
+                    category_type: type,
+                    // Priorité à la portion, sinon 100g
+                    carbs: isPerServingAvailable ? parseFloat(n.carbohydrates_serving) : parseFloat(n.carbohydrates_100g),
+                    proteins: isPerServingAvailable ? parseFloat(n.proteins_serving) : parseFloat(n.proteins_100g),
+                    fat: isPerServingAvailable ? parseFloat(n.fat_serving) : parseFloat(n.fat_100g),
+                    image_url: p.image_front_small_url,
+                    serving_size: p.serving_size || '100g' // Pour info utilisateur
+                };
+            } else {
+                return { found: false };
+            }
+        } catch (e) {
+            console.error("Erreur OFF", e);
+            return { found: false, error: true };
+        }
+    }
 };
 
 export const libraryService = { getAll: () => api.getComponentLibrary() };

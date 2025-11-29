@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { adminService, authService } from '../../services/api';
+import { adminService, authService, shopService } from '../../services/api';
 import { 
     FaUsers, FaDatabase, FaChartLine, FaUserShield, FaTrash, 
     FaListAlt, FaLock, FaTools, FaFileCsv, FaFileCode, 
-    FaEnvelopeOpenText, FaBroom, FaPowerOff, FaSearch, FaBullhorn, FaExclamationCircle, FaFilter
+    FaEnvelopeOpenText, FaBroom, FaPowerOff, FaSearch, FaBullhorn, FaExclamationCircle, FaFilter, FaTrophy, FaPlusCircle
 } from 'react-icons/fa';
 import './AdminPage.css';
 
@@ -23,6 +23,24 @@ function AdminPage() {
     // --- FILTRES ---
     const [searchTerm, setSearchTerm] = useState('');
     const [filterRole, setFilterRole] = useState('all');
+
+    // États Saison
+    const [seasonConfig, setSeasonConfig] = useState({ xp_per_km: 10, xp_per_elev: 0.5 });
+    const [newMission, setNewMission] = useState({ 
+        title: '', description: '', xp_reward: 500, icon: '🎯', 
+        type: 'manual', criteriaValue: 0 
+    });
+    const [shopItems, setShopItems] = useState([]);
+    const [levels, setLevels] = useState([]);
+
+    // LISTE DES TYPES DE MISSIONS PARAMÉTRABLES
+    const MISSION_TYPES = [
+        { code: 'manual', label: 'Manuelle (Déclaratif)', unit: '' },
+        { code: 'min_dist_single', label: 'Rouler une distance (1 sortie)', unit: 'km' },
+        { code: 'total_elevation', label: 'Cumuler du dénivelé (Total)', unit: 'm' },
+        { code: 'ride_count', label: 'Nombre de sorties', unit: 'sorties' },
+        { code: 'min_speed', label: 'Vitesse moyenne min (1 sortie)', unit: 'km/h' },
+    ];
 
     useEffect(() => {
         checkRights();
@@ -47,16 +65,26 @@ function AdminPage() {
     const unlockAndLoad = async () => {
         setLoading(true);
         try {
-            const [statsData, usersData, logsData] = await Promise.all([
+            // ON AJOUTE shopService.getSeason() et shopService.getCatalog()
+            const [statsData, usersData, logsData, configData, levelsData, itemsData] = await Promise.all([
                 adminService.getStats(),
                 adminService.getAllUsers(),
-                adminService.getLogs()
+                adminService.getLogs(),
+                shopService.getSeasonConfig(),
+                shopService.getSeason(),   // Récupère les niveaux
+                shopService.getCatalog()   // Récupère les items pour les listes déroulantes
             ]);
+
             setStats(statsData);
             setUsers(usersData);
             setLogs(logsData);
+            if(configData) setSeasonConfig(configData);
+            setLevels(levelsData || []);
+            setShopItems(itemsData || []);
+            
             setIsLocked(false);
         } catch (e) {
+            console.error(e);
             alert("Erreur chargement données.");
         } finally {
             setLoading(false);
@@ -81,6 +109,45 @@ function AdminPage() {
             console.error(err);
             setLoading(false);
         }
+    };
+
+    // --- LOGIQUE SAISON ---
+    const handleUpdateSeasonConfig = async (e) => {
+        e.preventDefault();
+        try {
+            await shopService.updateSeasonConfig(seasonConfig);
+            adminService.log('ADMIN_SEASON', `Mise à jour ratios XP: ${JSON.stringify(seasonConfig)}`, 'warning');
+            alert("Configuration saison mise à jour !");
+        } catch (e) { alert("Erreur sauvegarde config"); }
+    };
+
+    const handleCreateMission = async (e) => {
+        e.preventDefault();
+        
+        // Construction de l'objet criteria
+        let criteria = null;
+        if (newMission.type !== 'manual') {
+            criteria = {
+                type: newMission.type,
+                value: parseFloat(newMission.criteriaValue)
+            };
+        }
+
+        const missionPayload = {
+            title: newMission.title,
+            description: newMission.description,
+            xp_reward: newMission.xp_reward,
+            icon: newMission.icon,
+            criteria: criteria // Supabase stockera ça en JSONB
+        };
+
+        try {
+            await shopService.addMission(missionPayload);
+            adminService.log('ADMIN_MISSION', `Nouvelle mission: ${newMission.title}`, 'info');
+            alert("Mission créée !");
+            // Reset
+            setNewMission({ title: '', description: '', xp_reward: 500, icon: '🎯', type: 'manual', criteriaValue: 0 }); 
+        } catch (e) { alert("Erreur création mission"); }
     };
 
     // ACTIONS
@@ -188,9 +255,8 @@ function AdminPage() {
                             onChange={e => setPin(e.target.value)} 
                             placeholder="Mot de passe Admin" // Changé
                             autoFocus 
-                            // SUPPRIMÉ : maxLength={4} 
                             className="pin-input"
-                            style={{ letterSpacing: '5px' }} // Espacement plus normal que les 15px d'avant
+                            style={{ letterSpacing: '5px' }} 
                         />
                         <button type="submit" className="primary-btn" style={{width:'100%'}}>
                             Déverrouiller
@@ -213,6 +279,18 @@ function AdminPage() {
         return matchesSearch && matchesRole;
     });
 
+    const handleUpdateLevel = async (levelNum, field, value) => {
+        try {
+            // On utilise 'level' comme identifiant unique
+            const updatedLevels = levels.map(l => l.level === levelNum ? { ...l, [field]: value } : l);
+            setLevels(updatedLevels);
+            await shopService.updateLevel(levelNum, { [field]: value });
+        } catch (e) {
+            console.error(e);
+            alert("Erreur maj niveau : " + e.message);
+        }
+    };
+
     return (
         <div className="admin-page">
             <header className="admin-header">
@@ -222,10 +300,173 @@ function AdminPage() {
                 </div>
                 <div className="admin-tabs">
                     <button className={activeTab === 'users' ? 'active' : ''} onClick={() => setActiveTab('users')}><FaUsers /> Pilotes</button>
+                    <button className={activeTab === 'season' ? 'active' : ''} onClick={() => setActiveTab('season')}><FaTrophy /> Saison</button>
                     <button className={activeTab === 'logs' ? 'active' : ''} onClick={() => setActiveTab('logs')}><FaListAlt /> Logs</button>
                     <button className={activeTab === 'system' ? 'active' : ''} onClick={() => setActiveTab('system')}><FaTools /> Système</button>
                 </div>
             </header>
+
+            {/* ONGLET SAISON (C'est celui qui nous intéresse) */}
+            {activeTab === 'season' && (
+                <div className="admin-section glass-panel">
+                    <h3><FaTrophy /> Configuration Saison & Missions</h3>
+                    
+                    <div className="system-grid">
+                        {/* CONFIG RATIOS */}
+                        <div className="system-card glass-panel">
+                            <h4>Règles XP (Globales)</h4>
+                            <p>Modifie combien d'XP rapporte chaque kilomètre.</p>
+                            <form onSubmit={handleUpdateSeasonConfig} className="banner-form">
+                                <div className="form-group">
+                                    <label>XP par km (Défaut: 10)</label>
+                                    <input 
+                                        type="number" className="admin-input"
+                                        value={seasonConfig.xp_per_km} 
+                                        onChange={e => setSeasonConfig({...seasonConfig, xp_per_km: parseInt(e.target.value)})} 
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label>XP par m D+ (Défaut: 0.5)</label>
+                                    <input 
+                                        type="number" step="0.1" className="admin-input"
+                                        value={seasonConfig.xp_per_elev} 
+                                        onChange={e => setSeasonConfig({...seasonConfig, xp_per_elev: parseFloat(e.target.value)})} 
+                                    />
+                                </div>
+                                <button className="admin-std-btn">Sauvegarder Ratios</button>
+                            </form>
+                        </div>
+
+                        {/* CRÉATION MISSION INTELLIGENTE */}
+                        <div className="system-card glass-panel">
+                            <h4>Nouvelle Mission</h4>
+                            <p>Configurez une mission automatique.</p>
+                            <form onSubmit={handleCreateMission} className="banner-form">
+                                
+                                {/* 1. CHOIX DU TYPE */}
+                                <div className="form-group">
+                                    <label>Type d'objectif</label>
+                                    <select 
+                                        className="admin-input"
+                                        value={newMission.type}
+                                        onChange={e => setNewMission({...newMission, type: e.target.value})}
+                                    >
+                                        {MISSION_TYPES.map(t => (
+                                            <option key={t.code} value={t.code}>{t.label}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {/* 2. VALEUR CIBLE (Si pas manuel) */}
+                                {newMission.type !== 'manual' && (
+                                    <div className="form-group">
+                                        <label>Objectif à atteindre ({MISSION_TYPES.find(t=>t.code === newMission.type)?.unit})</label>
+                                        <input 
+                                            type="number" className="admin-input" 
+                                            placeholder="Ex: 50"
+                                            value={newMission.criteriaValue} 
+                                            onChange={e => setNewMission({...newMission, criteriaValue: e.target.value})} 
+                                        />
+                                    </div>
+                                )}
+
+                                {/* 3. DETAILS COSMÉTIQUES */}
+                                <div className="form-group">
+                                    <label>Titre</label>
+                                    <input 
+                                        className="admin-input" placeholder="Ex: Grand Fondeur" required
+                                        value={newMission.title} onChange={e => setNewMission({...newMission, title: e.target.value})} 
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label>Description</label>
+                                    <input 
+                                        className="admin-input" placeholder="Ex: Rouler 100km en une fois" 
+                                        value={newMission.description} onChange={e => setNewMission({...newMission, description: e.target.value})} 
+                                    />
+                                </div>
+                                <div style={{display:'flex', gap:'10px'}}>
+                                    <div className="form-group" style={{flex:1}}>
+                                        <label>XP Gain</label>
+                                        <input 
+                                            type="number" className="admin-input"
+                                            value={newMission.xp_reward} onChange={e => setNewMission({...newMission, xp_reward: parseInt(e.target.value)})} 
+                                        />
+                                    </div>
+                                    <div className="form-group" style={{width:'80px'}}>
+                                        <label>Icône</label>
+                                        <input 
+                                            className="admin-input"
+                                            value={newMission.icon} onChange={e => setNewMission({...newMission, icon: e.target.value})} 
+                                        />
+                                    </div>
+                                </div>
+                                <button className="admin-std-btn"><FaPlusCircle /> Créer Mission</button>
+                            </form>
+                        </div>
+                        {/* GESTION DES NIVEAUX (BATTLE PASS) */}
+                        <div className="system-card glass-panel" style={{gridColumn: '1 / -1'}}>
+                            <h4>Configuration du Battle Pass</h4>
+                            <p>Définissez l'XP requise et les récompenses pour chaque niveau.</p>
+                            
+                            <div style={{maxHeight:'400px', overflowY:'auto', border:'1px solid var(--border-color)', borderRadius:'8px'}}>
+                                <table className="users-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Niveau</th>
+                                            <th>XP Requis</th>
+                                            <th>Gain Watts</th>
+                                            <th>Item (Récompense)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {levels.map(lvl => (
+                                            /* CORRECTION 1 : On utilise lvl.level comme Key */
+                                            <tr key={lvl.level}> 
+                                                <td style={{fontWeight:'bold', color:'var(--neon-blue)'}}>Lvl {lvl.level}</td>
+                                                <td>
+                                                    <input 
+                                                        type="number" 
+                                                        className="admin-input" 
+                                                        style={{width:'80px', padding:'5px'}}
+                                                        value={lvl.xp_required}
+                                                        /* CORRECTION 2 : On passe lvl.level à la fonction update */
+                                                        onChange={(e) => handleUpdateLevel(lvl.level, 'xp_required', parseInt(e.target.value))}
+                                                    />
+                                                </td>
+                                                <td>
+                                                    <input 
+                                                        type="number" 
+                                                        className="admin-input" 
+                                                        style={{width:'80px', padding:'5px'}}
+                                                        value={lvl.reward_watts || 0}
+                                                        onChange={(e) => handleUpdateLevel(lvl.level, 'reward_watts', parseInt(e.target.value))}
+                                                    />
+                                                </td>
+                                                <td>
+                                                    <select 
+                                                        className="admin-input" 
+                                                        style={{padding:'5px'}}
+                                                        value={lvl.reward_item_id || ''}
+                                                        onChange={(e) => handleUpdateLevel(lvl.level, 'reward_item_id', e.target.value || null)}
+                                                    >
+                                                        <option value="">-- Aucun --</option>
+                                                        {shopItems.map(item => (
+                                                            <option key={item.id} value={item.id}>
+                                                                {item.name} ({item.rarity})
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* KPI */}
             <div className="admin-kpi-grid">

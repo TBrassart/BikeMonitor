@@ -31,6 +31,7 @@ import AdminPage from './components/Admin/AdminPage';
 import GlobalBanner from './components/Layout/GlobalBanner';
 
 import ShopPage from './components/Shop/ShopPage';
+import BattlePassPage from './components/Shop/BattlePassPage';
 
 import './App.css';
 
@@ -133,6 +134,7 @@ function App() {
                         <Route path="/app/settings" element={<SettingsPage />} />
     
                         <Route path="/app/shop" element={<ShopPage />} />
+                        <Route path="/app/season" element={<BattlePassPage />} />
                         
                         <Route path="/app/admin" element={<AdminPage />} />
                         

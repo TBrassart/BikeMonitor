@@ -1,0 +1,317 @@
+.battlepass-page {
+    padding-bottom: 80px;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 100px); /* Prend toute la hauteur dispo */
+    overflow: hidden;
+}
+
+/* --- HEADER --- */
+.bp-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background: linear-gradient(to right, rgba(0,0,0,0.8), transparent);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.bp-title h1 {
+    margin: 0;
+    font-size: 2rem;
+    background: linear-gradient(135deg, #facc15 0%, #f59e0b 100%); /* Or/Jaune */
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-style: italic;
+}
+
+.bp-title p {
+    margin: 5px 0 0 0;
+    color: var(--text-secondary);
+}
+
+.bp-level-badge {
+    background: rgba(255,255,255,0.1);
+    border: 2px solid #facc15;
+    border-radius: 12px;
+    padding: 10px 20px;
+    text-align: center;
+    box-shadow: 0 0 20px rgba(250, 204, 21, 0.2);
+}
+
+.bp-level-badge span { display: block; font-size: 0.7rem; text-transform: uppercase; }
+.bp-level-badge strong { font-size: 1.8rem; color: #facc15; line-height: 1; }
+
+/* --- TIMELINE (SCROLL HORIZONTAL) --- */
+.bp-timeline {
+    flex: 1;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    /* Scrollbar styling */
+    scrollbar-width: thin;
+    scrollbar-color: var(--neon-blue) var(--bg-deep);
+}
+
+/* BARRE DE PROGRESSION GLOBALE (Arrière-plan) */
+.bp-track {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    height: 6px;
+    background: rgba(255,255,255,0.1);
+    width: 100%; /* Sera ajusté dynamiquement en JS si besoin, ou fixe très large */
+    z-index: 0;
+    transform: translateY(-50%);
+}
+
+.bp-progress {
+    height: 100%;
+    background: var(--gradient-primary);
+    box-shadow: 0 0 15px var(--neon-blue);
+    transition: width 1s ease-out;
+}
+
+/* CONTENEUR DES CARTES */
+.bp-levels-container {
+    display: flex;
+    gap: 40px;
+    align-items: center;
+    z-index: 1;
+    padding-left: 50px; /* Marge de départ */
+    min-width: max-content; /* Force le scroll horizontal */
+}
+
+/* --- CARTE DE NIVEAU --- */
+.bp-level-card {
+    width: 160px;
+    height: 220px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px;
+    position: relative;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+/* LEVEL NUMBER (Bulle en haut) */
+.level-number {
+    background: rgba(0,0,0,0.5);
+    border: 1px solid var(--border-color);
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold; color: var(--text-secondary);
+    margin-bottom: 10px;
+}
+
+.xp-req { font-size: 0.7rem; color: var(--text-secondary); }
+
+/* BOITE RÉCOMPENSE */
+.reward-box {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    background: rgba(0,0,0,0.2);
+    border-radius: 8px;
+    margin: 10px 0;
+    border: 1px dashed rgba(255,255,255,0.1);
+}
+
+.reward-item { font-size: 0.9rem; text-align: center; color: var(--neon-purple); }
+.reward-watts { color: #f59e0b; font-weight: bold; font-size: 1.2rem; }
+.reward-none { color: #333; font-size: 2rem; }
+
+/* --- ÉTATS (Locked / Unlocked / Claimed) --- */
+
+/* 1. VERROUILLÉ */
+.bp-level-card.locked {
+    opacity: 0.5;
+    filter: grayscale(1);
+}
+.bp-level-card.locked .lock { color: #666; font-size: 1.5rem; }
+
+/* 2. DÉBLOQUÉ (Prêt à récupérer) */
+.bp-level-card.unlocked {
+    border-color: var(--neon-green);
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+    transform: scale(1.05);
+    background: linear-gradient(to bottom, var(--bg-card), rgba(16, 185, 129, 0.1));
+}
+.bp-level-card.unlocked .level-number {
+    background: var(--neon-green);
+    color: black;
+    box-shadow: 0 0 10px var(--neon-green);
+}
+
+/* Bouton Récupérer */
+.claim-btn {
+    background: var(--gradient-success);
+    border: none;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    animation: pulse 1.5s infinite;
+}
+
+/* 3. RÉCUPÉRÉ */
+.bp-level-card.claimed {
+    border-color: var(--text-secondary);
+    opacity: 0.8;
+}
+.bp-level-card.claimed .check {
+    color: var(--neon-green);
+    font-size: 2rem;
+    filter: drop-shadow(0 0 5px var(--neon-green));
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+/* MOBILE */
+@media (max-width: 600px) {
+    .bp-level-card { width: 140px; height: 200px; }
+}
+
+.battlepass-page {
+    padding-bottom: 20px;
+    height: calc(100vh - 60px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* HEADER */
+.bp-header {
+    padding: 20px;
+    background: rgba(0,0,0,0.3);
+    border-bottom: 1px solid var(--border-color);
+    display: flex; justify-content: space-between; align-items: center;
+    flex-shrink: 0;
+}
+.bp-title h1 { margin: 0; font-size: 1.5rem; color: var(--neon-purple); text-transform: uppercase; font-style: italic; }
+.bp-title p { margin: 5px 0; color: var(--text-secondary); }
+
+.bp-progress-bar-wrapper {
+    width: 300px; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; margin-top: 10px;
+}
+.bp-progress-bar { height: 100%; background: var(--gradient-secondary); transition: width 0.5s ease; }
+
+.bp-level-badge {
+    text-align: center; border: 2px solid var(--neon-blue); padding: 5px 15px; border-radius: 10px;
+    background: rgba(14, 165, 233, 0.1);
+}
+.bp-level-badge span { display: block; font-size: 0.7rem; text-transform: uppercase; }
+.bp-level-badge strong { font-size: 1.5rem; color: white; }
+
+/* LAYOUT PRINCIPAL */
+.bp-content-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 350px;
+    overflow: hidden;
+}
+
+/* TIMELINE HORIZONTALE */
+.bp-timeline-section {
+    overflow-x: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+.bp-levels-scroll {
+    display: flex; gap: 30px; align-items: center; height: 100%; padding-left: 20px; position: relative;
+}
+/* Ligne qui relie les cartes */
+.bp-track-line {
+    position: absolute; top: 50%; left: 0; right: 0; height: 4px; background: rgba(255,255,255,0.1); z-index: 0;
+}
+
+/* CARTE NIVEAU */
+.bp-level-card {
+    width: 180px; height: 240px; flex-shrink: 0; z-index: 1;
+    display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+    padding: 15px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px;
+    transition: transform 0.3s;
+}
+.bp-level-card.unlocked { border-color: var(--neon-green); box-shadow: 0 0 15px rgba(16, 185, 129, 0.2); }
+.bp-level-card.claimed { opacity: 0.5; border-color: #444; }
+.bp-level-card.locked { filter: grayscale(1); opacity: 0.7; }
+
+/* --- EFFET MILESTONE (Niveaux 10, 20...) --- */
+.bp-level-card.milestone {
+    border: 2px solid #facc15 !important; /* Bordure Or forcée */
+    background: linear-gradient(135deg, rgba(250, 204, 21, 0.1), rgba(20, 20, 20, 0.9)) !important;
+    transform: scale(1.08); /* Un peu plus grand */
+    z-index: 2; /* Passe devant les autres */
+    box-shadow: 0 0 25px rgba(250, 204, 21, 0.4);
+    animation: shineCard 3s infinite; /* Animation de brillance */
+}
+
+.bp-level-card.milestone .level-number {
+    background: #facc15; 
+    color: black; 
+    font-weight: 900;
+    border: 2px solid white;
+    box-shadow: 0 0 10px #facc15;
+}
+
+@keyframes shineCard {
+    0% { box-shadow: 0 0 15px rgba(250, 204, 21, 0.2); border-color: #facc15; }
+    50% { box-shadow: 0 0 30px rgba(250, 204, 21, 0.6); border-color: #fff; } /* Flash blanc */
+    100% { box-shadow: 0 0 15px rgba(250, 204, 21, 0.2); border-color: #facc15; }
+}
+
+.level-number {
+    width: 35px; height: 35px; border-radius: 50%; background: rgba(255,255,255,0.1);
+    display: flex; align-items: center; justify-content: center; font-weight: bold; color: white;
+    border: 2px solid var(--bg-deep);
+}
+.xp-req { font-size: 0.8rem; color: var(--text-secondary); margin-top: 5px; }
+
+.reward-box { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: bold; }
+.reward-watts { color: #f59e0b; }
+.reward-item { color: var(--neon-purple); font-size: 0.9rem; text-align: center; }
+
+.claim-btn {
+    width: 100%; background: var(--gradient-success); border: none; padding: 8px;
+    border-radius: 20px; color: white; font-weight: bold; cursor: pointer; animation: pulse 1.5s infinite;
+}
+
+/* MISSIONS */
+.bp-missions-section {
+    padding: 20px; border-left: 1px solid var(--border-color);
+    display: flex; flex-direction: column;
+}
+.missions-list { overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 10px; }
+
+.mission-card {
+    background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px;
+    display: flex; align-items: center; gap: 15px; cursor: pointer; border: 1px solid transparent;
+    transition: all 0.2s;
+}
+.mission-card:hover { background: rgba(255,255,255,0.08); }
+.mission-card.done { opacity: 0.5; border-color: var(--neon-green); }
+
+.mission-icon { font-size: 1.5rem; }
+.mission-info { flex: 1; }
+.mission-info h4 { margin: 0; font-size: 0.9rem; color: white; }
+.mission-info p { margin: 2px 0 0; font-size: 0.75rem; color: var(--text-secondary); }
+.mission-reward { font-weight: bold; color: var(--neon-blue); font-size: 0.85rem; }

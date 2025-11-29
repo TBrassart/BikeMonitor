@@ -1002,6 +1002,39 @@ async getKits() {
             .eq('id', bikeId);
         if (error) throw error;
     },
+    // --- BATTLE PASS ---
+    async getSeasonLevels() { const { data } = await supabase.from('season_levels').select('*, shop_items(*)').order('level', { ascending: true }); return data; },
+    async getClaimedRewards() { const u = await authService.getCurrentUser(); const { data } = await supabase.from('user_season_rewards').select('level').eq('user_id', u.id); return data ? data.map(r => r.level) : []; },
+    async claimLevelReward(level) { 
+        const u = await authService.getCurrentUser(); 
+        const {error} = await supabase.from('user_season_rewards').insert([{user_id: u.id, level}]);
+        if(error && error.code !== '23505') throw error;
+        // Crédit auto
+        const {data: l} = await supabase.from('season_levels').select('*').eq('level', level).single();
+        if(l) {
+            if(l.reward_watts > 0 || l.reward_chips > 0) await supabase.rpc('increment_currency', { p_watts: l.reward_watts, p_chips: l.reward_chips, p_user_id: u.id });
+            if(l.reward_item_id) await supabase.from('user_inventory').insert([{user_id: u.id, item_id: l.reward_item_id}]);
+        }
+    },
+    // CONFIG SAISON & MISSIONS
+    async getSeasonConfig() { const { data } = await supabase.from('app_settings').select('value').eq('key', 'season_config').maybeSingle(); return data?.value || { xp_per_km: 10, xp_per_elev: 0.5 }; },
+    async updateSeasonConfig(config) { return supabase.from('app_settings').upsert({ key: 'season_config', value: config }); },
+    async getMissions() { const { data } = await supabase.from('season_missions').select('*').order('xp_reward'); return data||[]; },
+    async getMyCompletedMissions() { const u = await authService.getCurrentUser(); const { data } = await supabase.from('user_missions').select('mission_id').eq('user_id', u.id); return data ? data.map(m => m.mission_id) : []; },
+    async completeMission(mid) { 
+        const u = await authService.getCurrentUser(); 
+        const { error } = await supabase.from('user_missions').insert([{user_id:u.id, mission_id:mid}]); 
+        if(error && error.code!=='23505') throw error;
+        await api.syncStats();
+    },
+    async addMission(d) { return supabase.from('season_missions').insert([d]); },
+    async deleteMission(id) { return supabase.from('season_missions').delete().eq('id', id); },
+    // MODIFICATION : Nouvelle fonction de synchro complète
+    async syncStats() {
+        const { data, error } = await supabase.rpc('sync_user_stats');
+        if (error) throw error;
+        return data; // { watts: 1200, xp: 500 }
+    },
 };
 
 // ==========================================
@@ -1082,11 +1115,37 @@ export const shopService = {
     getInventory: () => api.getMyInventory(),
     buy: (id, currency) => api.purchaseItem(id, currency),
     equip: (invId, type) => api.equipItem(invId, type),
-    syncHistory: () => api.syncWatts(),
-    equipBike: (bikeId, frameId) => api.equipBikeFrame(bikeId, frameId),
-    equip: (invId, type) => api.equipItem(invId, type),
     unequip: (type) => api.unequipCategory(type),
     equipBike: (bikeId, frameId) => api.equipBikeFrame(bikeId, frameId),
-    unequipBike: (bikeId) => api.removeBikeFrame(bikeId), // <--- AJOUT
-    syncHistory: () => api.syncWatts()
+    unequipBike: (bikeId) => api.removeBikeFrame(bikeId), 
+    syncHistory: () => api.syncStats(), 
+    getSeason: () => api.getSeasonLevels(),
+    getClaimed: () => api.getClaimedRewards(),
+    claim: (lvl) => api.claimLevelReward(lvl),
+    getSeasonConfig: () => api.getSeasonConfig(),
+    updateSeasonConfig: (c) => api.updateSeasonConfig(c),
+    getMissions: () => api.getMissions(),
+    getCompletedMissions: () => api.getMyCompletedMissions(),
+    completeMission: (id) => api.completeMission(id),
+    addMission: (d) => api.addMission(d),
+    deleteMission: (id) => api.deleteMission(id),
+    claimAll: async (levelsToClaim) => {
+        // levelsToClaim est un tableau de numéros de niveaux [1, 2, 5]
+        // On fait une boucle de promesses pour tout récupérer
+        await Promise.all(levelsToClaim.map(lvl => api.claimLevelReward(lvl)));
+    },
+    // NOUVEAU : Admin - Modifier un niveau
+    updateLevel: async (levelId, updates) => {
+        const { error } = await supabase
+            .from('season_levels')
+            .update(updates)
+            .eq('level', levelId);
+        if (error) throw error;
+    },
+
+};
+
+export const activityService = {
+    getAll: () => api.getActivities(),
+    addManual: (d) => api.addManualActivity(d)
 };

@@ -20,7 +20,7 @@
     margin: 0;
     font-size: 2rem;
     background: linear-gradient(135deg, #facc15 0%, #f59e0b 100%); /* Or/Jaune */
-    -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
     text-transform: uppercase;
     letter-spacing: 2px;

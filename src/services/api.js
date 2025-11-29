@@ -653,13 +653,21 @@ async getKits() {
 
     // --- ADMINISTRATION ---
     
-    // Récupérer tous les profils (Admin only)
+    // Récupérer tous les profils via RPC (Inclus last_sign_in_at)
     async getAllProfiles() {
-        const { data, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .order('created_at', { ascending: false });
-        if (error) throw error;
+        // On appelle la fonction SQL qu'on vient de créer
+        const { data, error } = await supabase.rpc('get_admin_users_list');
+        
+        if (error) {
+            console.error("Erreur RPC Admin Users:", error);
+            // Fallback : si la RPC n'existe pas encore, on lit juste les profils classiques
+            // pour ne pas faire crasher l'app
+            const { data: fallback } = await supabase
+                .from('profiles')
+                .select('*')
+                .order('created_at', { ascending: false });
+            return fallback;
+        }
         return data;
     },
 

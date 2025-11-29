@@ -613,7 +613,7 @@ function AdminPage() {
                     
                     <div className="users-table-container">
                         <table className="users-table">
-                            <thead><tr><th>Avatar</th><th>Nom</th><th>Rôle</th><th>Inscrit le</th><th>Actions</th></tr></thead>
+                            <thead><tr><th>Avatar</th><th>Nom</th><th>Rôle</th><th>Inscrit le</th><th>Dernière connexion</th><th>Actions</th></tr></thead>
                             <tbody>
                                 {filteredUsers.map(u => (
                                     <tr key={u.id}>
@@ -628,6 +628,18 @@ function AdminPage() {
                                             </span>
                                         </td>
                                         <td>{new Date(u.created_at).toLocaleDateString()}</td>
+                                        <td>
+                                            {u.last_sign_in_at ? (
+                                                <div style={{lineHeight:'1.2'}}>
+                                                    <div>{new Date(u.last_sign_in_at).toLocaleDateString()}</div>
+                                                    <small style={{color:'#888', fontSize:'0.75rem'}}>
+                                                        {new Date(u.last_sign_in_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                                    </small>
+                                                </div>
+                                            ) : (
+                                                <span style={{opacity: 0.3}}>-</span>
+                                            )}
+                                        </td>
                                         <td>
                                             {u.app_role !== 'admin' && (
                                                 <div className="actions-row">

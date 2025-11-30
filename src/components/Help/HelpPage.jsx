@@ -82,8 +82,8 @@ function HelpPage() {
             {activeTab === 'contact' && (
                 <div className="glass-panel" style={{padding:'30px'}}>
                     <div className="feedback-intro">
-                        <p>Une idée de génie pour la V3 ? Un bug qui t'empêche de rouler ?</p>
-                        <p>Dis-nous tout, on lit chaque message.</p>
+                        <p>Une idée de génie à ajouter à BikeMonitor ? Un bug qui t'empêche de rouler ?</p>
+                        <p>Dis-nous tout, on lit chaque message costructif.</p>
                     </div>
 
                     <form onSubmit={handleSubmit}>

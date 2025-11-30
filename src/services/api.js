@@ -1393,7 +1393,7 @@ export const activityService = {
 };
 
 export const helpService = {
-    // Récupérer la FAQ
+    // --- FAQ (Lecture) ---
     async getFaqs() {
         const { data, error } = await supabase
             .from('app_faqs')
@@ -1403,18 +1403,45 @@ export const helpService = {
         return data || [];
     },
 
-    // Envoyer un feedback
+    // --- FAQ (Admin) ---
+    async createFaq(faq) {
+        const { error } = await supabase.from('app_faqs').insert([faq]);
+        if (error) throw error;
+    },
+    async updateFaq(id, updates) {
+        const { error } = await supabase.from('app_faqs').update(updates).eq('id', id);
+        if (error) throw error;
+    },
+    async deleteFaq(id) {
+        const { error } = await supabase.from('app_faqs').delete().eq('id', id);
+        if (error) throw error;
+    },
+
+    // --- FEEDBACK (Utilisateur) ---
     async sendFeedback(type, message) {
         const user = await authService.getCurrentUser();
         if (!user) throw new Error("Vous devez être connecté.");
+        const { error } = await supabase.from('app_feedback').insert([{
+            user_id: user.id, type, message
+        }]);
+        if (error) throw error;
+    },
 
-        const { error } = await supabase
+    // --- FEEDBACK (Admin) ---
+    async getAllFeedbacks() {
+        // On récupère aussi l'info de l'user (nom/email)
+        const { data, error } = await supabase
             .from('app_feedback')
-            .insert([{
-                user_id: user.id,
-                type: type, // 'bug', 'feature', 'other'
-                message: message
-            }]);
+            .select(`
+                *,
+                profiles:user_id ( name )
+            `)
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        return data || [];
+    },
+    async updateFeedbackStatus(id, status) {
+        const { error } = await supabase.from('app_feedback').update({ status }).eq('id', id);
         if (error) throw error;
     }
 };

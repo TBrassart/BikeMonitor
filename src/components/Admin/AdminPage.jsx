@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { adminService, authService, shopService } from '../../services/api';
+import { adminService, authService, shopService, helpService } from '../../services/api';
 import { 
     FaUsers, FaDatabase, FaChartLine, FaUserShield, FaTrash, 
-    FaListAlt, FaLock, FaTools, FaFileCsv, FaFileCode, 
+    FaListAlt, FaLock, FaTools, FaFileCsv, FaFileCode, FaQuestionCircle, FaInbox, FaCheck, FaArchive, FaPen,
     FaEnvelopeOpenText, FaBroom, FaPowerOff, FaSearch, FaBullhorn, FaExclamationCircle, FaFilter, FaTrophy, FaPlusCircle
 } from 'react-icons/fa';
 import './AdminPage.css';
@@ -32,6 +32,14 @@ function AdminPage() {
     });
     const [shopItems, setShopItems] = useState([]);
     const [levels, setLevels] = useState([]);
+
+    // États pour FAQ & Feedback
+    const [faqs, setFaqs] = useState([]);
+    const [feedbacks, setFeedbacks] = useState([]);
+    
+    // État pour l'édition FAQ
+    const [editingFaq, setEditingFaq] = useState(null); // null = mode création
+    const [faqForm, setFaqForm] = useState({ question: '', answer: '', category: 'general', display_order: 0 });
 
     // LISTE DES TYPES DE MISSIONS PARAMÉTRABLES
     const MISSION_TYPES = [
@@ -66,13 +74,15 @@ function AdminPage() {
         setLoading(true);
         try {
             // ON AJOUTE shopService.getSeason() et shopService.getCatalog()
-            const [statsData, usersData, logsData, configData, levelsData, itemsData] = await Promise.all([
+            const [statsData, usersData, logsData, configData, levelsData, itemsData, faqsData, feedbacksData] = await Promise.all([
                 adminService.getStats(),
                 adminService.getAllUsers(),
                 adminService.getLogs(),
                 shopService.getSeasonConfig(),
-                shopService.getSeason(),   // Récupère les niveaux
-                shopService.getCatalog()   // Récupère les items pour les listes déroulantes
+                shopService.getSeason(),
+                shopService.getCatalog(),
+                helpService.getFaqs(),
+                helpService.getAllFeedbacks()
             ]);
 
             setStats(statsData);
@@ -81,7 +91,9 @@ function AdminPage() {
             if(configData) setSeasonConfig(configData);
             setLevels(levelsData || []);
             setShopItems(itemsData || []);
-            
+            setFaqs(faqsData || []);
+            setFeedbacks(feedbacksData || []);
+
             setIsLocked(false);
         } catch (e) {
             console.error(e);
@@ -291,6 +303,50 @@ function AdminPage() {
         }
     };
 
+    // --- GESTION FAQ ---
+    const handleSaveFaq = async (e) => {
+        e.preventDefault();
+        try {
+            if (editingFaq) {
+                await helpService.updateFaq(editingFaq.id, faqForm);
+                alert("Question mise à jour !");
+            } else {
+                await helpService.createFaq(faqForm);
+                alert("Question créée !");
+            }
+            // Reset & Reload
+            setEditingFaq(null);
+            setFaqForm({ question: '', answer: '', category: 'general', display_order: 0 });
+            const freshFaqs = await helpService.getFaqs();
+            setFaqs(freshFaqs);
+        } catch(e) { alert("Erreur sauvegarde FAQ"); }
+    };
+
+    const handleEditFaq = (faq) => {
+        setEditingFaq(faq);
+        setFaqForm({ 
+            question: faq.question, 
+            answer: faq.answer, 
+            category: faq.category, 
+            display_order: faq.display_order 
+        });
+    };
+
+    const handleDeleteFaq = async (id) => {
+        if(!window.confirm("Supprimer cette question ?")) return;
+        await helpService.deleteFaq(id);
+        setFaqs(faqs.filter(f => f.id !== id));
+    };
+
+    // --- GESTION FEEDBACK ---
+    const handleFeedbackStatus = async (id, newStatus) => {
+        try {
+            await helpService.updateFeedbackStatus(id, newStatus);
+            // Mise à jour optimiste locale
+            setFeedbacks(feedbacks.map(f => f.id === id ? { ...f, status: newStatus } : f));
+        } catch(e) { alert("Erreur maj statut"); }
+    };
+
     return (
         <div className="admin-page">
             <header className="admin-header">
@@ -303,6 +359,8 @@ function AdminPage() {
                     <button className={activeTab === 'season' ? 'active' : ''} onClick={() => setActiveTab('season')}><FaTrophy /> Saison</button>
                     <button className={activeTab === 'logs' ? 'active' : ''} onClick={() => setActiveTab('logs')}><FaListAlt /> Logs</button>
                     <button className={activeTab === 'system' ? 'active' : ''} onClick={() => setActiveTab('system')}><FaTools /> Système</button>
+                    <button className={activeTab === 'support' ? 'active' : ''} onClick={() => setActiveTab('support')}><FaInbox /> Support</button>
+                    <button className={activeTab === 'faq' ? 'active' : ''} onClick={() => setActiveTab('faq')}><FaQuestionCircle /> FAQ</button>
                 </div>
             </header>
 
@@ -669,6 +727,113 @@ function AdminPage() {
                                 <span className="log-details">{l.details}</span>
                             </div>
                         ))}
+                    </div>
+                </div>
+            )}
+
+            {/* ONGLET FAQ */}
+            {activeTab === 'faq' && (
+                <div className="admin-section glass-panel">
+                    <h3>Gestion FAQ</h3>
+                    
+                    {/* Formulaire Création/Édition */}
+                    <div className="system-card" style={{marginBottom:'30px', borderLeft:'4px solid var(--neon-blue)'}}>
+                        <h4>{editingFaq ? 'Modifier la question' : 'Nouvelle Question'}</h4>
+                        <form onSubmit={handleSaveFaq} className="banner-form">
+                            <input 
+                                className="admin-input" placeholder="Question ?" required
+                                value={faqForm.question} onChange={e => setFaqForm({...faqForm, question: e.target.value})}
+                            />
+                            <textarea 
+                                className="admin-input" placeholder="Réponse..." rows="3" required
+                                value={faqForm.answer} onChange={e => setFaqForm({...faqForm, answer: e.target.value})}
+                            />
+                            <div style={{display:'flex', gap:'10px'}}>
+                                <select 
+                                    className="admin-input" 
+                                    value={faqForm.category} onChange={e => setFaqForm({...faqForm, category: e.target.value})}
+                                >
+                                    <option value="general">Général</option>
+                                    <option value="technique">Technique</option>
+                                    <option value="turlag">Turlag</option>
+                                </select>
+                                <input 
+                                    type="number" className="admin-input" placeholder="Ordre"
+                                    value={faqForm.display_order} onChange={e => setFaqForm({...faqForm, display_order: parseInt(e.target.value)})}
+                                />
+                            </div>
+                            <div style={{display:'flex', gap:'10px'}}>
+                                <button type="submit" className="admin-std-btn">{editingFaq ? 'Mettre à jour' : 'Créer'}</button>
+                                {editingFaq && (
+                                    <button type="button" onClick={() => {setEditingFaq(null); setFaqForm({ question: '', answer: '', category: 'general', display_order: 0 });}} className="admin-danger-btn" style={{width:'auto'}}>Annuler</button>
+                                )}
+                            </div>
+                        </form>
+                    </div>
+
+                    {/* Liste */}
+                    <div className="faq-admin-list">
+                        {faqs.map(f => (
+                            <div key={f.id} className="faq-admin-item glass-panel">
+                                <div style={{flex:1}}>
+                                    <strong>{f.display_order}. {f.question}</strong>
+                                    <p style={{margin:'5px 0', color:'#ccc', fontSize:'0.9rem'}}>{f.answer}</p>
+                                    <span className="role-badge user">{f.category}</span>
+                                </div>
+                                <div style={{display:'flex', gap:'10px'}}>
+                                    <button onClick={() => handleEditFaq(f)} className="icon-action"><FaPen /></button>
+                                    <button onClick={() => handleDeleteFaq(f.id)} className="icon-action" style={{color:'#ef4444'}}><FaTrash /></button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* ONGLET SUPPORT (FEEDBACK) */}
+            {activeTab === 'support' && (
+                <div className="admin-section">
+                    <h3>Boîte de réception ({feedbacks.filter(f => f.status === 'new').length} nouveaux)</h3>
+                    
+                    <div className="feedback-list">
+                        {feedbacks.map(f => (
+                            <div key={f.id} className={`feedback-card glass-panel status-${f.status}`}>
+                                <div className="fb-header">
+                                    <span className={`fb-type ${f.type}`}>
+                                        {f.type === 'bug' && '🐛 BUG'}
+                                        {f.type === 'feature' && '💡 IDÉE'}
+                                        {f.type === 'other' && '💬 AUTRE'}
+                                    </span>
+                                    <span className="fb-date">{new Date(f.created_at).toLocaleDateString()}</span>
+                                </div>
+                                
+                                <p className="fb-message">"{f.message}"</p>
+                                
+                                <div className="fb-footer">
+                                    <div className="fb-user">
+                                        <span className="user-avatar small" style={{width:'20px', height:'20px', fontSize:'0.7rem'}}>👤</span>
+                                        {f.profiles?.name || 'Inconnu'}
+                                    </div>
+                                    
+                                    <div className="fb-actions">
+                                        {f.status !== 'done' && (
+                                            <button onClick={() => handleFeedbackStatus(f.id, 'done')} className="action-btn success" title="Marquer traité">
+                                                <FaCheck /> Traité
+                                            </button>
+                                        )}
+                                        {f.status === 'new' && (
+                                            <button onClick={() => handleFeedbackStatus(f.id, 'read')} className="action-btn read" title="Marquer lu">
+                                                <FaEnvelopeOpenText /> Lu
+                                            </button>
+                                        )}
+                                        {f.status === 'done' && (
+                                            <span className="status-done-badge">✅ Archivé</span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                        {feedbacks.length === 0 && <p className="empty-text">Aucun message.</p>}
                     </div>
                 </div>
             )}

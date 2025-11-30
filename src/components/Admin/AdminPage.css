@@ -242,3 +242,35 @@
     color: #94a3b8;
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
+/* --- FAQ ADMIN --- */
+.faq-admin-list { display: flex; flex-direction: column; gap: 15px; }
+.faq-admin-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; gap: 20px; }
+
+/* --- FEEDBACK ADMIN --- */
+.feedback-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+
+.feedback-card {
+    padding: 20px; display: flex; flex-direction: column; gap: 15px;
+    border-left: 4px solid transparent;
+}
+
+/* Statuts (Couleur Bordure Gauche) */
+.feedback-card.status-new { border-left-color: var(--neon-blue); background: rgba(59, 130, 246, 0.1); }
+.feedback-card.status-read { border-left-color: #f59e0b; }
+.feedback-card.status-done { border-left-color: #10b981; opacity: 0.7; }
+
+.fb-header { display: flex; justify-content: space-between; align-items: center; }
+.fb-type { font-size: 0.75rem; font-weight: 800; padding: 2px 8px; border-radius: 4px; background: rgba(255,255,255,0.1); }
+.fb-type.bug { color: #ef4444; background: rgba(239, 68, 68, 0.2); }
+.fb-type.feature { color: #facc15; background: rgba(250, 204, 21, 0.2); }
+
+.fb-message { font-style: italic; color: white; line-height: 1.4; margin: 0; }
+
+.fb-footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); }
+.fb-user { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-secondary); }
+
+.fb-actions { display: flex; gap: 10px; }
+.action-btn { border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 0.8rem; font-weight: 600; color: white; }
+.action-btn.success { background: #10b981; }
+.action-btn.read { background: #f59e0b; }
+.status-done-badge { color: #10b981; font-weight: bold; font-size: 0.9rem; }

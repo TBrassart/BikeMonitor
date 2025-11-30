@@ -756,6 +756,9 @@ function AdminPage() {
                                     <option value="general">Général</option>
                                     <option value="technique">Technique</option>
                                     <option value="turlag">Turlag</option>
+                                    <option value="boutique">Boutique</option>
+                                    <option value="battlepass">Battle Pass</option>
+                                    <option value="profil">Profil</option>
                                 </select>
                                 <input 
                                     type="number" className="admin-input" placeholder="Ordre"

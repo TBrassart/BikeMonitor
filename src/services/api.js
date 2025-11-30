@@ -1209,16 +1209,57 @@ async getKits() {
     },
     // --- BATTLE PASS ---
     async getSeasonLevels() { const { data } = await supabase.from('season_levels').select('*, shop_items(*)').order('level', { ascending: true }); return data; },
-    async getClaimedRewards() { const u = await authService.getCurrentUser(); const { data } = await supabase.from('user_season_rewards').select('level').eq('user_id', u.id); return data ? data.map(r => r.level) : []; },
+    async getClaimedRewards() { 
+        const u = await authService.getCurrentUser(); 
+        
+        // 1. Quelle est la saison active ?
+        const { data: season } = await supabase
+            .from('seasons')
+            .select('year')
+            .eq('is_active', true)
+            .single();
+            
+        const currentYear = season?.year || new Date().getFullYear();
+
+        // 2. On récupère les rewards de CETTE année
+        const { data } = await supabase
+            .from('user_season_rewards')
+            .select('level')
+            .eq('user_id', u.id)
+            .eq('season_year', currentYear); // Filtre par année
+            
+        return data ? data.map(r => r.level) : []; 
+    },
+
+    // Réclamer une récompense (Enregistre l'année)
     async claimLevelReward(level) { 
         const u = await authService.getCurrentUser(); 
-        const {error} = await supabase.from('user_season_rewards').insert([{user_id: u.id, level}]);
+        
+        // 1. Récup active year
+        const { data: season } = await supabase
+            .from('seasons')
+            .select('year')
+            .eq('is_active', true)
+            .single();
+        const currentYear = season?.year || new Date().getFullYear();
+
+        // 2. Insert avec l'année
+        const {error} = await supabase.from('user_season_rewards').insert([{
+            user_id: u.id, 
+            level: level, 
+            season_year: currentYear // <--- IMPORTANT
+        }]);
+        
         if(error && error.code !== '23505') throw error;
-        // Crédit auto
+
+        // 3. Crédit (Watts/Chips/Item) - Inchangé
         const {data: l} = await supabase.from('season_levels').select('*').eq('level', level).single();
         if(l) {
-            if(l.reward_watts > 0 || l.reward_chips > 0) await supabase.rpc('increment_currency', { p_watts: l.reward_watts, p_chips: l.reward_chips, p_user_id: u.id });
-            if(l.reward_item_id) await supabase.from('user_inventory').insert([{user_id: u.id, item_id: l.reward_item_id}]);
+            if(l.reward_watts > 0 || l.reward_chips > 0) 
+                await supabase.rpc('increment_currency', { p_watts: l.reward_watts, p_chips: l.reward_chips, p_user_id: u.id });
+            
+            if(l.reward_item_id) 
+                await supabase.from('user_inventory').insert([{user_id: u.id, item_id: l.reward_item_id}]);
         }
     },
     // CONFIG SAISON & MISSIONS
@@ -1238,7 +1279,12 @@ async getKits() {
     async syncStats() {
         const { data, error } = await supabase.rpc('sync_user_stats');
         if (error) throw error;
-        return data; // { watts: 1200, xp: 500 }
+        return data; // Renvoie { xp: 1200, season: "Saison 2025", watts_converted: 50 }
+    },
+    async getGlobalLeaderboard() {
+        const { data, error } = await supabase.rpc('get_season_leaderboard');
+        if (error) throw error;
+        return data || [];
     },
 };
 
@@ -1365,14 +1411,29 @@ export const shopService = {
     getCatalog: () => api.getShopCatalog(),
     getInventory: () => api.getMyInventory(),
     buy: (id, currency) => api.purchaseItem(id, currency),
+
+    // Gestion équipement
     equip: (invId, type) => api.equipItem(invId, type),
     unequip: (type) => api.unequipCategory(type),
     equipBike: (bikeId, frameId) => api.equipBikeFrame(bikeId, frameId),
     unequipBike: (bikeId) => api.removeBikeFrame(bikeId), 
+
+    // Synchronisation (Unifiée ici)
     syncHistory: () => api.syncStats(), 
+    syncStats: () => api.syncStats(),
+
+    // Classement
+    getGlobalLeaderboard: () => api.getGlobalLeaderboard(),
+
+    // Battle Pass
     getSeason: () => api.getSeasonLevels(),
     getClaimed: () => api.getClaimedRewards(),
     claim: (lvl) => api.claimLevelReward(lvl),
+    claimAll: async (levelsToClaim) => {
+        await Promise.all(levelsToClaim.map(lvl => shopService.claim(lvl))); 
+    },
+
+    // Config & Missions
     getSeasonConfig: () => api.getSeasonConfig(),
     updateSeasonConfig: (c) => api.updateSeasonConfig(c),
     getMissions: () => api.getMissions(),
@@ -1380,12 +1441,8 @@ export const shopService = {
     completeMission: (id) => api.completeMission(id),
     addMission: (d) => api.addMission(d),
     deleteMission: (id) => api.deleteMission(id),
-    claimAll: async (levelsToClaim) => {
-        // levelsToClaim est un tableau de numéros de niveaux [1, 2, 5]
-        // On fait une boucle de promesses pour tout récupérer
-        await Promise.all(levelsToClaim.map(lvl => api.claimLevelReward(lvl)));
-    },
-    // NOUVEAU : Admin - Modifier un niveau
+
+    // Admin
     updateLevel: async (levelId, updates) => {
         const { error } = await supabase
             .from('season_levels')
@@ -1393,7 +1450,6 @@ export const shopService = {
             .eq('level', levelId);
         if (error) throw error;
     },
-
 };
 
 export const activityService = {

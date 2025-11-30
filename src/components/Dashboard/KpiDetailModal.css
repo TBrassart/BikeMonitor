@@ -1,0 +1,101 @@
+/* MODALE LARGE (Mais pas trop haute) */
+.kpi-modal-lg {
+    width: 900px; /* Un peu plus large pour mettre les graphs côte à côte */
+    max-width: 95vw;
+    max-height: 90vh; /* Sécurité */
+    padding: 0 !important;
+    overflow: hidden; /* Pas de scroll sur la modale elle-même */
+    display: flex;
+    flex-direction: column;
+}
+
+.kpi-analysis-content {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Espace réduit entre les blocs */
+    flex: 1;
+    overflow-y: auto; /* Scroll uniquement dans le contenu si besoin */
+}
+
+/* --- 1. LIGNE DES STATS (Compacte) --- */
+.analysis-stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.analysis-stat-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    padding: 10px; /* Padding réduit */
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: transform 0.2s;
+}
+.analysis-stat-card:hover { transform: translateY(-2px); background: rgba(255, 255, 255, 0.05); }
+
+.stat-icon-circle {
+    width: 35px; height: 35px; /* Icône plus petite */
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+/* COULEURS DES ICONES (Inchangées) */
+.stat-icon-circle.blue { background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
+.stat-icon-circle.purple { background: rgba(217, 70, 239, 0.2); color: #d946ef; }
+.stat-icon-circle.orange { background: rgba(249, 115, 22, 0.2); color: #f97316; }
+.stat-icon-circle.green { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+.stat-icon-circle.gold { background: rgba(250, 204, 21, 0.2); color: #facc15; }
+
+.stat-text { display: flex; flex-direction: column; }
+.stat-text .val { font-size: 1rem; font-weight: 800; color: white; line-height: 1.1; }
+.stat-text .lbl { font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; }
+
+/* --- 2. GRAPHIQUES (Grille 2 colonnes) --- */
+.charts-split-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Deux colonnes égales */
+    gap: 15px;
+    flex: 1; /* Prend l'espace restant */
+}
+
+/* Si un seul graphique, il prend toute la largeur */
+.charts-split-row:not(.grid-2) {
+    grid-template-columns: 1fr;
+}
+
+.analysis-chart-container {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+}
+
+.analysis-chart-container h4 {
+    margin: 0 0 10px 0;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+}
+
+.chart-box {
+    flex: 1;
+    min-height: 200px; /* Hauteur minimale forcée mais raisonnable */
+    max-height: 250px; /* Empêche de devenir géant */
+    width: 100%;
+    position: relative;
+}
+
+/* RESPONSIVE */
+@media (max-width: 800px) {
+    .charts-split-row { grid-template-columns: 1fr; } /* Empile sur tablette */
+    .analysis-stats-row { grid-template-columns: 1fr; } 
+    .chart-box { min-height: 180px; }
+}

@@ -7,6 +7,7 @@ import {
 } from 'react-icons/fa';
 import ChartsSection from './ChartsSection';
 import WeatherWidget from './WeatherWidget';
+import KpiDetailModal from './KpiDetailModal';
 import './Dashboard.css';
 
 function Dashboard() {
@@ -17,6 +18,7 @@ function Dashboard() {
     // Données
     const [activities, setActivities] = useState([]);
     const [bikes, setBikes] = useState([]);
+    const [selectedKpi, setSelectedKpi] = useState(null);
     
     // Filtres
     const [period, setPeriod] = useState('month');
@@ -127,13 +129,15 @@ function Dashboard() {
         const elev = filteredData.reduce((acc, a) => acc + (a.total_elevation_gain || 0), 0);
         const time = filteredData.reduce((acc, a) => acc + (a.moving_time || 0), 0);
         
+        const myBikesCount = bikes.filter(b => b.user_id === user?.id).length;
+        
         return {
             dist: { id: 'dist', label: 'Distance', val: Math.round(dist).toLocaleString(), unit: 'km', icon: <FaRoad />, color: 'blue', link: '/app/activities' },
             elev: { id: 'elev', label: 'Dénivelé', val: Math.round(elev).toLocaleString(), unit: 'm', icon: <FaMountain />, color: 'purple', link: '/app/activities' },
             time: { id: 'time', label: 'Temps', val: Math.floor(time / 3600), unit: 'h', icon: <FaClock />, color: 'orange', link: '/app/activities' },
-            fleet: { id: 'fleet', label: 'Parc', val: bikes.length, unit: 'vélos', icon: <FaBicycle />, color: 'green', link: '/app/garage' }
+            fleet: { id: 'fleet', label: 'Parc', val: myBikesCount, unit: 'vélos', icon: <FaBicycle />, color: 'green', link: '/app/garage' }
         };
-    }, [filteredData, bikes]);
+    }, [filteredData, bikes, user]);
 
     // --- DRAG & DROP HANDLERS ---
     const handleDragStart = (e, id, type) => {
@@ -291,7 +295,7 @@ function Dashboard() {
                             onDragStart={(e) => handleDragStart(e, key, 'kpi')}
                             onDragOver={handleDragOver}
                             onDrop={(e) => handleDrop(e, key, 'kpi')}
-                            onClick={() => !isEditMode && navigate(item.link)}
+                            onClick={() => !isEditMode && setSelectedKpi(key)}
                             style={{cursor: isEditMode ? 'grab' : 'pointer'}}
                         >
                             {isEditMode && (
@@ -340,6 +344,16 @@ function Dashboard() {
                     </div>
                 </div>
             </div>
+            {/* MODALE DÉTAIL KPI */}
+            {selectedKpi && (
+                <KpiDetailModal 
+                    type={selectedKpi} 
+                    activities={activities} // On passe TOUTES les activités pour l'historique
+                    bikes={bikes}
+                    user={user}
+                    onClose={() => setSelectedKpi(null)} 
+                />
+            )}
         </div>
     );
 }

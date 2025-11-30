@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
     FaChartPie, FaBicycle, FaUsers, FaTshirt, FaAppleAlt, 
-    FaToolbox, FaBook, FaRunning, FaCog, FaSignOutAlt, FaBolt, FaUserShield, FaStore
+    FaToolbox, FaBook, FaRunning, FaCog, FaSignOutAlt, FaBolt, FaUserShield, FaStore, FaQuestionCircle
 } from 'react-icons/fa';
 import { authService, shopService } from '../../services/api'; // Ajout shopService
 import './SideBar.css';
@@ -123,6 +123,7 @@ function SideBar() {
                     
                     <NavLink to="/app/shop" icon={FaStore} label="Boutique" />
                     <NavLink to="/app/settings" icon={FaCog} label="Paramètres" />
+                    <NavLink to="/app/help" icon={FaQuestionCircle} label="Aide & Feedback" />
                     <button onClick={handleLogout} className="nav-item logout-btn">
                         <FaSignOutAlt className="icon" />
                         <span className="label">Déconnexion</span>

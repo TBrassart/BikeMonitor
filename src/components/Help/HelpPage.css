@@ -1,0 +1,57 @@
+.help-page {
+    padding-bottom: 80px;
+    max-width: 800px; /* On centre pour la lisibilité */
+    margin: 0 auto;
+}
+
+/* FAQ ACCORDION */
+.faq-list {
+    display: flex; flex-direction: column; gap: 15px;
+}
+
+.faq-item {
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.faq-item:hover { background: rgba(255,255,255,0.08); }
+
+.faq-question {
+    display: flex; justify-content: space-between; align-items: center;
+    font-weight: 600; color: white;
+}
+
+.faq-answer {
+    margin-top: 15px; padding-top: 15px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    color: var(--text-secondary); line-height: 1.6; font-size: 0.95rem;
+    animation: slideDown 0.3s ease;
+}
+
+/* FEEDBACK FORM */
+.feedback-intro {
+    text-align: center; margin-bottom: 30px; color: var(--text-secondary);
+}
+
+.feedback-types {
+    display: flex; gap: 15px; margin-bottom: 20px;
+}
+
+.type-card {
+    flex: 1; padding: 15px;
+    background: rgba(0,0,0,0.3); border: 1px solid var(--border-color);
+    border-radius: 12px; cursor: pointer; text-align: center;
+    transition: all 0.2s; color: var(--text-secondary);
+}
+.type-card:hover { border-color: var(--neon-blue); color: white; }
+
+.type-card.active {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: var(--neon-blue);
+    color: white; font-weight: bold;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}

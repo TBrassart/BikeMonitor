@@ -401,12 +401,24 @@ function TurlagDetail() {
     // --- ACTIONS ÉVÉNEMENTS ---
     const handleCreateEvent = async (e) => {
         e.preventDefault();
+        
+        // 1. On sépare 'date' du reste des données pour ne pas l'envoyer en doublon/erreur
+        const { date, ...restEventData } = eventData;
+
         try {
-            await authService.addTurlagEvent({ turlag_id: turlagId, event_date: eventData.date, ...eventData });
+            await authService.addTurlagEvent({ 
+                turlag_id: turlagId, 
+                event_date: date, // On mappe ta variable locale 'date' vers la colonne BDD 'event_date'
+                ...restEventData  // On envoie le reste (title, location, description)
+            });
+            
             setShowEventForm(false);
             setEventData({ title: '', date: '', location: '', description: '' });
             loadData();
-        } catch(e) { alert("Erreur création événement"); }
+        } catch(e) { 
+            console.error("Erreur création event:", e);
+            alert("Erreur lors de la création de l'événement."); 
+        }
     };
 
     if (loading || !details) return <div className="loading">Chargement du QG...</div>;

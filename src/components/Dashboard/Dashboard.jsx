@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { api, authService } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
 import { 
-    FaRoad, FaMountain, FaClock, FaBicycle, FaPlus, FaUsers,
+    FaRoad, FaMountain, FaClock, FaBicycle, FaPlus, FaUsers, FaFlagCheckered,
     FaExclamationTriangle, FaWrench, FaCalendarAlt, FaSync, FaTimes, FaArrowRight, FaEdit, FaEye, FaEyeSlash, FaGripVertical
 } from 'react-icons/fa';
 import ChartsSection from './ChartsSection';
@@ -23,7 +23,7 @@ function Dashboard() {
     const [isRolling, setIsRolling] = useState(false);
 
     // Alertes
-    const [alertList, setAlertList] = useState({ parts: [], maintenance: [] });
+    const [alertList, setAlertList] = useState({ parts: [], maintenance: [], turlag: [] });
     const [showAlertModal, setShowAlertModal] = useState(false);
 
     // --- GESTION PERSONNALISATION (KPI & CHARTS) ---
@@ -76,12 +76,16 @@ function Dashboard() {
             const currentUser = await authService.getCurrentUser();
             setUser(currentUser);
 
-            const acts = await api.getActivities();
+            // Appel API parallèle pour gagner du temps
+            const [acts, myBikes, turlagEvents] = await Promise.all([
+                api.getActivities(),
+                api.getBikes(),
+                authService.getMyTurlagEvents() // <--- NOUVEL APPEL
+            ]);
+
             setActivities(acts || []);
-
-            const myBikes = await api.getBikes();
             setBikes(myBikes || []);
-
+            const upcomingEvents = turlagEvents || [];
             const partsIssues = [];
             const maintIssues = [];
 
@@ -96,7 +100,7 @@ function Dashboard() {
                     }
                 });
             }
-            setAlertList({ parts: partsIssues, maintenance: maintIssues });
+            setAlertList({ parts: partsIssues, maintenance: maintIssues, turlag: upcomingEvents });
 
         } catch (e) { console.error(e); } 
         finally { setLoading(false); }
@@ -174,6 +178,13 @@ function Dashboard() {
 
     const hasPartAlerts = alertList.parts.length > 0;
     const hasMaintAlerts = alertList.maintenance.length > 0;
+    const isEventImminent = alertList.turlag.some(e => {
+        const diff = new Date(e.event_date) - new Date();
+        return diff < 48 * 60 * 60 * 1000; // 48h en ms
+    });
+    
+    const hasTurlagEvents = alertList.turlag.length > 0;
+    const hasAnyAlert = hasPartAlerts || hasMaintAlerts || hasTurlagEvents;
 
     return (
         <div className="dashboard-container">
@@ -211,6 +222,10 @@ function Dashboard() {
                                 <FaWrench />
                                 {hasMaintAlerts && <span className="badge-dot"></span>}
                             </div>
+                            <div className={`alert-bubble turlag ${hasTurlagEvents ? 'active' : 'inactive'} ${isEventImminent ? 'imminent' : ''}`}>
+                                <FaUsers />
+                                {isEventImminent && <span className="badge-dot"></span>}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -228,6 +243,19 @@ function Dashboard() {
                             <button onClick={() => setShowAlertModal(false)} className="close-btn"><FaTimes /></button>
                         </div>
                         <div className="alert-list">
+                            {alertList.turlag.length > 0 && (
+                                <div className="alert-section-title">📅 Sorties de Groupe</div>
+                            )}
+                            {alertList.turlag.map((ev, idx) => (
+                                <div key={`ev-${idx}`} className="alert-item turlag-event" onClick={() => navigate(`/app/turlag/${ev.turlag_id}`)}>
+                                    <div className="alert-icon"><FaFlagCheckered /></div>
+                                    <div className="alert-info">
+                                        <strong>{ev.title}</strong>
+                                        <span>{new Date(ev.event_date).toLocaleDateString()} • {ev.turlags?.name}</span>
+                                    </div>
+                                    <FaArrowRight className="arrow" />
+                                </div>
+                            ))}
                             {alertList.parts.map((item, idx) => (
                                 <div key={`part-${idx}`} className="alert-item critical" onClick={() => navigate(`/app/bike/${item.bikeId}`)}>
                                     <div className="alert-icon"><FaExclamationTriangle /></div>

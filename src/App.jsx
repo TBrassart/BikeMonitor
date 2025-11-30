@@ -15,7 +15,6 @@ import BikeGarage from './components/Bike/BikeGarage';
 import BikeDetailShell from './components/Bike/BikeDetailShell';
 import BikeForm from './components/Bike/BikeForm';
 
-// MODULES MANQUANTS (Imports)
 import EquipmentPage from './components/Equipment/EquipmentPage';
 import NutritionPage from './components/Nutrition/NutritionPage';
 import KitsPage from './components/Kits/KitsPage';
@@ -32,6 +31,8 @@ import GlobalBanner from './components/Layout/GlobalBanner';
 
 import ShopPage from './components/Shop/ShopPage';
 import BattlePassPage from './components/Shop/BattlePassPage';
+
+import HelpPage from './components/Help/HelpPage';
 
 import './App.css';
 
@@ -137,6 +138,8 @@ function App() {
                         <Route path="/app/season" element={<BattlePassPage />} />
                         
                         <Route path="/app/admin" element={<AdminPage />} />
+                        
+                        <Route path="/app/help" element={<HelpPage />} />
                         
                         <Route path="*" element={<Navigate to="/app/dashboard" />} />
                     </Routes>

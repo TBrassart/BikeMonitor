@@ -145,6 +145,32 @@ export const authService = {
         return { turlag, members, events: events || [] };
     },
 
+    // --- TURLAG EVENTS (Agrégé) ---
+    async getMyTurlagEvents() {
+        const user = await this.getCurrentUser();
+        // On récupère d'abord les IDs des turlags dont je suis membre
+        const { data: memberships } = await supabase
+            .from('turlag_members')
+            .select('turlag_id')
+            .eq('user_id', user.id);
+            
+        if (!memberships || memberships.length === 0) return [];
+        
+        const turlagIds = memberships.map(m => m.turlag_id);
+
+        // On récupère les événements futurs de ces turlags
+        const { data: events, error } = await supabase
+            .from('turlag_events')
+            .select('*, turlags(name)') // On joint le nom du turlag pour l'affichage
+            .in('turlag_id', turlagIds)
+            .gte('event_date', new Date().toISOString()) // Seulement les futurs
+            .order('event_date', { ascending: true })
+            .limit(5); // On limite aux 5 prochains
+
+        if (error) throw error;
+        return events || [];
+    },
+
     async createTurlag(name, desc) {
         const user = await this.getCurrentUser();
         const { data: t } = await supabase.from('turlags').insert([{name, description: desc, created_by: user.id}]).select().single();
@@ -1364,4 +1390,31 @@ export const shopService = {
 export const activityService = {
     getAll: () => api.getActivities(),
     addManual: (d) => api.addManualActivity(d)
+};
+
+export const helpService = {
+    // Récupérer la FAQ
+    async getFaqs() {
+        const { data, error } = await supabase
+            .from('app_faqs')
+            .select('*')
+            .order('display_order', { ascending: true });
+        if (error) throw error;
+        return data || [];
+    },
+
+    // Envoyer un feedback
+    async sendFeedback(type, message) {
+        const user = await authService.getCurrentUser();
+        if (!user) throw new Error("Vous devez être connecté.");
+
+        const { error } = await supabase
+            .from('app_feedback')
+            .insert([{
+                user_id: user.id,
+                type: type, // 'bug', 'feature', 'other'
+                message: message
+            }]);
+        if (error) throw error;
+    }
 };

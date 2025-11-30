@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { authService, supabase } from '../../services/api'; 
+import { authService, supabase, api } from '../../services/api'; 
 import { 
     FaUsers, FaArrowLeft, FaCog, FaPaperPlane, FaPoll, FaTools, 
     FaTrophy, FaCommentDots, FaHome, FaPlus, FaTimes, FaCrown, 
-    FaUserShield, FaTrash, FaMapMarkerAlt, FaCalendarAlt,FaStopCircle
+    FaUserShield, FaTrash, FaMapMarkerAlt, FaCalendarAlt, FaStopCircle, FaFileDownload, FaMap
 } from 'react-icons/fa';
 import TurlagAdmin from './TurlagAdmin';
 import './TurlagDetail.css';
@@ -399,25 +399,42 @@ function TurlagDetail() {
     };
 
     // --- ACTIONS ÉVÉNEMENTS ---
+    // 1. SUPPRESSION
+    const handleDeleteEvent = async (eventId) => {
+        if(!window.confirm("Annuler cet événement ?")) return;
+        try {
+            await authService.deleteTurlagEvent(eventId);
+            loadData(); // Rafraîchir la liste
+        } catch(e) { alert("Erreur suppression"); }
+    };
+
+    // 2. CRÉATION AVEC UPLOAD GPX
     const handleCreateEvent = async (e) => {
         e.preventDefault();
         
-        // 1. On sépare 'date' du reste des données pour ne pas l'envoyer en doublon/erreur
-        const { date, ...restEventData } = eventData;
+        // On sépare le fichier et la date locale
+        const { date, gpxFile, ...restEventData } = eventData;
+        let gpxUrl = null;
 
         try {
+            // Upload si un fichier est présent
+            if (gpxFile) {
+                gpxUrl = await api.uploadGpx(gpxFile);
+            }
+
             await authService.addTurlagEvent({ 
                 turlag_id: turlagId, 
-                event_date: date, // On mappe ta variable locale 'date' vers la colonne BDD 'event_date'
-                ...restEventData  // On envoie le reste (title, location, description)
+                event_date: date, 
+                gpx_url: gpxUrl, // On enregistre l'URL
+                ...restEventData 
             });
             
             setShowEventForm(false);
-            setEventData({ title: '', date: '', location: '', description: '' });
+            setEventData({ title: '', date: '', location: '', description: '', gpxFile: null });
             loadData();
         } catch(e) { 
             console.error("Erreur création event:", e);
-            alert("Erreur lors de la création de l'événement."); 
+            alert("Erreur lors de la création."); 
         }
     };
 
@@ -530,6 +547,17 @@ function TurlagDetail() {
                                             <input type="datetime-local" value={eventData.date} onChange={e => setEventData({...eventData, date: e.target.value})} required style={{flex:1}} />
                                         </div>
                                         <input type="text" placeholder="Lieu de RDV" value={eventData.location} onChange={e => setEventData({...eventData, location: e.target.value})} />
+                                        
+                                        {/* CHAMP GPX */}
+                                        <div style={{marginBottom:'15px'}}>
+                                            <label style={{display:'block', color:'#ccc', marginBottom:'5px', fontSize:'0.9rem'}}>Trace GPX (Optionnel)</label>
+                                            <input 
+                                                type="file" accept=".gpx"
+                                                onChange={e => setEventData({...eventData, gpxFile: e.target.files[0]})}
+                                                style={{background:'rgba(255,255,255,0.05)', padding:'10px'}}
+                                            />
+                                        </div>
+
                                         <textarea placeholder="Description, parcours, allure..." value={eventData.description} onChange={e => setEventData({...eventData, description: e.target.value})} rows="3" />
                                         
                                         <div className="form-actions">
@@ -545,22 +573,59 @@ function TurlagDetail() {
                                 {details.events.length === 0 ? (
                                     <div className="empty-state glass-panel">Aucune sortie prévue.</div>
                                 ) : (
-                                    details.events.map(ev => (
-                                        <div key={ev.id} className="event-card glass-panel">
-                                            <div className="event-date-box">
-                                                <span className="day">{new Date(ev.event_date).getDate()}</span>
-                                                <span className="month">{new Date(ev.event_date).toLocaleDateString('fr-FR', {month:'short'})}</span>
-                                            </div>
-                                            <div className="event-content">
-                                                <h4>{ev.title}</h4>
-                                                <div className="event-meta">
-                                                    <span><FaMapMarkerAlt /> {ev.location || 'Lieu inconnu'}</span>
-                                                    <span>• {new Date(ev.event_date).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+                                    details.events.map(ev => {
+                                        // On vérifie si c'est passé
+                                        const isPast = new Date(ev.event_date) < new Date();
+                                        // On vérifie si on a le droit de supprimer (Admin ou Créateur)
+                                        const canDelete = isAdmin() || ev.created_by === currentUser.id;
+
+                                        return (
+                                            <div key={ev.id} className={`event-card glass-panel ${isPast ? 'past-event' : ''}`} style={{opacity: isPast ? 0.6 : 1}}>
+                                                <div className="event-date-box">
+                                                    <span className="day">{new Date(ev.event_date).getDate()}</span>
+                                                    <span className="month">{new Date(ev.event_date).toLocaleDateString('fr-FR', {month:'short'})}</span>
                                                 </div>
-                                                <p>{ev.description}</p>
+                                                <div className="event-content">
+                                                    <div style={{display:'flex', justifyContent:'space-between', alignItems:'start'}}>
+                                                        <h4>{ev.title} {isPast && <span style={{fontSize:'0.7rem', background:'#444', padding:'2px 6px', borderRadius:'4px'}}>PASSÉ</span>}</h4>
+                                                        
+                                                        {/* Actions */}
+                                                        <div style={{display:'flex', gap:'10px'}}>
+                                                            {/* Bouton GPX */}
+                                                            {ev.gpx_url && (
+                                                                <a 
+                                                                    href={ev.gpx_url} 
+                                                                    download 
+                                                                    className="icon-btn-small" 
+                                                                    title="Télécharger GPX"
+                                                                    style={{color:'var(--neon-green)', textDecoration:'none', display:'flex', alignItems:'center', justifyContent:'center'}}
+                                                                >
+                                                                    <FaFileDownload />
+                                                                </a>
+                                                            )}
+                                                            
+                                                            {/* Bouton Supprimer */}
+                                                            {canDelete && (
+                                                                <button 
+                                                                    onClick={() => handleDeleteEvent(ev.id)} 
+                                                                    className="icon-btn-small danger"
+                                                                    title="Annuler l'événement"
+                                                                >
+                                                                    <FaTrash />
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="event-meta">
+                                                        <span><FaMapMarkerAlt /> {ev.location || 'Lieu inconnu'}</span>
+                                                        <span>• {new Date(ev.event_date).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+                                                    </div>
+                                                    <p>{ev.description}</p>
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))
+                                        );
+                                    })
                                 )}
                             </div>
                         </div>

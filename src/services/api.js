@@ -542,6 +542,15 @@ export const api = {
         const { data } = supabase.storage.from(bucket).getPublicUrl(fileName);
         return data.publicUrl;
     },
+    async uploadGpx(file) {
+        const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+        
+        const { error } = await supabase.storage.from('tracks').upload(fileName, file);
+        if (error) throw error;
+        
+        const { data } = supabase.storage.from('tracks').getPublicUrl(fileName);
+        return data.publicUrl;
+    },
     async equipBikeFrame(bikeId, frameItemId) {
         // Vérif: l'utilisateur possède-t-il cet item ?
         // (Optionnel si on fait confiance au front, mais mieux pour la sécu)

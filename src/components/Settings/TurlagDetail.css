@@ -1,270 +1,316 @@
 /* src/components/Settings/TurlagDetail.css */
 
-.turlag-detail-page {
-    padding-bottom: 50px;
-}
-
-/* --- HERO HEADER (Correction Alignement) --- */
+/* 1. RESET PARENT : On force l'alignement en ligne */
 .turlag-hero {
-    display: flex;
-    flex-direction: row; 
-    align-items: center;
-    gap: 20px;
-    padding: 30px;
-    margin-bottom: 30px;
-    position: relative;
-    flex-wrap: wrap;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    
+    gap: 20px !important;
+    padding: 20px 30px !important;
+    margin-bottom: 30px !important;
+    min-height: 120px !important; /* On donne de la place en hauteur */
+    
+    position: relative !important;
+    z-index: 1;
+    overflow: visible !important;
 }
 
-/* Bouton Retour (Rond et stylé) */
+/* 2. BOUTON RETOUR (Gauche) */
 .back-icon {
+    /* On TUE le positionnement absolu */
+    position: static !important;
+    float: none !important;
+    margin: 0 !important;
+    transform: none !important;
+    
+    /* Taille fixe */
+    flex: 0 0 45px !important; 
+    width: 45px !important;
+    height: 45px !important;
+    
     background: rgba(255,255,255,0.1);
     border: 1px solid rgba(255,255,255,0.2);
     color: white;
-    width: 45px; height: 45px;
-    border-radius: 50%;
+    border-radius: 12px;
+    
+    display: flex; align-items: center; justify-content: center;
     cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-    position: relative; /* Pas d'absolute ! */
 }
-.back-icon:hover { background: rgba(255,255,255,0.2); transform: translateX(-3px); }
+.back-icon:hover { background: var(--gradient-primary); color: white; border-color: transparent; }
 
+/* 3. BLOC CENTRAL (Conteneur Icone + Texte) */
 .hero-content {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    flex: 1;
-    min-width: 200px;
+    /* Doit prendre la place restante */
+    flex: 1 1 auto !important;
+    
+    /* Doit aligner l'icone et le texte horizontalement */
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 25px !important;
+    
+    /* Sécurité */
+    position: static !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    min-width: 0; /* Pour l'ellipsis du texte */
 }
 
+/* 3a. L'ICÔNE (Dans le bloc central) */
 .turlag-icon-large {
-    width: 70px; height: 70px; border-radius: 18px;
+    /* Taille fixe qui ne bouge pas */
+    flex: 0 0 80px !important; 
+    width: 80px !important;
+    height: 80px !important;
+    
+    border-radius: 20px;
     background: var(--gradient-secondary);
+    
     display: flex; align-items: center; justify-content: center;
-    font-size: 2rem; color: white; overflow: hidden; flex-shrink: 0;
-    box-shadow: 0 0 15px rgba(14, 165, 233, 0.3);
+    font-size: 2.5rem; color: white;
+    
+    position: static !important;
+    margin: 0 !important;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
 }
-.turlag-icon-large img { width: 100%; height: 100%; object-fit: cover; }
+.turlag-icon-large img { width: 100%; height: 100%; object-fit: cover; border-radius: 18px; }
 
-/* Titres */
-.hero-content h1 { margin: 0; font-size: 1.8rem; color: white; line-height: 1.2; }
-.turlag-desc { color: var(--text-secondary); margin: 5px 0 0 0; font-size: 0.9rem; }
-
-.edit-btn {
-    margin-left: auto; width: 40px; height: 40px; border-radius: 50%; border: none;
-    background: rgba(255,255,255,0.1); color: white; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-}
-.edit-btn:hover { background: var(--gradient-primary); }
-
-/* --- LAYOUT --- */
-.turlag-layout {
-    display: grid;
-    grid-template-columns: 320px 1fr;
-    gap: 30px;
-}
-
-/* COLONNE GAUCHE */
-.left-col {
+/* 3b. LE TEXTE (Dans le bloc central) */
+.hero-content > div:last-child {
     display: flex;
     flex-direction: column;
-    gap: 25px; /* ESPACE AJOUTÉ ENTRE INVITE ET MEMBRES */
+    align-items: flex-start;
+    justify-content: center;
 }
 
-.invite-card { padding: 20px; text-align: center; }
-.code-box {
-    background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px;
-    border: 1px dashed var(--neon-blue); margin-top: 10px;
-    display: flex; justify-content: space-between; align-items: center;
-    cursor: pointer; color: var(--neon-blue); font-family: monospace; font-size: 1.1rem;
+.hero-content h1 { 
+    margin: 0 !important; 
+    font-size: 2rem; 
+    color: white; 
+    line-height: 1.1;
+}
+.turlag-desc { 
+    color: var(--text-secondary); 
+    margin: 5px 0 0 0 !important; 
+    font-size: 1rem;
 }
 
-/* --- MEMBRES (Correction Alignement) --- */
-.members-list { padding: 20px; }
-.members-list h3 { margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+/* 4. BOUTON SETTINGS (Droite) */
+.edit-btn {
+    position: static !important;
+    float: none !important;
+    margin: 0 !important;
+    
+    /* Taille fixe */
+    flex: 0 0 45px !important;
+    width: 45px !important;
+    height: 45px !important;
+    
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text-secondary);
+    border-radius: 12px;
+    
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 1.2rem;
+}
+.edit-btn:hover { background: var(--gradient-primary); color: white; border-color: transparent; }
+
+
+/* =========================================
+   2. FORMULAIRE ÉVÉNEMENT (FIXE)
+   ========================================= */
+.event-form {
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid var(--neon-blue); /* Bordure pour le distinguer */
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.15);
+}
+
+.event-form h4 {
+    margin-top: 0; margin-bottom: 15px;
+    color: white; display: flex; align-items: center; gap: 10px;
+}
+
+/* Style des inputs du formulaire */
+.event-form input, 
+.event-form textarea, 
+.event-form select {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border-color);
+    color: white;
+    padding: 12px 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    box-sizing: border-box; /* Important pour ne pas dépasser */
+}
+
+.event-form input:focus, 
+.event-form textarea:focus {
+    outline: none;
+    border-color: var(--neon-blue);
+    background: rgba(59, 130, 246, 0.1);
+}
+
+/* Ligne pour date/heure si besoin */
+.event-form .form-row {
+    display: flex; gap: 15px;
+}
+
+/* Actions du formulaire */
+.event-form .form-actions {
+    display: flex; justify-content: flex-end; gap: 10px;
+}
+.event-form button[type="button"] {
+    background: transparent; border: 1px solid var(--border-color); color: #aaa;
+    padding: 8px 15px; border-radius: 8px; cursor: pointer;
+}
+.event-form button[type="submit"] {
+    background: var(--gradient-primary); border: none; color: white;
+    padding: 8px 20px; border-radius: 8px; font-weight: bold; cursor: pointer;
+}
+
+
+/* =========================================
+   3. LISTE DES MEMBRES (FIXE)
+   ========================================= */
+.members-list h3 { 
+    margin: 0 0 15px 0; padding-bottom: 10px; 
+    border-bottom: 1px solid rgba(255,255,255,0.1); 
+}
+
+.members-scroll {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 400px; 
+    overflow-y: auto;
+}
 
 .member-row {
     display: flex;
-    align-items: center; /* Centre verticalement l'avatar et le texte */
-    gap: 15px;
-    padding: 12px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+    align-items: center;
+    justify-content: space-between; /* Pousse les actions à droite */
+    padding: 10px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+/* Groupe Gauche : Avatar + Infos */
+.member-row > div:first-child { 
+    /* C'est le div implicite s'il y en a un, sinon on cible direct */
 }
 
 .member-avatar {
     width: 40px; height: 40px; 
-    border-radius: 50%;
-    background: var(--gradient-primary);
-    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%; 
+    background: var(--gradient-secondary);
+    display: flex; align-items: center; justify-content: center; 
     font-weight: bold; color: white;
-    flex-shrink: 0; /* Empêche l'écrasement */
-    font-size: 1rem;
+    margin-right: 15px;
+    flex-shrink: 0;
 }
 
-.member-info { flex: 1; display: flex; flex-direction: column; justify-content: center; }
-.member-name { font-size: 0.95rem; color: white; font-weight: 500; }
-.role-tag { font-size: 0.7rem; color: var(--text-secondary); display: flex; align-items: center; gap: 4px; margin-top: 2px; }
-.role-tag.admin { color: #fde047; }
-
-/* --- ÉVÉNEMENTS & BOUTONS --- */
-.events-header {
-    display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
-}
-
-/* Bouton Créer Événement (Néon) */
-.add-event-btn {
-    background: var(--gradient-success);
-    color: white; border: none;
-    padding: 10px 20px; 
-    border-radius: 12px; 
-    font-weight: 600; cursor: pointer;
-    display: flex; align-items: center; gap: 8px;
-    box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
-    transition: transform 0.2s;
-}
-.add-event-btn:hover { transform: translateY(-2px); }
-
-.event-card { display: flex; gap: 20px; padding: 20px; margin-bottom: 15px; }
-.event-date-box {
-    background: rgba(255,255,255,0.05);
-    padding: 12px; border-radius: 12px;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    min-width: 65px;
-    border: 1px solid rgba(255,255,255,0.1);
-}
-.day { font-size: 1.6rem; font-weight: 700; color: var(--neon-blue); line-height: 1; }
-.month { font-size: 0.8rem; text-transform: uppercase; color: var(--text-secondary); margin-top: 2px; }
-
-.event-content h4 { margin: 0 0 5px 0; color: white; font-size: 1.2rem; }
-.event-meta { color: var(--text-secondary); font-size: 0.9rem; display: flex; gap: 15px; margin-bottom: 10px; }
-
-/* --- FORMULAIRES (Modales & Events) --- */
-.event-form, .modal-content { padding: 25px; margin-bottom: 20px; }
-
-/* Inputs stylés */
-.event-form input, .event-form textarea, .modal-content input, .modal-content textarea {
-    width: 100%;
-    background: rgba(0,0,0,0.3);
-    border: 1px solid var(--border-color);
-    color: white;
-    padding: 12px;
-    border-radius: 10px;
-    margin-bottom: 15px;
-    box-sizing: border-box;
-    font-size: 1rem;
-}
-.event-form input:focus, .modal-content input:focus {
-    border-color: var(--neon-blue); outline: none;
-}
-
-/* Boutons Formulaires (Annuler / Valider) */
-.form-actions {
+.member-info {
     display: flex;
-    justify-content: flex-end;
-    gap: 15px;
-    margin-top: 10px;
+    flex-direction: column; /* Nom en haut, Rôle en bas */
+    gap: 2px;
+    flex: 1; /* Prend la place */
 }
 
-.form-actions button[type="button"] { /* Bouton Annuler */
-    background: transparent;
-    border: 1px solid rgba(255,255,255,0.2);
-    color: var(--text-secondary);
-    padding: 10px 20px;
-    border-radius: 10px;
-    cursor: pointer;
-    font-weight: 500;
-}
-.form-actions button[type="button"]:hover {
-    background: rgba(255,255,255,0.05);
-    color: white;
+.member-name {
+    font-weight: 600; font-size: 0.95rem; color: white;
 }
 
-.form-actions button[type="submit"] { /* Bouton Valider */
-    background: var(--gradient-primary);
-    border: none;
-    color: white;
-    padding: 10px 25px;
-    border-radius: 10px;
-    cursor: pointer;
-    font-weight: 600;
-    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+.role-tag {
+    display: inline-flex; align-items: center; gap: 5px; width: fit-content;
+    font-size: 0.65rem; padding: 2px 8px; border-radius: 4px;
+    background: rgba(255,255,255,0.1); 
+    color: #ccc; text-transform: uppercase; font-weight: 700;
+}
+.role-tag.admin { background: rgba(234, 179, 8, 0.2); color: #fde047; }
+.role-tag.moderator { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
+
+/* Groupe Droite : Actions */
+.member-actions {
+    display: flex; gap: 8px;
 }
 
-/* INVITE & LEAVE */
-.invite-card { padding: 20px; text-align: center; }
-.code-box {
-    background: rgba(0,0,0,0.3);
-    padding: 12px; border-radius: 10px;
-    border: 1px dashed var(--neon-blue);
-    display: flex; justify-content: space-between; align-items: center;
-    cursor: pointer; margin-top: 10px;
-    color: var(--neon-blue); font-family: monospace; font-size: 1.1rem;
+.icon-btn-small {
+    width: 30px; height: 30px;
+    border-radius: 50%; border: none;
+    background: rgba(255,255,255,0.1); color: #aaa;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.2s;
 }
+.icon-btn-small:hover { background: white; color: black; }
+.icon-btn-small.danger:hover { background: #ef4444; color: white; }
+
+/* Bouton Quitter (Rouge Néon) */
 .leave-group-btn {
     width: 100%; margin-top: 20px;
-    background: rgba(239,68,68,0.15);
-    border: 1px solid #ef4444;
-    color: #ef4444;
-    padding: 12px; border-radius: 10px;
+    background: rgba(239, 68, 68, 0.1); 
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #ef4444; 
+    padding: 12px; border-radius: 10px; 
     cursor: pointer; font-weight: 600;
     transition: all 0.2s;
 }
-.leave-group-btn:hover { background: rgba(239,68,68,0.25); }
-
-.kick-btn {
-    background: rgba(239, 68, 68, 0.1);
-    border: 1px solid #ef4444;
-    color: #ef4444;
-    width: 24px; height: 24px;
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 0.7rem;
-}
-.kick-btn:hover { background: #ef4444; color: white; }
-
-/* MODAL FIXE */
-.modal-overlay {
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.85);
-    backdrop-filter: blur(8px);
-    display: flex; align-items: center; justify-content: center;
-    z-index: 1000;
-}
-.modal-content { width: 500px; max-width: 95%; }
-
-.admin-modal-size {
-    width: 800px; /* Largeur confortable pour l'admin */
-    max-width: 95vw;
-    max-height: 90vh;
-    overflow-y: auto;
-    padding: 30px !important;
+.leave-group-btn:hover { 
+    background: rgba(239, 68, 68, 0.2); 
+    color: white; 
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.2); 
 }
 
-.modal-header-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-}
 
-.close-btn {
-    background: transparent;
-    border: none;
-    color: white;
-    font-size: 1.2rem;
-    cursor: pointer;
-}
-.close-btn:hover { color: #ef4444; }
+/* =========================================
+   4. GENERAL LAYOUT & TABS
+   ========================================= */
+.turlag-tabs { display: flex; gap: 10px; overflow-x: auto; padding: 5px; margin-bottom: 30px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.tab-btn { background: transparent; border: none; color: var(--text-secondary); padding: 10px 20px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; border-radius: 8px; transition: all 0.2s; white-space: nowrap; }
+.tab-btn:hover { background: rgba(255,255,255,0.05); color: white; }
+.tab-btn.active { background: var(--gradient-primary); color: white; }
 
-/* MOBILE */
+.turlag-layout { display: grid; grid-template-columns: 350px 1fr; gap: 30px; align-items: start; }
+.left-col, .right-col { display: flex; flex-direction: column; gap: 25px; }
+.glass-panel { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; }
+
+/* BOUTONS ACTIONS (Néon) */
+.action-icon-btn, .add-event-btn {
+    background: var(--gradient-primary); border: none; border-radius: 8px; color: white;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.4); transition: transform 0.2s;
+}
+.action-icon-btn { width: 35px; height: 35px; }
+.add-event-btn { padding: 8px 15px; font-weight: 700; gap: 8px; background: var(--gradient-success); box-shadow: 0 0 10px rgba(16, 185, 129, 0.3); }
+
+/* CHAT */
+.turlag-chat { height: 65vh; display: flex; flex-direction: column; overflow: hidden; }
+.chat-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; background: rgba(0,0,0,0.2); }
+.chat-input-area { padding: 15px; background: var(--bg-card); border-top: 1px solid var(--border-color); display: flex; gap: 10px; }
+.chat-input-area input { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: white; padding: 12px; border-radius: 20px; outline: none; }
+.chat-input-area button { width: 45px; height: 45px; border-radius: 50%; border: none; background: var(--gradient-primary); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.chat-bubble-row { display: flex; gap: 10px; max-width: 80%; }
+.chat-bubble-row.me { align-self: flex-end; flex-direction: row-reverse; }
+.chat-avatar { width: 32px; height: 32px; border-radius: 50%; background: #444; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.1); }
+.chat-bubble { padding: 10px 15px; border-radius: 12px; font-size: 0.95rem; line-height: 1.4; color: white; }
+.chat-bubble-row.other .chat-bubble { background: #2a2a35; border-top-left-radius: 0; }
+.chat-bubble-row.me .chat-bubble { background: var(--neon-blue); color: black; border-top-right-radius: 0; }
+.chat-name { font-size: 0.7rem; color: #888; margin-bottom: 2px; display: block; }
+.chat-time { font-size: 0.65rem; color: #aaa; display: block; text-align: right; margin-top: 2px; }
+
+/* RESPONSIVE */
 @media (max-width: 900px) {
     .turlag-layout { grid-template-columns: 1fr; }
+    .turlag-hero { grid-template-columns: 1fr; text-align: center; justify-items: center; padding: 20px; }
     .hero-content { flex-direction: column; text-align: center; }
-    .turlag-hero { flex-direction: column; }
-    .back-icon { position: absolute; top: 20px; left: 20px; }
-    .edit-btn { position: absolute; top: 20px; right: 20px; }
+    .edit-btn { position: absolute; top: 15px; right: 15px; }
+    .back-icon { position: absolute; top: 15px; left: 15px; }
 }

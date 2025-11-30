@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { equipmentService } from '../../services/api';
+import { equipmentService, authService } from '../../services/api';
 import { FaTshirt, FaMicrochip, FaTools, FaPlus, FaSnowflake, FaSun, FaLeaf, FaTrash, FaBatteryThreeQuarters } from 'react-icons/fa';
 import EquipmentForm from './EquipmentForm';
 import './EquipmentPage.css';
@@ -9,6 +9,8 @@ function EquipmentPage() {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('textile'); // 'textile', 'tech', 'accessory'
     const [showForm, setShowForm] = useState(false);
+
+    const [editingItem, setEditingItem] = useState(null);
 
     const [currentProfile, setCurrentProfile] = useState(null);
 
@@ -34,6 +36,22 @@ function EquipmentPage() {
         }
     };
 
+    const openEdit = (item) => {
+        setEditingItem(item); // Charge les données de l'item cliqué
+        setShowForm(true);    // Ouvre le formulaire
+    };
+
+    const handleFormCancel = () => {
+        setShowForm(false);
+        setEditingItem(null); // Réinitialise l'état d'édition
+    };
+
+    const handleSaveSuccess = () => {
+        setShowForm(false);
+        setEditingItem(null);
+        loadData(); // Recharge les données et ferme le formulaire
+    };
+
     const handleDelete = async (id) => {
         if (window.confirm("Supprimer cet équipement ?")) {
             await equipmentService.delete(id);
@@ -42,7 +60,10 @@ function EquipmentPage() {
     };
 
     // Filtre par onglet
-    const filteredItems = items.filter(item => item.type === activeTab);
+    const filteredItems = items.filter(item => 
+        // FIX : On s'assure que item.type est une chaîne et on le compare en minuscules
+        typeof item.type === 'string' && item.type.toLowerCase() === activeTab.toLowerCase()
+    );
 
     // Helpers visuels
     const getConditionColor = (cond) => {
@@ -95,13 +116,15 @@ function EquipmentPage() {
             </div>
 
             {/* FORMULAIRE (MODAL) */}
-            {showForm && (
+            {(showForm || editingItem) && (
                 <div className="modal-overlay">
                     <div className="glass-panel modal-content">
                         <EquipmentForm 
+                            initialData={editingItem}
+
                             typePreselect={activeTab}
-                            onSuccess={() => { setShowForm(false); loadData(); }} 
-                            onCancel={() => setShowForm(false)} 
+                            onSuccess={handleSaveSuccess}
+                            onCancel={handleFormCancel}
                         />
                     </div>
                 </div>
@@ -124,6 +147,7 @@ function EquipmentPage() {
                                     key={item.id} 
                                     className="equip-card glass-panel"
                                     style={{ borderLeft: `4px solid ${getConditionColor(item.condition)}` }}
+                                    onClick={() => openEdit(item)}
                                 >
                                     <div className="equip-header">
                                         <div className="equip-title">

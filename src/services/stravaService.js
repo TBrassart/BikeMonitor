@@ -113,7 +113,7 @@ export const stravaService = {
                 bike_id: bikeId,
                 name: act.name,
                 type: act.type,
-                distance: act.distance / 1000,
+                distance: act.distance,
                 moving_time: act.moving_time,
                 total_elevation_gain: act.total_elevation_gain,
                 start_date: act.start_date,

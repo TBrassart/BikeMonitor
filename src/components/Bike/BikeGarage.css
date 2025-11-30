@@ -226,6 +226,27 @@
     height: 120px;
     align-items: center;
 }
+.garage-bike-card {
+    /* Style Glass manuel pour éviter le conflit */
+    background-color: var(--bg-card);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    
+    /* BORDURE PAR DÉFAUT (Faible) */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    color: white;
+    
+    /* FIX CRITIQUE : Restaurer la structure de la carte */
+    display: flex;
+    flex-direction: column;
+    
+    overflow: hidden;
+    transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+    height: 100%; /* Uniformiser la hauteur */
+}
 
 .bikes-container.list .bike-image-placeholder {
     width: 150px;

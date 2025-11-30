@@ -57,16 +57,21 @@ function BikeGarage() {
         return bike.parts.some(p => p.status === 'critical' || p.status === 'warning');
     };
 
-    const getFrameStyle = (bike) => {
+    // Renommé pour être plus précis : récupère les détails du cadre
+    const getFrameDetails = (bike) => {
         const frame = Array.isArray(bike.frame_details) ? bike.frame_details[0] : bike.frame_details;
+        
         if (frame && frame.asset_data) {
             return {
-                border: `3px solid ${frame.asset_data.border}`,
-                boxShadow: `0 0 20px ${frame.asset_data.border}, inset 0 0 10px ${frame.asset_data.border}`,
-                zIndex: 10
+                className: frame.asset_data.className || '', // On récupère la classe CSS spécifique
+                style: {
+                    // On ne renvoie que le zIndex (pour la superposition), on laisse le CSS gérer le border/shadow
+                    zIndex: 10 
+                }
             };
         }
-        return {};
+        // Retourne un objet vide si aucun cadre cosmétique n'est équipé
+        return { className: '', style: {} };
     };
 
     if (loading) return <div className="loading-state">Ouverture du garage...</div>;
@@ -113,13 +118,15 @@ function BikeGarage() {
                     const isMine = bike.user_id === currentUser?.id;
                     const alert = hasAlerts(bike);
                     const ownerName = isMine ? 'Moi' : (bike.profiles?.name || 'Inconnu');
-                    const frameStyle = getFrameStyle(bike);
+                    const frameDetails = getFrameDetails(bike);
+                    const frameClass = frameDetails.className;
+                    const frameStyle = frameDetails.style;
                     const hasFrame = Object.keys(frameStyle).length > 0;
 
                     return (
                         <div 
                             key={bike.id} 
-                            className={`garage-bike-card ${!isMine ? 'friend-bike' : ''}`}
+                            className={`garage-bike-card glass-panel ${!isMine ? 'friend-bike' : ''} ${frameClass}`}
                             onClick={() => isMine && navigate(`/app/bike/${bike.id}`)}
                             style={{ 
                                 cursor: isMine ? 'pointer' : 'default',

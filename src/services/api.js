@@ -162,7 +162,6 @@ export const authService = {
         await supabase.from('turlag_members').insert([{turlag_id: id, user_id: u.id, role: 'member'}]);
     },
 
-    // CORRECTION DU BUG "QUITTER LE GROUPE"
     async leaveTurlag(turlagId) {
         const user = await this.getCurrentUser();
         
@@ -218,6 +217,96 @@ export const authService = {
 
     updateMemberRole: (tid, uid, role) => api.updateMemberRole(tid, uid, role),
     kickMember: (tid, uid) => api.kickMember(tid, uid),
+
+    // --- CHAT ---
+    async getMessages(turlagId) {
+        const { data, error } = await supabase
+            .from('turlag_messages')
+            .select('*, profiles:user_id(name, avatar)')
+            .eq('turlag_id', turlagId)
+            .order('created_at', { ascending: true })
+            .limit(50);
+        if (error) throw error;
+        return data;
+    },
+    async sendMessage(turlagId, content) {
+        const user = await this.getCurrentUser();
+        const { error } = await supabase
+            .from('turlag_messages')
+            .insert([{ turlag_id: turlagId, user_id: user.id, content }]);
+        if (error) throw error;
+    },
+
+    // --- SONDAGES ---
+    async getPolls(turlagId) {
+        // Récupère les sondages ET les votes associés
+        const { data, error } = await supabase
+            .from('turlag_polls')
+            .select(`
+                *, 
+                votes:turlag_poll_votes(user_id, option_index),
+                creator:created_by(name)
+            `)
+            .eq('turlag_id', turlagId)
+            .eq('is_active', true)
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        return data;
+    },
+    async createPoll(turlagId, question, options) {
+        const user = await this.getCurrentUser();
+        const { error } = await supabase
+            .from('turlag_polls')
+            .insert([{ turlag_id: turlagId, created_by: user.id, question, options }]);
+        if (error) throw error;
+    },
+    async votePoll(pollId, optionIndex) {
+        const user = await this.getCurrentUser();
+        // Upsert pour gérer le changement de vote
+        const { error } = await supabase
+            .from('turlag_poll_votes')
+            .upsert([{ poll_id: pollId, user_id: user.id, option_index: optionIndex }]);
+        if (error) throw error;
+    },
+    async closePoll(pollId) {
+        const { error } = await supabase
+            .from('turlag_polls')
+            .update({ is_active: false })
+            .eq('id', pollId);
+        if (error) throw error;
+    },
+
+    // --- LEADERBOARD & ATELIER ---
+    async getLeaderboard(turlagId) {
+        const { data, error } = await supabase.rpc('get_turlag_leaderboard', { target_turlag_id: turlagId });
+        if (error) throw error;
+        return data;
+    },
+    
+    // Récupérer le matos partagé par les membres du groupe
+    async getSharedWorkshop(turlagId) {
+        // 1. Récupérer les IDs des membres
+        const { data: members } = await supabase.from('turlag_members').select('user_id').eq('turlag_id', turlagId);
+        const memberIds = members.map(m => m.user_id);
+
+        if (memberIds.length === 0) return [];
+
+        // 2. Récupérer l'équipement partagé de ces membres
+        // Note: equipment est lié à `profiles` via `profile_id`. Il faut faire la jointure.
+        // On suppose ici que equipment a `profile_id`.
+        // On récupère d'abord les profile_ids des users.
+        const { data: profiles } = await supabase.from('profiles').select('id').in('user_id', memberIds);
+        const profileIds = profiles.map(p => p.id);
+
+        const { data, error } = await supabase
+            .from('equipment')
+            .select('*, profiles(name, avatar)')
+            .in('profile_id', profileIds)
+            .eq('is_shared', true);
+            
+        if (error) throw error;
+        return data;
+    },
 
     // 1. Demander le reset (Envoie un email)
     async resetPasswordForEmail(email) {
@@ -298,7 +387,78 @@ export const authService = {
         if (error) throw error;
         return data;
     },
+    // --- CHAT & SOCIAL (A AJOUTER DANS authService) ---
+    async getMessages(turlagId) {
+        const { data, error } = await supabase
+            .from('turlag_messages')
+            .select('*, profiles:user_id(name, avatar)')
+            .eq('turlag_id', turlagId)
+            .order('created_at', { ascending: true })
+            .limit(50);
+        if (error) throw error;
+        return data;
+    },
+    async sendMessage(turlagId, content) {
+        const user = await this.getCurrentUser();
+        const { error } = await supabase
+            .from('turlag_messages')
+            .insert([{ turlag_id: turlagId, user_id: user.id, content }]);
+        if (error) throw error;
+    },
 
+    // --- SONDAGES ---
+    async getPolls(turlagId) {
+        const { data, error } = await supabase
+            .from('turlag_polls')
+            .select(`*, votes:turlag_poll_votes(user_id, option_index), creator:created_by(name)`)
+            .eq('turlag_id', turlagId)
+            .eq('is_active', true)
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        return data;
+    },
+    async createPoll(turlagId, question, options) {
+        const user = await this.getCurrentUser();
+        const { error } = await supabase
+            .from('turlag_polls')
+            .insert([{ turlag_id: turlagId, created_by: user.id, question, options }]);
+        if (error) throw error;
+    },
+    async votePoll(pollId, optionIndex) {
+        const user = await this.getCurrentUser();
+        const { error } = await supabase
+            .from('turlag_poll_votes')
+            .upsert([{ poll_id: pollId, user_id: user.id, option_index: optionIndex }]);
+        if (error) throw error;
+    },
+
+    // --- LEADERBOARD & ATELIER ---
+    async getLeaderboard(turlagId) {
+        const { data, error } = await supabase.rpc('get_turlag_leaderboard', { target_turlag_id: turlagId });
+        if (error) throw error;
+        return data;
+    },
+    
+    async getSharedWorkshop(turlagId) {
+        // 1. Récupérer les membres
+        const { data: members } = await supabase.from('turlag_members').select('user_id').eq('turlag_id', turlagId);
+        const memberIds = members.map(m => m.user_id);
+        if (memberIds.length === 0) return [];
+
+        // 2. Récupérer les ID profils correspondants
+        const { data: profiles } = await supabase.from('profiles').select('id').in('user_id', memberIds);
+        const profileIds = profiles.map(p => p.id);
+
+        // 3. Récupérer le matos partagé
+        const { data, error } = await supabase
+            .from('equipment')
+            .select('*, profiles(name, avatar)')
+            .in('profile_id', profileIds)
+            .eq('is_shared', true);
+            
+        if (error) throw error;
+        return data;
+    },
     createInvite: (tid, opt) => api.createInvite(tid, opt),
     getInvites: (tid) => api.getInvites(tid),
     deleteInvite: (id) => api.deleteInvite(id),
@@ -476,13 +636,15 @@ export const api = {
         const user = await authService.getCurrentUser();
         const profile = await authService.getMyProfile();
 
+        const distanceInMeters = parseFloat(activityData.distance) * 1000;
+
         const { data, error } = await supabase.from('activities').insert([{
             // ID généré (pas de strava ID)
             profile_id: profile.id,
             bike_id: activityData.bike_id,
             name: activityData.name,
             type: 'Ride', // Par défaut vélo
-            distance: activityData.distance, // Déjà en km via le parser
+            distance: distanceInMeters, // Déjà en km via le parser
             moving_time: activityData.moving_time,
             total_elevation_gain: activityData.elevation,
             start_date: activityData.start_date,

@@ -17,6 +17,9 @@
   --text-primary: #ffffff;
   --text-secondary: #a1a1aa;
   
+  --neon-blue: #3b82f6;
+  --neon-purple: #ec4899;
+  --neon-green: #10b981;
   /* DÉGRADÉ BLEU -> ROSE */
   --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #ec4899 100%); 
   

@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { equipmentService } from '../../services/api';
 import './EquipmentForm.css';
 
-function EquipmentForm({ typePreselect, onSuccess, onCancel }) {
+function EquipmentForm({ typePreselect, onSuccess, onCancel, initialData }) {
+    const isEditMode = Boolean(initialData);
+
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
@@ -11,18 +13,19 @@ function EquipmentForm({ typePreselect, onSuccess, onCancel }) {
         category: '',
         season: 'all',
         condition: 'good',
-        purchase_date: ''
+        purchase_date: '',
+        is_shared: false
     });
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+        setFormData({ ...formData, [e.target.name]: value });
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         try {
-            // Nettoyage des données pour éviter les erreurs SQL sur les champs vides
             const cleanedData = {
                 name: formData.name,
                 brand: formData.brand || null,
@@ -30,12 +33,15 @@ function EquipmentForm({ typePreselect, onSuccess, onCancel }) {
                 category: formData.category || null,
                 season: formData.season,
                 condition: formData.condition,
-                // Si la date est vide (''), Supabase veut NULL
-                purchase_date: formData.purchase_date || null
-                // notes: ... (ajouter ici si tu as un champ notes)
+                purchase_date: formData.purchase_date || null,
+                is_shared: formData.is_shared,
             };
 
-            await equipmentService.add(cleanedData);
+            if (isEditMode) {
+                await equipmentService.update(initialData.id, cleanedData); 
+            } else {
+                await equipmentService.add(cleanedData); 
+            }
             if (onSuccess) onSuccess();
         } catch (err) {
             // Afficher une erreur plus précise en console
@@ -48,7 +54,7 @@ function EquipmentForm({ typePreselect, onSuccess, onCancel }) {
 
     return (
         <form className="equipment-form" onSubmit={handleSubmit}>
-            <h3>Ajouter un équipement</h3>
+            <h3>{isEditMode ? 'Modifier' : 'Ajouter'} un équipement</h3>
             
             <div className="form-group">
                 <label>Nom</label>
@@ -101,9 +107,27 @@ function EquipmentForm({ typePreselect, onSuccess, onCancel }) {
                 </select>
             </div>
 
+            <div className="form-group checkbox-group" style={{background:'rgba(255,255,255,0.05)', padding:'10px', borderRadius:'8px', marginTop:'10px'}}>
+                <label style={{display:'flex', alignItems:'center', gap:'10px', cursor:'pointer'}}>
+                    <input 
+                        type="checkbox" 
+                        name="is_shared" 
+                        checked={formData.is_shared} 
+                        onChange={handleChange}
+                        style={{width:'20px', height:'20px'}}
+                    />
+                    <div>
+                        <span style={{display:'block', fontWeight:'bold'}}>Partager dans l'Atelier Turlag</span>
+                        <small style={{color:'#aaa', fontWeight:'normal'}}>Visible par les membres de vos groupes (pour prêt/dépannage)</small>
+                    </div>
+                </label>
+            </div>
+            
             <div className="form-actions">
                 <button type="button" onClick={onCancel}>Annuler</button>
-                <button type="submit" className="primary-btn" disabled={loading}>Ajouter</button>
+                <button type="submit" className="primary-btn" disabled={loading}>
+                    {isEditMode ? 'Mettre à jour' : 'Ajouter'}
+                </button>
             </div>
         </form>
     );

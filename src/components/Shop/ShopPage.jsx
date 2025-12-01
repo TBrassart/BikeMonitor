@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-// CORRECTION 1 : Ajout de bikeService ici
+import ThemeEffects from '../Layout/ThemeEffects';
 import { shopService, authService, bikeService } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
-import { FaBolt, FaGem, FaCheck, FaMagic, FaPalette, FaIdBadge, FaCrown, FaSync, FaBicycle, FaTimes, FaFilter, FaSortAmountDown, FaTrophy } from 'react-icons/fa';
+import { FaBolt, FaGem, FaCheck, FaMagic, FaPalette, FaIdBadge, FaCrown, FaSync, FaBicycle, FaTimes, FaFilter, FaSortAmountDown, FaTrophy, FaEye } from 'react-icons/fa';
 import './ShopPage.css';
 
 function ShopPage() {
@@ -14,6 +14,7 @@ function ShopPage() {
     
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('skin'); 
+    const [previewTheme, setPreviewTheme] = useState(null);
     const [isSyncing, setIsSyncing] = useState(false);
     const [gainAnim, setGainAnim] = useState(null); // { amount: 50, type: 'watts' }
     const [processing, setProcessing] = useState(null);
@@ -117,6 +118,105 @@ function ShopPage() {
 
     if (loading) return <div className="loading">Chargement...</div>;
 
+    // --- RENDER DU CONTENU DE LA PREVIEW ---
+    const renderThemePreview = () => {
+        if (!previewTheme) return null;
+        
+        const assets = previewTheme.asset_data || {};
+        const effectName = assets.effect || null;
+        
+        // 1. On applique la couleur de fond, mais on la rend semi-transparente si un effet est actif
+        // pour qu'on puisse voir l'effet à travers, ou on met l'effet par dessus le fond.
+        const previewStyle = {
+            '--preview-bg': assets.bg || '#12121e',
+            '--preview-primary': assets.primary || '#3b82f6',
+            '--preview-secondary': assets.secondary || '#ec4899',
+            '--preview-card': assets.card || 'rgba(255,255,255,0.05)',
+            
+            // CORRECTION IMPORTANTE : 
+            // Si un effet est présent, on met le background sur le wrapper, pas ici, 
+            // ou on utilise une couleur rgba pour laisser passer l'effet.
+            // Ici, on va appliquer la couleur de fond MAIS le canvas sera en 'absolute' par dessus le fond (mais sous le texte).
+            backgroundColor: 'var(--preview-bg)', 
+            color: 'white'
+        };
+
+        const gradientStyle = {
+            background: `linear-gradient(135deg, var(--preview-primary), var(--preview-secondary))`,
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent'
+        };
+        const effectClass = assets.className || '';
+        const titleEffectClass = '';
+
+        return (
+            <div className="modal-overlay" onClick={() => setPreviewTheme(null)}>
+                <div className="glass-panel modal-content theme-preview-modal" onClick={e => e.stopPropagation()}>
+                    <div className="preview-header">
+                        <h3>Aperçu : {previewTheme.name}</h3>
+                        <button onClick={() => setPreviewTheme(null)} className="close-btn"><FaTimes /></button>
+                    </div>
+
+                    {/* CONTENEUR PRINCIPAL */}
+                    {/* On ajoute 'position: relative' pour que le canvas absolute se cale ici */}
+                    <div className={`mini-interface ${effectClass}`} style={{...previewStyle, position: 'relative', overflow: 'hidden'}}>
+                        
+                        {/* 1. L'EFFET VISUEL (CANVAS) */}
+                        {/* Il doit être en absolute, z-index 0. Le fond de couleur est derrière. */}
+                        {effectName && (
+                            <ThemeEffects 
+                                effect={effectName} 
+                                style={{
+                                    position: 'absolute', 
+                                    top: 0, left: 0, 
+                                    width: '100%', height: '100%', 
+                                    zIndex: 0, 
+                                    pointerEvents: 'none' // Laisse passer les clics
+                                }} 
+                            />
+                        )}
+
+                        {/* 2. LE CONTENU (z-index 1 pour passer DEVANT l'effet) */}
+                        <div style={{position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: '20px'}}>
+                            
+                            <div className="mini-header">
+                                <h2 style={!titleEffectClass ? gradientStyle : {}} className={titleEffectClass}>
+                                    Dashboard
+                                </h2>
+                                <div className="mini-avatar" style={{background: 'var(--preview-primary)'}}>TB</div>
+                            </div>
+
+                            <div className="mini-grid">
+                                {/* Ajout d'un fond semi-transparent sur les cartes pour lisibilité sur l'effet */}
+                                <div className="mini-card" style={{borderColor: 'var(--preview-primary)', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)'}}>
+                                    <span>DISTANCE</span>
+                                    <strong>124 km</strong>
+                                </div>
+                                <div className="mini-card" style={{borderColor: 'var(--preview-secondary)', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)'}}>
+                                    <span>DÉNIVELÉ</span>
+                                    <strong>1200 m</strong>
+                                </div>
+                            </div>
+
+                            <button className="mini-btn" style={{background: `linear-gradient(90deg, var(--preview-primary), var(--preview-secondary))`}}>
+                                Voir les activités
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="preview-actions">
+                        <button onClick={() => setPreviewTheme(null)} className="secondary-btn">Fermer</button>
+                        {!getOwnedItem(previewTheme.id) && (
+                            <button className="primary-btn" onClick={() => { setPreviewTheme(null); handleBuy(previewTheme, 'watts'); }}>
+                                Acheter ({previewTheme.price_watts} <FaBolt/>)
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     return (
         <div className="shop-page">
             
@@ -126,6 +226,9 @@ function ShopPage() {
                     +{gainAnim.amount} <FaBolt />
                 </div>
             )}
+
+            {/* MODALE PREVIEW */}
+            {renderThemePreview()}
 
             {/* MODALE SÉLECTION VÉLO (CORRECTION 3) */}
             {showBikeSelector && (
@@ -215,6 +318,16 @@ function ShopPage() {
                                     item.type === 'title' ? <span className={item.asset_data?.className || ''} style={{fontSize: '0.9rem', textAlign: 'center', padding: '5px'}}>{item.name}</span> :
                                     <FaMagic />
                                 }
+                                {/* BOUTON OEIL - Uniquement pour les skins */}
+                                {item.type === 'skin' && (
+                                    <button 
+                                        className="preview-eye-btn" 
+                                        onClick={(e) => { e.stopPropagation(); setPreviewTheme(item); }}
+                                        title="Prévisualiser"
+                                    >
+                                        <FaEye />
+                                    </button>
+                                )}
                             </div>
 
                             <div className="card-details">

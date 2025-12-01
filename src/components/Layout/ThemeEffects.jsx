@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 
-const ThemeEffects = ({ effect }) => {
+const ThemeEffects = ({ effect, style }) => {
     const canvasRef = useRef(null);
     const requestRef = useRef(null);
     const mouseRef = useRef({ x: -1000, y: -1000, clickTime: 0 });
@@ -12,17 +12,30 @@ const ThemeEffects = ({ effect }) => {
         const ctx = canvas.getContext('2d');
         
         const resize = () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+            const parent = canvas.parentElement;
+            if (parent) {
+                canvas.width = parent.clientWidth;
+                canvas.height = parent.clientHeight;
+            } else {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
         };
         window.addEventListener('resize', resize);
         resize();
 
         // Gestion du clic pour les interactions
         const handleClick = (e) => {
-            mouseRef.current = { x: e.clientX, y: e.clientY, clickTime: Date.now() };
+            // Correction des coordonnées si on est dans une modale
+            const rect = canvas.getBoundingClientRect();
+            mouseRef.current = { 
+                x: e.clientX - rect.left, 
+                y: e.clientY - rect.top, 
+                clickTime: Date.now() 
+            };
         };
-        window.addEventListener('click', handleClick);
+        // On écoute le clic sur le canvas, pas sur la fenêtre entière
+        canvas.addEventListener('click', handleClick);
 
         // --- CLASSES D'EFFETS ---
 
@@ -572,22 +585,25 @@ const ThemeEffects = ({ effect }) => {
 
         requestRef.current = requestAnimationFrame(render);
 
+        // NETTOYAGE
         return () => {
             window.removeEventListener('resize', resize);
-            window.removeEventListener('click', handleClick);
+            if(canvas) canvas.removeEventListener('click', handleClick);
             cancelAnimationFrame(requestRef.current);
         };
     }, [effect]);
 
     if (!effect) return null;
 
+    const defaultStyle = {
+        position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+        zIndex: 0, pointerEvents: 'auto', opacity: 0.6
+    };
+
     return (
         <canvas 
             ref={canvasRef}
-            style={{
-                position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-                zIndex: 0, pointerEvents: 'auto', opacity: 0.6
-            }}
+            style={{ ...defaultStyle, ...style }} // On écrase avec les props si besoin
         />
     );
 };

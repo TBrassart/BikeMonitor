@@ -256,3 +256,91 @@
 .shop-card.rarity-rare { border-top-color: #3b82f6 !important; }
 .shop-card.rarity-epic { border-top-color: #a855f7 !important; box-shadow: 0 0 15px rgba(168, 85, 247, 0.2); }
 .shop-card.rarity-legendary { border-top-color: #f59e0b !important; box-shadow: 0 0 20px rgba(245, 158, 11, 0.3); }
+
+/* --- BOUTON OEIL (Sur la carte) --- */
+.preview-eye-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.2s;
+}
+
+.shop-card:hover .preview-eye-btn {
+    opacity: 1;
+    transform: scale(1);
+}
+.preview-eye-btn:hover {
+    background: var(--neon-blue);
+    border-color: var(--neon-blue);
+}
+
+/* --- MODALE PREVIEW --- */
+.theme-preview-modal {
+    width: 500px;
+    max-width: 90%;
+    padding: 0 !important; /* On gère le padding nous-même */
+    overflow: hidden;
+}
+
+.preview-header {
+    padding: 20px;
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid var(--border-color);
+}
+.preview-header h3 { margin: 0; }
+
+/* LA FAUSSE INTERFACE (Le cœur du système) */
+.mini-interface {
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    /* Transition douce si on changeait de thème en live */
+    transition: background 0.3s;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.mini-header {
+    display: flex; justify-content: space-between; align-items: center;
+}
+.mini-avatar {
+    width: 35px; height: 35px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold; font-size: 0.8rem;
+}
+
+.mini-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
+}
+
+.mini-card {
+    background: var(--preview-card);
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid; /* La couleur vient du style inline */
+    display: flex; flex-direction: column;
+}
+.mini-card span { font-size: 0.7rem; opacity: 0.7; letter-spacing: 1px; }
+.mini-card strong { font-size: 1.2rem; margin-top: 5px; }
+
+.mini-btn {
+    width: 100%; padding: 12px; border: none; border-radius: 8px;
+    color: white; font-weight: bold; cursor: default;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+/* ACTIONS FOOTER */
+.preview-actions {
+    padding: 20px;
+    display: flex; justify-content: flex-end; gap: 10px;
+    background: var(--bg-card);
+}

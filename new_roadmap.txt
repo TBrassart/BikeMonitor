@@ -1,0 +1,46 @@
+1. 🔐 Module : Authentification & Profil
+
+Cosmétique (Cadres)	⭐ Plus que fonctionnel	Prévisualiser le cadre directement lors du survol dans le garage.
+Import 99spokes	🚧 À Faire (En attente API)	Une fois la clé reçue : réactiver le bouton et parser le JSON officiel.
+Remplacement Pièce	✅ Fonctionnel	Suggérer la référence de la pièce à racheter (lien affilié ?).
+Planification Entretien	✅ Fonctionnel	Ajouter une récurrence automatique (ex: "Graisser chaîne tous les 300km").
+Historique	✅ Fonctionnel	Ajouter des photos avant/après dans l'historique d'une réparation.
+    Stock Atelier : Lier la maintenance à l'inventaire "Équipement/Atelier". Si je change une chaîne, ça décrémente mon stock de chaînes neuves.
+Analyse Fitness	✅ Fonctionnel	Ajouter une courbe de "Fatigue" pure pour prévenir le surentraînement.
+Paiement Réel	🚧 À Faire	Intégrer LemonSqueezy pour acheter des NeonChips.
+Création (Stock/Manuel)	✅ Fonctionnel	Permettre de dupliquer un Kit existant.
+Liaison Inventaire	✅ Fonctionnel	Alerter si un item du kit est marqué "Usé" ou "Périmé" dans l'inventaire.
+Calculateur Stratégie	⭐ Plus que fonctionnel	Enregistrer la stratégie générée pour la retrouver plus tard.
+Suivi Prix	✅ Fonctionnel	Graphique de l'évolution du prix des barres/gels.
+A. Le "Workshop" (L'Atelier Communautaire) 🛠️
+    Concept : Une base de connaissance collaborative (Wiki).
+    Fonction : Les utilisateurs créent des guides ("Comment purger des freins Shimano", "Changer une guidoline").
+    Lien : Quand on crée une maintenance "Purge Freins", l'app propose le tutoriel correspondant.
+    Gamification : Créer un tuto validé rapporte des NeonChips.
+B. Le "Marketplace" (Brocante Turlag) 💰
+    Concept : Vendre ou donner ses pièces d'occasion.
+    Fonction : Je retire une selle de mon vélo dans l'app -> Je clique sur "Vendre". Elle apparaît dans une liste visible par mon Turlag ou le public.
+    Avantage : L'acheteur voit l'historique réel de la pièce (km certifiés par l'app !).
+C. Le "Race Day" (Jour J) 🏁
+    Concept : Un mode spécial pour le jour d'une course.
+    Fonction :
+        Affiche la Checklist.
+        Affiche la Météo heure par heure du lieu exact.
+        Affiche le plan de nutrition avec des rappels (Notifications Push sur téléphone).
+        Permet aux proches de suivre (si API Strava Live ou autre dispo).	 
+		
+		
+revoir les alertes de base
+		
+idées de themes :
+immeubles (différentes tailles, sur plusieurs plans, avec des fenetres illuminées, d'autres non et certaines s'allument ou s'éteignent aléatoirement avec la lune en arrière plan
+hexagones qui s'illuminent 
+noel
+paysage qui defile a travers un hublo d'avion
+huée de vélos (fin de carriere cycliste)
+theme roues enve (logos qui tournent)
+
+
+idées de titres (effets + typo):
+typo minecraft 
+typo LoL

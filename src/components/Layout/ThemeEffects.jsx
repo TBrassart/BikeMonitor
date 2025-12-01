@@ -70,7 +70,7 @@ const ThemeEffects = ({ effect, style }) => {
         // 2. MATRIX (Pluie binaire)
         const letters = '01';
         const fontSize = 14;
-        const columns = Math.floor(window.innerWidth / fontSize); // Fix crash resize
+        const columns = Math.floor(canvas.width / fontSize); // Fix crash resize
         const drops = Array(columns).fill(1);
         
         const drawMatrix = () => {
@@ -370,8 +370,8 @@ const ThemeEffects = ({ effect, style }) => {
         // 14. MOUTONS (IA) ---
         // Initialisation du troupeau
         const sheepHerd = Array(12).fill().map(() => ({
-            x: Math.random() * window.innerWidth,
-            y: Math.random() * (window.innerHeight - 100), // Pas dans le lac direct
+            x: Math.random() * canvas.width,
+            y: Math.random() * (canvas.height - 100), // Pas dans le lac direct
             state: 'idle', // idle, move, drink, flee
             target: {x:0, y:0},
             timer: Math.random() * 100,
@@ -396,7 +396,7 @@ const ThemeEffects = ({ effect, style }) => {
                 
                 // Interaction Peur (Clic souris)
                 const distMouse = Math.hypot(s.x - mouseRef.current.x, s.y - mouseRef.current.y);
-                if (Date.now() - mouseRef.current.clickTime < 500 && distMouse < 200) {
+                if (Date.now() - mouseRef.current.clickTime < 2000 && distMouse < 300) {
                     s.state = 'flee';
                     // Vecteur de fuite
                     const angle = Math.atan2(s.y - mouseRef.current.y, s.x - mouseRef.current.x);
@@ -439,7 +439,7 @@ const ThemeEffects = ({ effect, style }) => {
                         s.y += (dy / dist) * speed;
                         
                         // Petit sautillement
-                        if (s.state !== 'drink') s.y += Math.sin(time * 0.2) * 0.5;
+                        if (s.state !== 'drink') s.y += Math.sin(time * 0.002) * 0.5;
                     }
                 }
 
@@ -564,6 +564,9 @@ const ThemeEffects = ({ effect, style }) => {
 
         // BOUCLE D'ANIMATION
         const render = (time) => {
+
+            const slowTime = time * 0.002;
+
             if (effect === 'lava') drawLava();
             if (effect === 'matrix') drawMatrix();
             if (effect === 'vaporwave') drawVaporwave(time);

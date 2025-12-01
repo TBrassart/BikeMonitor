@@ -206,10 +206,40 @@ function ShopPage() {
 
                     <div className="preview-actions">
                         <button onClick={() => setPreviewTheme(null)} className="secondary-btn">Fermer</button>
+                        
+                        {/* Si l'item n'est pas possédé, on affiche les options d'achat */}
                         {!getOwnedItem(previewTheme.id) && (
-                            <button className="primary-btn" onClick={() => { setPreviewTheme(null); handleBuy(previewTheme, 'watts'); }}>
-                                Acheter ({previewTheme.price_watts} <FaBolt/>)
-                            </button>
+                            <div style={{display:'flex', gap:'10px'}}>
+                                
+                                {/* OPTION 1 : WATTS */}
+                                {previewTheme.price_watts > 0 && (
+                                    <button 
+                                        className="primary-btn" 
+                                        onClick={() => { setPreviewTheme(null); handleBuy(previewTheme, 'watts'); }}
+                                        disabled={profile.watts < previewTheme.price_watts}
+                                        style={{display:'flex', alignItems:'center', gap:'5px'}}
+                                    >
+                                        Acheter {previewTheme.price_watts} <FaBolt />
+                                    </button>
+                                )}
+
+                                {/* OPTION 2 : CHIPS */}
+                                {previewTheme.price_chips > 0 && (
+                                    <button 
+                                        className="primary-btn" 
+                                        // On change la couleur pour le bleu Chips (#0ea5e9)
+                                        style={{
+                                            background: '#0ea5e9', 
+                                            boxShadow: '0 4px 15px rgba(14, 165, 233, 0.4)',
+                                            display:'flex', alignItems:'center', gap:'5px'
+                                        }}
+                                        onClick={() => { setPreviewTheme(null); handleBuy(previewTheme, 'chips'); }}
+                                        disabled={profile.neon_chips < previewTheme.price_chips}
+                                    >
+                                        Acheter {previewTheme.price_chips} <FaGem />
+                                    </button>
+                                )}
+                            </div>
                         )}
                     </div>
                 </div>

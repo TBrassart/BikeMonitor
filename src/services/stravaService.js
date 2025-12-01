@@ -100,7 +100,11 @@ export const stravaService = {
 
         let addedCount = 0;
 
+        const newlyProcessedActivityIds = [];
+
         for (const act of activities) {
+
+            const { data: existing } = await supabase.from('activities').select('id').eq('id', act.id.toString()).maybeSingle();
             // LOGIQUE AUTO-CREATE : On trouve ou on crée le vélo
             let bikeId = null;
             if (act.gear_id) {
@@ -121,12 +125,22 @@ export const stravaService = {
                 external_data: act
             }, { onConflict: 'id' });
 
-            if (!error) {
+            if (!error && !existing) {
                 addedCount++;
-                if (bikeId) await this.calculateWear(bikeId, act.distance / 1000);
+                newlyProcessedActivityIds.push(act.id.toString());
+                if (bikeId){
+                    // On passe les valeurs brutes (mètres, secondes)
+                    await this.calculateWear(bikeId, act.distance, act.total_elevation_gain, act.moving_time); 
+                }
             }
         }
-        return { added: addedCount };
+        let wattsCredited = 0;
+        if (newlyProcessedActivityIds.length > 0) {
+            const result = await authService.creditPassiveWatts(newlyProcessedActivityIds);
+            wattsCredited = result.watts_credited;
+        }
+
+        return { added: addedCount, wattsCredited: wattsCredited };
     },
 
     // --- FONCTION MAGIQUE : GET OR CREATE BIKE ---
@@ -163,6 +177,8 @@ export const stravaService = {
                     model: gearData.model_name || '',
                     strava_gear_id: stravaGearId,
                     total_km: Math.round(gearData.distance / 1000), // On reprend le km réel de Strava
+                    total_elevation: 0,
+                    total_hours: 0,
                     type: 'Route' // Par défaut, l'utilisateur changera si besoin
                 }])
                 .select()
@@ -181,12 +197,23 @@ export const stravaService = {
         }
     },
 
-    async calculateWear(bikeId, kmDelta) {
-        const { data: bike } = await supabase.from('bikes').select('total_km').eq('id', bikeId).single();
+    async calculateWear(bikeId, distanceMeters, elevationMeters, timeSeconds) {
+        // La fonction calcule l'usure pour les pièces et met à jour le total sur le vélo
+        
+        const kmDelta = distanceMeters / 1000;
+        
+        // 1. Mise à jour des totaux du vélo (Ajout simple)
+        const { data: bike } = await supabase.from('bikes').select('*').eq('id', bikeId).single();
         if (bike) {
-            const newTotal = (bike.total_km || 0) + kmDelta;
-            await supabase.from('bikes').update({ total_km: Math.round(newTotal) }).eq('id', bikeId);
+            await supabase.from('bikes').update({ 
+                total_km: Math.round((bike.total_km || 0) + kmDelta), // On incrémente le total
+                // Ajout des nouvelles colonnes
+                total_elevation: Math.round((bike.total_elevation || 0) + (elevationMeters || 0)),
+                total_hours: Math.round((bike.total_hours || 0) + (timeSeconds / 3600))
+            }).eq('id', bikeId);
         }
+        
+        // 2. Usure Pièces
         const { data: parts } = await supabase.from('parts').select('*').eq('bike_id', bikeId);
         if (parts) {
             for (const part of parts) {

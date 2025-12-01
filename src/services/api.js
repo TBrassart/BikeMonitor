@@ -413,7 +413,7 @@ export const authService = {
         if (error) throw error;
         return data;
     },
-    // --- CHAT & SOCIAL (A AJOUTER DANS authService) ---
+    // --- CHAT & SOCIAL ---
     async getMessages(turlagId) {
         const { data, error } = await supabase
             .from('turlag_messages')
@@ -485,6 +485,15 @@ export const authService = {
         if (error) throw error;
         return data;
     },
+
+    // --- MONNAIE PASSIF ---
+    async creditPassiveWatts(activityIds) {
+        const { data, error } = await supabase.rpc('credit_passive_watts', { 
+            activity_ids: activityIds 
+        });
+        if (error) throw error;
+        return data;
+    },
     createInvite: (tid, opt) => api.createInvite(tid, opt),
     getInvites: (tid) => api.getInvites(tid),
     deleteInvite: (id) => api.deleteInvite(id),
@@ -536,7 +545,7 @@ export const api = {
     },
     async uploadImage(file, bucket = 'bikes') {
         const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
+        const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
         const { error } = await supabase.storage.from(bucket).upload(fileName, file);
         if (error) throw error;
         const { data } = supabase.storage.from(bucket).getPublicUrl(fileName);

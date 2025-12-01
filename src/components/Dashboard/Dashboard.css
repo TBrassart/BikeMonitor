@@ -413,7 +413,62 @@
     grid-column: span 1; /* Prend 1 colonne */
 }
 
-/* RESPONSIVE */
+/* --- TOAST NOTIFICATION (Synchro) --- */
+.sync-toast {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 9999;
+    
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 25px;
+    
+    background: rgba(15, 23, 42, 0.95); /* Fond très opaque */
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    
+    color: white;
+    font-weight: 600;
+    font-size: 0.9rem;
+    
+    /* Animation d'entrée */
+    animation: slideInRight 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: all 0.3s ease;
+}
+
+/* État : En cours */
+.sync-toast.loading {
+    border-left: 4px solid var(--neon-blue);
+}
+.sync-toast.loading .icon {
+    color: var(--neon-blue);
+    animation: spin 1s linear infinite;
+}
+
+/* État : Terminé */
+.sync-toast.success {
+    border-left: 4px solid var(--neon-green);
+}
+.sync-toast.success .icon {
+    color: var(--neon-green);
+    font-size: 1.2rem;
+}
+
+/* Animations */
+@keyframes slideInRight {
+    from { opacity: 0; transform: translateX(100%); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes spin { 
+    100% { transform: rotate(360deg); } 
+}
+
+/* MOBILE */
 @media (max-width: 1000px) {
     .charts-grid-dynamic {
         grid-template-columns: 1fr; /* Tout en une colonne sur mobile */
@@ -423,7 +478,6 @@
     }
 }
 
-/* MOBILE */
 @media (max-width: 1000px) {
     .dashboard-layout {
         grid-template-columns: 1fr; /* Colonne unique sur tablette/mobile */

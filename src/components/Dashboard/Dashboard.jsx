@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { api, authService } from '../../services/api';
+import { stravaService } from '../../services/stravaService';
 import { useNavigate } from 'react-router-dom';
 import { 
     FaRoad, FaMountain, FaClock, FaBicycle, FaPlus, FaUsers, FaFlagCheckered,
-    FaExclamationTriangle, FaWrench, FaCalendarAlt, FaSync, FaTimes, FaArrowRight, FaEdit, FaEye, FaEyeSlash, FaGripVertical
+    FaExclamationTriangle, FaWrench, FaCalendarAlt, FaSync, FaTimes, FaArrowRight, FaEdit, FaEye, FaEyeSlash, FaGripVertical, FaCheck
 } from 'react-icons/fa';
 import ChartsSection from './ChartsSection';
 import WeatherWidget from './WeatherWidget';
@@ -19,7 +20,8 @@ function Dashboard() {
     const [activities, setActivities] = useState([]);
     const [bikes, setBikes] = useState([]);
     const [selectedKpi, setSelectedKpi] = useState(null);
-    
+    const [toast, setToast] = useState(null);
+
     // Filtres
     const [period, setPeriod] = useState('month');
     const [isRolling, setIsRolling] = useState(false);
@@ -46,6 +48,7 @@ function Dashboard() {
     useEffect(() => {
         loadData();
         loadPreferences();
+        handleBackgroundSync();
     }, []);
 
     const loadPreferences = () => {
@@ -69,6 +72,42 @@ function Dashboard() {
         } else if (type === 'chart') {
             if (newOrder) { setChartOrder(newOrder); localStorage.setItem('bm_charts_order', JSON.stringify(newOrder)); }
             if (newHidden) { setHiddenCharts(newHidden); localStorage.setItem('bm_charts_hidden', JSON.stringify(newHidden)); }
+        }
+    };
+
+    // FONCTION DE SYNCHRO ARRIÈRE-PLAN
+    const handleBackgroundSync = async () => {
+        const LAST_SYNC_KEY = 'bm_last_auto_sync';
+        const SYNC_COOLDOWN = 30 * 60 * 1000; // 30 minutes entre deux synchros auto
+
+        const lastSync = localStorage.getItem(LAST_SYNC_KEY);
+        const now = Date.now();
+
+        // Si jamais synchro ou si délai dépassé
+        if (!lastSync || (now - Number(lastSync)) > SYNC_COOLDOWN) {
+            setToast({ status: 'loading', message: 'Synchro Strava en cours...' });
+            console.log("🔄 Synchro Strava auto lancée...");
+            try {
+                // On met à jour le timestamp tout de suite pour éviter double appel
+                localStorage.setItem(LAST_SYNC_KEY, now.toString());
+                const result = await stravaService.syncActivities();
+                
+                if (result && result.added > 0) {
+                    setToast({ status: 'success', message: `${result.added} nouvelles activités !` });
+                    console.log(`✅ ${result.added} nouvelles activités ! Rechargement...`);
+                    // Si on a trouvé des trucs, on rafraîchit l'écran
+                    loadData(); 
+                } else {
+                    setToast({ status: 'success', message: 'Tout est à jour.' });
+                    console.log("Rien de nouveau sur Strava.");
+                }
+            } catch (e) {
+                console.warn("Échec synchro auto (silencieux):", e);
+                setToast(null);
+            }
+            setTimeout(() => {
+                setToast(null);
+            }, 3000);
         }
     };
 
@@ -353,6 +392,14 @@ function Dashboard() {
                     user={user}
                     onClose={() => setSelectedKpi(null)} 
                 />
+            )}
+            
+            {/* TOAST NOTIFICATION */}
+            {toast && (
+                <div className={`sync-toast ${toast.status}`}>
+                    {toast.status === 'loading' ? <FaSync className="icon" /> : <FaCheck className="icon" />}
+                    <span>{toast.message}</span>
+                </div>
             )}
         </div>
     );

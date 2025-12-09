@@ -2,18 +2,69 @@ import React, { useState, useEffect } from 'react';
 import { 
     FaTimes, FaRoad, FaMountain, FaStopwatch, FaTrophy, FaChevronRight, FaChevronLeft, 
     FaBicycle, FaRunning, FaHeartbeat, FaBolt, FaPlane, FaFilm, FaUserAstronaut, FaFire,
-    FaShareAlt, FaCopy
+    FaShareAlt, FaCopy, FaDownload
 } from 'react-icons/fa';
 import './YearWrapped.css';
+import html2canvas from 'html2canvas';
 
 const YearWrapped = ({ activities, bikes, onClose }) => {
     
     const [stats, setStats] = useState(null);
     const [slideIndex, setSlideIndex] = useState(0);
     const [selectedYear, setSelectedYear] = useState(new Date().getMonth() === 0 ? new Date().getFullYear() - 1 : new Date().getFullYear());
+    const [isSharing, setIsSharing] = useState(false);
 
     const TOTAL_SLIDES = 16;
     
+    // --- FONCTION DE PARTAGE IMAGE ---
+    const handleShare = async () => {
+        setIsSharing(true);
+        const element = document.getElementById('social-card-capture');
+        
+        if (!element) return;
+
+        try {
+            // 1. Génération de l'image
+            const canvas = await html2canvas(element, {
+                backgroundColor: '#1e1e2e', // Force le fond sombre (sinon transparent parfois)
+                scale: 2, // Meilleure résolution (Retina)
+                logging: false,
+                useCORS: true // Utile si tu as des images externes (avatar, etc.)
+            });
+
+            // 2. Conversion en Blob pour le partage
+            canvas.toBlob(async (blob) => {
+                const file = new File([blob], `bilan-bikemonitor-${stats.year}.png`, { type: 'image/png' });
+
+                // 3. Tentative de partage natif (Mobile)
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({
+                            title: `Mon Bilan ${stats.year}`,
+                            text: `Une année de dingue sur BikeMonitor ! 🚴💨`,
+                            files: [file]
+                        });
+                    } catch (err) {
+                        console.log("Partage annulé ou échoué", err);
+                    }
+                } else {
+                    // 4. Fallback PC : Téléchargement direct
+                    const link = document.createElement('a');
+                    link.download = `bilan-bikemonitor-${stats.year}.png`;
+                    link.href = canvas.toDataURL();
+                    link.click();
+                    alert("Image téléchargée ! Tu peux maintenant la poster sur tes réseaux.");
+                }
+                setIsSharing(false);
+            }, 'image/png');
+
+        } catch (e) {
+            console.error("Erreur génération image", e);
+            alert("Erreur lors de la création de l'image.");
+            setIsSharing(false);
+        }
+    };
+
     // STATS PRO (Moyenne World Tour / Tadej P.)
     const PRO_STATS = { 
         name: "Un Pro World Tour",
@@ -429,6 +480,7 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
                         <h2>Bilan {stats.year}</h2>
                         
                         {/* LA CARTE À PARTAGER */}
+                        {/* On ajoute une classe 'capture-mode' si besoin de styles spécifiques pour l'image */}
                         <div className="social-card" id="social-card-capture">
                             <div className="social-header">
                                 <span className="social-year">{stats.year}</span>
@@ -465,20 +517,14 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
                         </div>
 
                         <div className="share-actions">
-                            <button className="primary-btn" onClick={() => {
-                                const text = `Mon année ${stats.year} sur BikeMonitor : ${stats.totals.dist}km, ${stats.totals.elev}m D+ et ${stats.totals.time}h de selle ! 🚴💨`;
-                                if (navigator.share) {
-                                    navigator.share({ title: `Bilan Vélo ${stats.year}`, text: text });
-                                } else {
-                                    navigator.clipboard.writeText(text);
-                                    alert("Résumé copié dans le presse-papier !");
-                                }
-                            }}>
-                                <FaShareAlt /> Partager
+                            <button className="primary-btn" onClick={handleShare} disabled={isSharing}>
+                                {isSharing ? 'Génération...' : <><FaShareAlt /> Partager la Card</>}
                             </button>
                             <button className="secondary-btn" onClick={onClose}>Fermer</button>
                         </div>
-                        <p className="sub-text" style={{fontSize:'0.8rem'}}>Fais une capture d'écran de la carte pour la partager ! 📸</p>
+                        <p className="sub-text" style={{fontSize:'0.8rem'}}>
+                            Si le partage échoue, l'image sera téléchargée.
+                        </p>
                     </div>
                 );
             default: return null;

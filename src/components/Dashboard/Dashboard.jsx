@@ -4,11 +4,13 @@ import { stravaService } from '../../services/stravaService';
 import { useNavigate } from 'react-router-dom';
 import { 
     FaRoad, FaMountain, FaClock, FaBicycle, FaPlus, FaUsers, FaFlagCheckered,
-    FaExclamationTriangle, FaWrench, FaCalendarAlt, FaSync, FaTimes, FaArrowRight, FaEdit, FaEye, FaEyeSlash, FaGripVertical, FaCheck
+    FaExclamationTriangle, FaWrench, FaCalendarAlt, FaSync, FaTimes, FaArrowRight, 
+    FaEdit, FaEye, FaEyeSlash, FaGripVertical, FaCheck, FaPlay
 } from 'react-icons/fa';
 import ChartsSection from './ChartsSection';
 import WeatherWidget from './WeatherWidget';
 import KpiDetailModal from './KpiDetailModal';
+import YearWrapped from '../Stats/YearWrapped';
 import './Dashboard.css';
 
 function Dashboard() {
@@ -29,6 +31,7 @@ function Dashboard() {
     // Alertes
     const [alertList, setAlertList] = useState({ parts: [], maintenance: [], turlag: [] });
     const [showAlertModal, setShowAlertModal] = useState(false);
+    const [showWrapped, setShowWrapped] = useState(false);
 
     // --- GESTION PERSONNALISATION (KPI & CHARTS) ---
     const [isEditMode, setIsEditMode] = useState(false);
@@ -231,6 +234,15 @@ function Dashboard() {
 
     return (
         <div className="dashboard-container">
+
+            {/* --- COMPOSANT WRAPPED --- */}
+            {showWrapped && (
+                <YearWrapped 
+                    activities={activities}
+                    onClose={() => setShowWrapped(false)} 
+                />
+            )}
+
             <header className="dashboard-header">
                 <div>
                     <h1 className="gradient-text">Bonjour, {user?.user_metadata?.full_name || "Pilote"}</h1>
@@ -377,6 +389,9 @@ function Dashboard() {
                     <div className="glass-panel actions-widget">
                         <h3>Raccourcis</h3>
                         <div className="actions-grid">
+                            <button onClick={() => setShowWrapped(true)} className="quick-btn"style={{color: 'var(--neon-purple)', borderColor: 'rgba(217, 70, 239, 0.3)'}}>
+                                <FaPlay /> Mon Récap {new Date().getFullYear()}
+                            </button>
                             <button onClick={() => navigate('/app/add-bike')} className="quick-btn"><FaPlus /> Vélo</button>
                             <button onClick={() => navigate('/app/turlag')} className="quick-btn"><FaUsers /> Turlag</button>
                         </div>

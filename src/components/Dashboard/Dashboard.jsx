@@ -231,6 +231,12 @@ function Dashboard() {
     
     const hasTurlagEvents = alertList.turlag.length > 0;
     const hasAnyAlert = hasPartAlerts || hasMaintAlerts || hasTurlagEvents;
+    // Helper pour le label du bouton
+    const getDefaultYearLabel = () => {
+        const now = new Date();
+        // Si Janvier (0), année précédente. Sinon année en cours.
+        return now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+    };
 
     return (
         <div className="dashboard-container">
@@ -239,6 +245,7 @@ function Dashboard() {
             {showWrapped && (
                 <YearWrapped 
                     activities={activities}
+                    bikes={bikes}
                     onClose={() => setShowWrapped(false)} 
                 />
             )}
@@ -389,8 +396,16 @@ function Dashboard() {
                     <div className="glass-panel actions-widget">
                         <h3>Raccourcis</h3>
                         <div className="actions-grid">
-                            <button onClick={() => setShowWrapped(true)} className="quick-btn"style={{color: 'var(--neon-purple)', borderColor: 'rgba(217, 70, 239, 0.3)'}}>
-                                <FaPlay /> Mon Récap {new Date().getFullYear()}
+                            <button 
+                                onClick={() => setShowWrapped(true)} 
+                                className="quick-btn"
+                                style={{
+                                    color: 'var(--neon-purple)', 
+                                    borderColor: 'rgba(217, 70, 239, 0.3)',
+                                    background: 'rgba(217, 70, 239, 0.05)'
+                                }}
+                            >
+                                <FaPlay /> Mon Récap {getDefaultYearLabel()}
                             </button>
                             <button onClick={() => navigate('/app/add-bike')} className="quick-btn"><FaPlus /> Vélo</button>
                             <button onClick={() => navigate('/app/turlag')} className="quick-btn"><FaUsers /> Turlag</button>

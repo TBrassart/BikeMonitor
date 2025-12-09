@@ -12,7 +12,7 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
     const [slideIndex, setSlideIndex] = useState(0);
     const [selectedYear, setSelectedYear] = useState(new Date().getMonth() === 0 ? new Date().getFullYear() - 1 : new Date().getFullYear());
 
-    const TOTAL_SLIDES = 15;
+    const TOTAL_SLIDES = 16;
     
     // STATS PRO (Moyenne World Tour / Tadej P.)
     const PRO_STATS = { 
@@ -256,6 +256,8 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
                         <div className="simple-bar-chart">
                             {stats.daysActivePerMonth.map((val, i) => (
                                 <div key={i} className="bar-col">
+                                    {/* AJOUT DE LA VALEUR */}
+                                    <span className="bar-data-val">{val > 0 ? val : ''}</span>
                                     <div className="bar-val" style={{height: `${(val/31)*100}%`}}></div>
                                     <div className="bar-lbl">{months[i]}</div>
                                 </div>
@@ -332,13 +334,15 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
                     </div>
                 );
             case 9: // REPARTITION HEBDO
-                const maxDay = Math.max(...stats.dayOfWeek);
+                const maxDay = Math.max(...stats.dayOfWeek) || 1; // Eviter division par 0
                 return (
                     <div className="slide-content graph-slide">
                         <h2>Rythme Hebdo</h2>
                         <div className="simple-bar-chart">
                             {stats.dayOfWeek.map((val, i) => (
                                 <div key={i} className="bar-col">
+                                    {/* AJOUT DE LA VALEUR */}
+                                    <span className="bar-data-val">{val > 0 ? val : ''}</span>
                                     <div className={`bar-val ${val === maxDay ? 'highlight' : ''}`} style={{height: `${(val/maxDay)*100}%`}}></div>
                                     <div className="bar-lbl">{days[i]}</div>
                                 </div>
@@ -356,13 +360,15 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
                     </div>
                 );
             case 11: // DISTANCE MOIS
-                const maxM = Math.max(...stats.monthlyDist);
+                const maxM = Math.max(...stats.monthlyDist) || 1;
                 return (
                     <div className="slide-content graph-slide">
                         <h2>Distance / mois</h2>
                         <div className="simple-bar-chart">
                             {stats.monthlyDist.map((val, i) => (
                                 <div key={i} className="bar-col">
+                                    {/* AJOUT DE LA VALEUR (Arrondie) */}
+                                    <span className="bar-data-val">{val > 5 ? Math.round(val) : ''}</span>
                                     <div className="bar-val blue" style={{height: `${(val/maxM)*100}%`}}></div>
                                     <div className="bar-lbl">{months[i]}</div>
                                 </div>

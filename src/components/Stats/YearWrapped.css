@@ -119,15 +119,42 @@ h2 { font-size: 2.2rem; margin-bottom: 40px; font-weight: 800; text-transform: u
 
 /* GRAPHS BARS */
 .simple-bar-chart { 
-    display: flex; align-items: flex-end; justify-content: space-between; 
-    height: 300px; width: 100%; max-width: 800px;
-    padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.2); 
+    display: flex; 
+    align-items: flex-end; /* Aligne tout en bas */
+    justify-content: space-between; 
+    height: 300px; 
+    width: 100%; 
+    max-width: 800px;
+    padding-bottom: 10px; 
+    border-bottom: 1px solid rgba(255,255,255,0.2); 
+    margin-top: 20px;
 }
-.bar-col { display: flex; flex-direction: column; align-items: center; flex: 1; margin: 0 2px; }
+
+.bar-col { 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    flex: 1; 
+    margin: 0 2px;
+    height: 100%; /* IMPORTANT : Permet aux enfants de calculer leur % */
+    justify-content: flex-end; /* Pousse le contenu (barre + texte) vers le bas */
+}
+.bar-data-val {
+    font-size: 0.7rem;
+    color: white;
+    margin-bottom: 5px;
+    font-weight: bold;
+    text-shadow: 0 0 5px rgba(0,0,0,0.5);
+}
+
 .bar-val { 
-    width: 100%; max-width: 20px; background: white; border-radius: 4px 4px 0 0; 
+    width: 100%; 
+    max-width: 20px; 
+    background: white; 
+    border-radius: 4px 4px 0 0; 
     transition: height 1s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
     box-shadow: 0 0 10px rgba(255,255,255,0.3);
+    min-height: 2px; /* Pour voir au moins un trait si > 0 */
 }
 .bar-val.blue { background: var(--neon-blue); box-shadow: 0 0 10px var(--neon-blue); }
 .bar-val.highlight { background: var(--neon-purple); box-shadow: 0 0 15px var(--neon-purple); }

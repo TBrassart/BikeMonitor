@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
     FaTimes, FaRoad, FaMountain, FaStopwatch, FaTrophy, FaChevronRight, FaChevronLeft, 
-    FaBicycle, FaRunning, FaHeartbeat, FaBolt, FaPlane, FaFilm, FaUserAstronaut
+    FaBicycle, FaRunning, FaHeartbeat, FaBolt, FaPlane, FaFilm, FaUserAstronaut, FaFire,
+    FaShareAlt, FaCopy
 } from 'react-icons/fa';
 import './YearWrapped.css';
 
@@ -34,27 +35,31 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
             return;
         }
 
-        // --- 1. CALCULS GÉNÉRAUX ---
+        // --- 1. TOTAUX (Correction Distance: On somme les mètres puis on convertit) ---
+        const totalDistMeters = yearActs.reduce((acc, a) => acc + (a.distance || 0), 0);
+        const prevDistMeters = prevYearActs.reduce((acc, a) => acc + (a.distance || 0), 0);
+
         const totals = {
-            dist: Math.round(yearActs.reduce((acc, a) => acc + (a.distance > 1000 ? a.distance/1000 : a.distance), 0)),
+            dist: Math.round(totalDistMeters / 1000), // Conversion mètres -> km
             elev: Math.round(yearActs.reduce((acc, a) => acc + (a.total_elevation_gain || 0), 0)),
             time: Math.floor(yearActs.reduce((acc, a) => acc + (a.moving_time || 0), 0) / 3600),
             count: yearActs.length
         };
 
         const prevTotals = {
-            dist: Math.round(prevYearActs.reduce((acc, a) => acc + (a.distance > 1000 ? a.distance/1000 : a.distance), 0)),
+            dist: Math.round(prevDistMeters / 1000),
             elev: Math.round(prevYearActs.reduce((acc, a) => acc + (a.total_elevation_gain || 0), 0)),
             time: Math.floor(prevYearActs.reduce((acc, a) => acc + (a.moving_time || 0), 0) / 3600),
             count: prevYearActs.length
         };
 
         // --- 2. LOGIQUE MONUMENTS (TOPS) ---
-        // On prépare les 3 listes distinctes
+        const formatKm = (meters) => (meters / 1000).toFixed(1) + ' km';
+        
         const topDist = [...yearActs]
-            .sort((a,b) => (b.distance > 1000 ? b.distance/1000 : b.distance) - (a.distance > 1000 ? a.distance/1000 : a.distance))
+            .sort((a,b) => b.distance - a.distance)
             .slice(0, 3)
-            .map(a => ({ name: a.name, val: (a.distance > 1000 ? a.distance/1000 : a.distance).toFixed(1) + ' km', date: new Date(a.start_date).toLocaleDateString() }));
+            .map(a => ({ name: a.name, val: formatKm(a.distance), date: new Date(a.start_date).toLocaleDateString() }));
 
         const topTime = [...yearActs]
             .sort((a,b) => b.moving_time - a.moving_time)
@@ -66,9 +71,7 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
             .slice(0, 3)
             .map(a => ({ name: a.name, val: Math.round(a.total_elevation_gain) + ' m', date: new Date(a.start_date).toLocaleDateString() }));
 
-
-        // --- 3. AUTRES CALCULS (Streak, Mois, etc.) ---
-        // (Identique à avant, condensé pour la lisibilité)
+        // --- 3. STREAKS ---
         const dates = [...new Set(yearActs.map(a => a.start_date.split('T')[0]))].sort();
         let maxStreak = 0, currentStreak = 0, lastDate = null;
         dates.forEach(date => {
@@ -82,19 +85,28 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
             lastDate = d;
         });
 
+        // --- 4. DATA GRAPHIQUES ---
         const monthsDist = new Array(12).fill(0);
         const uniqueDaysPerMonth = Array.from({ length: 12 }, () => new Set());
         const dayOfWeekCount = new Array(7).fill(0);
+        
         yearActs.forEach(a => {
             const d = new Date(a.start_date);
-            monthsDist[d.getMonth()] += (a.distance > 1000 ? a.distance/1000 : a.distance);
+            // On ajoute les km (mètres / 1000)
+            monthsDist[d.getMonth()] += (a.distance || 0) / 1000; 
             dayOfWeekCount[d.getDay()]++;
             uniqueDaysPerMonth[d.getMonth()].add(d.getDate());
         });
+        
         const daysActivePerMonth = uniqueDaysPerMonth.map(s => s.size);
         const mostActiveMonthIdx = monthsDist.indexOf(Math.max(...monthsDist));
-        const leastActiveMonthIdx = monthsDist.indexOf(Math.min(...monthsDist.filter(v => v > 0)));
+        // On cherche le min mais > 0 pour ne pas dire "Janvier" si pas commencé
+        const activeMonthsValues = monthsDist.map((v, i) => ({v, i})).filter(o => o.v > 0);
+        const leastActiveMonthIdx = activeMonthsValues.length > 0 
+            ? activeMonthsValues.sort((a,b) => a.v - b.v)[0].i 
+            : 0;
 
+        // --- 5. MAXS ---
         const maxs = {
             speed: Math.max(...yearActs.map(a => (a.external_data?.max_speed || 0) * 3.6)).toFixed(1),
             hr: Math.max(...yearActs.map(a => a.external_data?.max_heartrate || 0)),
@@ -102,8 +114,11 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
             altitude: Math.max(...yearActs.map(a => a.external_data?.elev_high || 0)).toFixed(0)
         };
 
+        // --- 6. EQUIPEMENT ---
         const bikeStats = {};
-        yearActs.forEach(a => { if(a.bike_id) bikeStats[a.bike_id] = (bikeStats[a.bike_id] || 0) + (a.distance > 1000 ? a.distance/1000 : a.distance); });
+        yearActs.forEach(a => { 
+            if(a.bike_id) bikeStats[a.bike_id] = (bikeStats[a.bike_id] || 0) + ((a.distance || 0) / 1000); 
+        });
         const bikeUsage = Object.keys(bikeStats).map(bid => {
             const bike = bikes.find(b => b.id === bid);
             return { name: bike ? bike.name : 'Inconnu', dist: Math.round(bikeStats[bid]) };
@@ -400,6 +415,64 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
                             <div className="max-item"><small>Altitude Max</small><strong>{stats.maxs.altitude} m</strong></div>
                         </div>
                         <button className="primary-btn mt-20" onClick={onClose}>Fermer</button>
+                    </div>
+                );
+            case 15: // RECAP CARD & SHARE
+                return (
+                    <div className="slide-content share-slide">
+                        <h2>Bilan {stats.year}</h2>
+                        
+                        {/* LA CARTE À PARTAGER */}
+                        <div className="social-card" id="social-card-capture">
+                            <div className="social-header">
+                                <span className="social-year">{stats.year}</span>
+                                <span className="social-brand">BikeMonitor</span>
+                            </div>
+                            
+                            <div className="social-stats-grid">
+                                <div className="s-item">
+                                    <span className="s-lbl">Distance</span>
+                                    <span className="s-val blue">{stats.totals.dist.toLocaleString()} <small>km</small></span>
+                                </div>
+                                <div className="s-item">
+                                    <span className="s-lbl">Dénivelé</span>
+                                    <span className="s-val purple">{stats.totals.elev.toLocaleString()} <small>m</small></span>
+                                </div>
+                                <div className="s-item">
+                                    <span className="s-lbl">Heures</span>
+                                    <span className="s-val green">{stats.totals.time} <small>h</small></span>
+                                </div>
+                                <div className="s-item">
+                                    <span className="s-lbl">Sorties</span>
+                                    <span className="s-val orange">{stats.totals.count}</span>
+                                </div>
+                            </div>
+
+                            <div className="social-footer">
+                                <div className="s-fun">
+                                    {stats.fun.dist.val} x {stats.fun.dist.label}
+                                </div>
+                                <div className="s-streak">
+                                    🔥 {stats.streak} jours de suite
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="share-actions">
+                            <button className="primary-btn" onClick={() => {
+                                const text = `Mon année ${stats.year} sur BikeMonitor : ${stats.totals.dist}km, ${stats.totals.elev}m D+ et ${stats.totals.time}h de selle ! 🚴💨`;
+                                if (navigator.share) {
+                                    navigator.share({ title: `Bilan Vélo ${stats.year}`, text: text });
+                                } else {
+                                    navigator.clipboard.writeText(text);
+                                    alert("Résumé copié dans le presse-papier !");
+                                }
+                            }}>
+                                <FaShareAlt /> Partager
+                            </button>
+                            <button className="secondary-btn" onClick={onClose}>Fermer</button>
+                        </div>
+                        <p className="sub-text" style={{fontSize:'0.8rem'}}>Fais une capture d'écran de la carte pour la partager ! 📸</p>
                     </div>
                 );
             default: return null;

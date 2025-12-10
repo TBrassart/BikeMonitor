@@ -1413,6 +1413,7 @@ export const adminService = {
     log: (a, d, l) => api.logAction(a, d, l),
     getMaintenance: () => api.getMaintenanceMode(),
     setMaintenance: (s) => api.setMaintenanceMode(s),
+    getWrappedStatus: () => api.getWrappedStatus(),
     cleanupPhotos: () => api.cleanupUnusedPhotos(),
     exportLibrary: () => api.getFullLibrary(),
     exportLogs: () => api.getFullLogs(),

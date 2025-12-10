@@ -34,73 +34,136 @@
     /* Dimensions FIXES pour le rendu HD portrait */
     width: 1080px;
     height: 1350px;
-    position: fixed; top: 0; left: 0; /* Hors écran */
+    position: fixed; top: 0; left: 0; /* Hors écran mais rendu par le navigateur */
     background: #0a0a10;
-    display: flex; /* Sera géré par le JS */
+    display: flex; 
     flex-direction: column;
     align-items: center;
-    justify-content: space-between;
-    padding: 80px 50px;
+    /* On utilise space-between pour bien répartir la hauteur */
+    justify-content: space-between; 
+    padding: 100px 60px; /* Plus de padding sur les côtés */
     box-sizing: border-box;
     font-family: 'Outfit', sans-serif;
     color: white;
-    z-index: -1; /* Derrière tout */
-    overflow: hidden;
+    z-index: -9999; /* Bien caché derrière */
 }
 
 /* Fond spécifique pour l'export */
 .export-bg-overlay {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     background: 
-        radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.2), transparent 50%),
-        radial-gradient(circle at 0% 100%, rgba(217, 70, 239, 0.2), transparent 50%);
+        radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.15), transparent 60%),
+        radial-gradient(circle at 0% 100%, rgba(217, 70, 239, 0.15), transparent 50%);
     z-index: 0;
-    /* Ajout d'un motif "scanline" subtil */
     background-size: 100% 4px;
-    background-image: linear-gradient(to bottom, rgba(0,0,0,0.1) 50%, transparent 50%);
+    background-image: linear-gradient(to bottom, rgba(0,0,0,0.2) 50%, transparent 50%);
 }
 
 .export-header {
-    z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 20px;
+    z-index: 1; 
+    display: flex; 
+    flex-direction: row; /* Logo à gauche, Année à droite ou inverse */
+    align-items: center; 
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 40px;
+    border-bottom: 2px solid rgba(255,255,255,0.1);
+    padding-bottom: 40px;
 }
+
 /* On force le style du logo pour l'export */
-.export-header .logo-container { transform: scale(2.5); } 
-.export-year { font-size: 2rem; letter-spacing: 5px; color: rgba(255,255,255,0.7); font-weight: 300; }
+.export-header .logo-container { transform: scale(3); transform-origin: left center; } 
+.export-year { 
+    font-size: 4rem; /* Plus gros */
+    font-weight: 900; 
+    letter-spacing: -2px;
+    color: white;
+    text-shadow: 0 0 20px rgba(255,255,255,0.3);
+}
 
 .export-main-stats {
-    z-index: 1; width: 100%; padding: 60px;
+    z-index: 1; 
+    width: 100%; 
+    padding: 80px;
     background: rgba(255, 255, 255, 0.03);
-    border-radius: 40px;
-    /* Bordure néon complexe */
-    border: 3px solid transparent;
+    border-radius: 60px;
+    border: 4px solid transparent; /* Bordure plus épaisse */
     background-clip: padding-box;
     position: relative;
-}
-/* Double bordure néon */
-.export-main-stats::before {
-    content: ''; position: absolute; top: -3px; bottom: -3px; left: -3px; right: -3px;
-    background: linear-gradient(45deg, var(--neon-blue), var(--neon-purple), var(--neon-green));
-    z-index: -1; border-radius: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 60px; /* Espace vertical entre les lignes de stats */
 }
 
-.e-stat-row { display: flex; justify-content: space-around; width: 100%; margin-bottom: 50px; }
+/* Double bordure néon */
+.export-main-stats::before {
+    content: ''; position: absolute; top: -4px; bottom: -4px; left: -4px; right: -4px;
+    background: linear-gradient(45deg, var(--neon-blue), var(--neon-purple), var(--neon-green));
+    z-index: -1; border-radius: 64px;
+}
+
+.e-stat-row { 
+    display: flex; 
+    justify-content: space-around; 
+    width: 100%; 
+    align-items: flex-end;
+}
 .e-stat-row.main { margin-bottom: 80px; }
 .e-stat-row.secondary { margin-bottom: 0; }
 
 .e-stat { display: flex; flex-direction: column; align-items: center; }
-.e-val { font-size: 7rem; font-weight: 900; line-height: 1; text-shadow: 0 0 30px currentColor; }
-.e-stat-row.secondary .e-val { font-size: 4.5rem; }
-.e-lbl { font-size: 1.5rem; letter-spacing: 3px; margin-top: 15px; opacity: 0.8; }
+.e-val { 
+    font-size: 8rem; /* Très gros pour le HD */
+    font-weight: 900; 
+    line-height: 1; 
+    text-shadow: 0 0 40px currentColor; 
+}
+.e-stat-row.secondary .e-val { font-size: 5rem; }
+.e-lbl { 
+    font-size: 1.8rem; 
+    letter-spacing: 5px; 
+    margin-top: 20px; 
+    opacity: 0.7; 
+    font-weight: 600;
+}
 
 .export-fun-stats {
-    z-index: 1; display: flex; flex-direction: column; gap: 30px; font-size: 2rem;
+    z-index: 1; 
+    display: flex; 
+    flex-direction: row; /* En ligne */
+    justify-content: space-between;
+    width: 100%;
+    gap: 40px;
+    margin-top: auto; /* Pousse vers le bas */
+    padding-top: 60px;
 }
-.e-fun-item { display: flex; align-items: center; gap: 20px; background: rgba(255,255,255,0.05); padding: 20px 40px; border-radius: 100px; }
-.e-fun-icon { font-size: 2.5rem; }
-.e-fun-item.streak { border: 2px solid var(--neon-orange); box-shadow: 0 0 20px rgba(249, 115, 22, 0.3); }
 
-.export-footer { z-index: 1; font-size: 1.2rem; color: rgba(255,255,255,0.5); letter-spacing: 2px; }
+.e-fun-item { 
+    flex: 1;
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    gap: 30px; 
+    background: rgba(255,255,255,0.05); 
+    padding: 30px; 
+    border-radius: 30px; 
+    font-size: 1.8rem; /* Texte lisible */
+    color: #ddd;
+    text-align: left;
+    border: 2px solid rgba(255,255,255,0.1);
+}
 
+.e-fun-icon { font-size: 3rem; flex-shrink: 0; }
+.e-fun-item.streak { border-color: var(--neon-orange); box-shadow: 0 0 30px rgba(249, 115, 22, 0.1); }
+
+.export-footer { 
+    z-index: 1; 
+    font-size: 1.5rem; 
+    color: rgba(255,255,255,0.4); 
+    letter-spacing: 5px; 
+    margin-top: 50px;
+    text-transform: uppercase;
+}
 
 /* ================================================================== */
 /* --- ANIMATIONS D'ENTRÉE SÉQUENTIELLES (STAGGERED) --- */

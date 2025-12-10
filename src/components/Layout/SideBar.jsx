@@ -6,6 +6,7 @@ import {
     FaPlay, FaGift
 } from 'react-icons/fa';
 import { authService, shopService, adminService, activityService, bikeService } from '../../services/api'; // Ajout shopService
+import YearWrapped from '../Stats/YearWrapped';
 import './SideBar.css';
 
 function SideBar() {

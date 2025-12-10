@@ -5,6 +5,7 @@ import {
     FaShareAlt, FaCopy, FaDownload
 } from 'react-icons/fa';
 import './YearWrapped.css';
+import Logo from '../Layout/Logo';
 import html2canvas from 'html2canvas';
 
 const YearWrapped = ({ activities, bikes, onClose }) => {

@@ -553,50 +553,64 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
             {/* --- CONTENEUR CACHÉ POUR L'EXPORT HD (OFF-SCREEN RENDER) --- */}
             {/* ================================================================== */}
             {stats && (
-                <div id="export-container" style={{display: 'none'}}> {/* Caché par défaut */}
-                    <div className="export-bg-overlay"></div> {/* Fond cyberpunk pour l'export */}
+                <div id="export-container" style={{display: 'none'}}> 
+                    <div className="export-bg-overlay"></div>
                     
                     <div className="export-header">
-                        <Logo /> {/* Le vrai composant Logo */}
-                        <span className="export-year">YEAR WRAPPED // {stats.year}</span>
+                        <div style={{transform:'scale(2)', transformOrigin:'left center'}}>
+                            <Logo />
+                        </div>
+                        <span className="export-year">{stats.year}</span>
                     </div>
 
-                    <div className="export-main-stats neon-border-box">
-                        <div className="e-stat-row main">
+                    <div className="export-main-stats">
+                        <div className="e-row">
                             <div className="e-stat">
-                                <span className="e-val neon-blue">{stats.totals.dist.toLocaleString()}</span>
-                                <span className="e-lbl">KM PARCOURUS</span>
+                                <span className="e-lbl">DISTANCE</span>
+                                <div>
+                                    <span className="e-val neon-blue">{stats.totals.dist.toLocaleString()}</span>
+                                    <span className="e-unit neon-blue">km</span>
+                                </div>
                             </div>
                         </div>
-                        <div className="e-stat-row secondary">
+                        <div className="e-row">
                             <div className="e-stat">
-                                <span className="e-val neon-purple">{stats.totals.elev.toLocaleString()}</span>
-                                <span className="e-lbl">M DÉNIVELÉ+</span>
+                                <span className="e-lbl">DÉNIVELÉ</span>
+                                <div>
+                                    <span className="e-val neon-purple">{stats.totals.elev.toLocaleString()}</span>
+                                    <span className="e-unit neon-purple">m</span>
+                                </div>
                             </div>
+                        </div>
+                        <div className="e-row">
                             <div className="e-stat">
-                                <span className="e-val neon-green">{stats.totals.time}</span>
                                 <span className="e-lbl">HEURES</span>
+                                <div>
+                                    <span className="e-val neon-green">{stats.totals.time}</span>
+                                    <span className="e-unit neon-green">h</span>
+                                </div>
                             </div>
                             <div className="e-stat">
-                                <span className="e-val neon-orange">{stats.totals.count}</span>
                                 <span className="e-lbl">SORTIES</span>
+                                <span className="e-val neon-orange">{stats.totals.count}</span>
                             </div>
                         </div>
                     </div>
 
                     <div className="export-fun-stats">
-                        <div className="e-fun-item">
-                            <span className="e-fun-icon">{stats.fun.dist.icon}</span>
-                            <span>{stats.fun.dist.val} x {stats.fun.dist.label}</span>
+                        <div className="e-fun-line">
+                            <span>{stats.fun.dist.val} x</span>
+                            <span>{stats.fun.dist.label}</span>
+                            <span style={{fontSize:'3rem'}}>{stats.fun.dist.icon}</span>
                         </div>
-                        <div className="e-fun-item streak">
-                            <span className="e-fun-icon"><FaFire className="neon-orange" /></span>
-                            <span>Meilleure série : {stats.streak} jours !</span>
+                        <div className="e-fun-line streak">
+                            <FaFire style={{color:'#f97316', fontSize:'3rem'}} />
+                            <span>{stats.streak} jours de suite !</span>
                         </div>
                     </div>
 
                     <div className="export-footer">
-                        #BikeMonitor #CyclingLife #{stats.year}Goals
+                        BIKEMONITOR // WRAPPED
                     </div>
                 </div>
             )}

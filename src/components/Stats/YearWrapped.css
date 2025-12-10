@@ -1,235 +1,148 @@
-/* --- BASE WRAPPER --- */
+/* --- BASE WRAPPER & ANIMATIONS FOND RENFORCÉES --- */
 .wrapped-overlay {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    /* On garde une transparence pour voir l'effet de fond */
-    background: radial-gradient(circle at center, #1e1e2e 0%, #050505 100%);
+    /* Fond plus riche */
+    background: radial-gradient(ellipse at bottom, #1B2735 0%, #090A0F 100%);
     z-index: 9999;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     color: white; font-family: 'Outfit', sans-serif;
     overflow: hidden;
 }
 
-/* --- ANIMATION BACKGROUND CYBERPUNK --- */
-.wrapped-bg {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    z-index: 0; overflow: hidden; pointer-events: none;
-}
-
+/* Grille plus lumineuse et rapide */
 .bg-grid-plane {
-    position: absolute; top: 50%; left: -50%; width: 200%; height: 200%;
+    /* ... propriétés existantes ... */
     background-image: 
-        linear-gradient(rgba(59, 130, 246, 0.3) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(59, 130, 246, 0.3) 1px, transparent 1px);
-    background-size: 50px 50px;
-    transform: perspective(500px) rotateX(60deg);
-    animation: planeMove 5s linear infinite;
-    opacity: 0.2;
+        linear-gradient(rgba(59, 130, 246, 0.5) 1px, transparent 1px), /* Opacité augmentée */
+        linear-gradient(90deg, rgba(59, 130, 246, 0.5) 1px, transparent 1px);
+    animation: planeMove 4s linear infinite; /* Plus rapide */
+    opacity: 0.3;
 }
 
+/* Particules plus visibles */
 .bg-particles {
-    position: absolute; width: 100%; height: 100%;
-    background-image: radial-gradient(white 1px, transparent 1px);
-    background-size: 30px 30px;
-    opacity: 0.1;
-    animation: starsFly 10s linear infinite;
+    /* ... propriétés existantes ... */
+    background-image: radial-gradient(white 2px, transparent 2px); /* Points plus gros */
+    opacity: 0.4;
+    animation: starsFly 8s linear infinite; /* Plus rapide */
 }
 
-@keyframes planeMove { from { transform: perspective(500px) rotateX(60deg) translateY(0); } to { transform: perspective(500px) rotateX(60deg) translateY(50px); } }
-@keyframes starsFly { from { transform: scale(1); opacity: 0; } 50% { opacity: 0.5; } to { transform: scale(2); opacity: 0; } }
-
-/* --- CONTENEUR PRINCIPAL RESPONSIVE --- */
-.slide-container {
-    position: relative; z-index: 10;
-    width: 90%; max-width: 450px; /* Mobile par défaut */
-    height: 80vh;
-    display: flex; flex-direction: column; justify-content: center; align-items: center;
-    text-align: center;
-    transition: all 0.3s ease;
-}
-
-/* Sur PC, on élargit pour les slides complexes */
-@media (min-width: 1024px) {
-    .slide-container { max-width: 1000px; }
-    
-    /* Layout Overview en ligne */
-    .stat-grid { grid-template-columns: repeat(4, 1fr) !important; }
-    
-    /* Monuments en 3 colonnes */
-    .monuments-grid { flex-direction: row !important; }
-}
-
-/* --- TYPOGRAPHIE & ELEMENTS --- */
-h1 { font-size: 3.5rem; font-weight: 900; letter-spacing: -2px; margin-bottom: 20px; text-shadow: 0 0 20px rgba(255,255,255,0.5); }
-h2 { font-size: 2.2rem; margin-bottom: 40px; font-weight: 800; text-transform: uppercase; }
-.sub-text { font-size: 1.2rem; color: #aaa; margin-top: 30px; font-style: italic; }
-
-/* Progress Bar */
-.progress-container { position: absolute; top: 20px; left: 20px; right: 20px; display: flex; gap: 5px; z-index: 20; }
-.progress-bar { height: 4px; flex: 1; background: rgba(255,255,255,0.1); border-radius: 2px; }
-.progress-bar.active { background: white; box-shadow: 0 0 10px white; }
-
-/* Navigation */
-.close-btn { position: absolute; top: 40px; right: 30px; background: none; border: none; color: rgba(255,255,255,0.5); font-size: 1.5rem; cursor: pointer; z-index: 50; transition: 0.2s; }
-.close-btn:hover { color: white; transform: scale(1.1); }
-
-.nav-controls { position: absolute; bottom: 30px; width: 100%; display: flex; justify-content: space-between; padding: 0 40px; z-index: 20; }
-.nav-btn { background: rgba(255,255,255,0.1); border: none; color: white; padding: 15px; border-radius: 50%; cursor: pointer; transition: 0.2s; font-size: 1.2rem; }
-.nav-btn:hover { background: rgba(255,255,255,0.3); transform: scale(1.1); }
-.tap-hint { font-size: 0.8rem; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 2px; margin-top: 15px; }
-
-/* --- SLIDES SPECIFIQUES --- */
-
-/* SLIDE 1 & 2 : STATS GRID */
-.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; margin-bottom: 30px; }
-.stat-box { 
-    background: rgba(255,255,255,0.05); padding: 30px 20px; border-radius: 20px; 
-    border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px);
-    display: flex; flex-direction: column; align-items: center; gap: 10px;
-    transition: transform 0.2s;
-}
-.stat-box:hover { transform: translateY(-5px); border-color: var(--neon-blue); }
-.stat-box span { font-size: 2rem; }
-.stat-box strong { font-size: 1.5rem; }
-
-/* SLIDE 3 : VS PRO */
-.pro-vs { width: 100%; padding: 0 20px; }
-.pro-chart-container { display: flex; flex-direction: column; gap: 25px; width: 100%; max-width: 800px; margin: 0 auto; }
-.pro-row { width: 100%; }
-.pro-labels { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; font-weight: bold; color: #ddd; }
-.pro-bar-track { width: 100%; height: 12px; background: rgba(255,255,255,0.1); border-radius: 6px; overflow: hidden; }
-.pro-bar-fill { height: 100%; border-radius: 6px; transition: width 1.5s ease-out; }
-.pro-bar-fill.blue { background: #3b82f6; box-shadow: 0 0 10px #3b82f6; }
-.pro-bar-fill.purple { background: #d946ef; box-shadow: 0 0 10px #d946ef; }
-.pro-bar-fill.green { background: #10b981; box-shadow: 0 0 10px #10b981; }
-
-/* SLIDE 8 : MONUMENTS (3 COLONNES) */
-.monuments-grid { 
-    display: flex; flex-direction: column; gap: 30px; width: 100%; 
-    justify-content: center; align-items: stretch;
-}
-.monument-col { 
-    flex: 1; background: rgba(255,255,255,0.03); border-radius: 16px; padding: 20px; 
-    border: 1px solid rgba(255,255,255,0.05); text-align: left;
-}
-.monument-col h3 { font-size: 1.1rem; margin-top: 0; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
-.top-item { margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-.top-item:last-child { border-bottom: none; }
-.top-val { font-size: 1.2rem; font-weight: 800; color: white; }
-.top-name { font-size: 0.85rem; color: #aaa; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-/* GRAPHS BARS */
-.simple-bar-chart { 
-    display: flex; 
-    align-items: flex-end; /* Aligne tout en bas */
-    justify-content: space-between; 
-    height: 300px; 
-    width: 100%; 
-    max-width: 800px;
-    padding-bottom: 10px; 
-    border-bottom: 1px solid rgba(255,255,255,0.2); 
-    margin-top: 20px;
-}
-
-.bar-col { 
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    flex: 1; 
-    margin: 0 2px;
-    height: 100%; /* IMPORTANT : Permet aux enfants de calculer leur % */
-    justify-content: flex-end; /* Pousse le contenu (barre + texte) vers le bas */
-}
-.bar-data-val {
-    font-size: 0.7rem;
+/* ================================================================== */
+/* --- STYLE DE L'EXPORT HD (OFF-SCREEN) --- */
+/* ================================================================== */
+#export-container {
+    /* Dimensions FIXES pour le rendu HD portrait */
+    width: 1080px;
+    height: 1350px;
+    position: fixed; top: 0; left: 0; /* Hors écran */
+    background: #0a0a10;
+    display: flex; /* Sera géré par le JS */
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 80px 50px;
+    box-sizing: border-box;
+    font-family: 'Outfit', sans-serif;
     color: white;
-    margin-bottom: 5px;
-    font-weight: bold;
-    text-shadow: 0 0 5px rgba(0,0,0,0.5);
-}
-
-.bar-val { 
-    width: 100%; 
-    max-width: 20px; 
-    background: white; 
-    border-radius: 4px 4px 0 0; 
-    transition: height 1s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-    box-shadow: 0 0 10px rgba(255,255,255,0.3);
-    min-height: 2px; /* Pour voir au moins un trait si > 0 */
-}
-.bar-val.blue { background: var(--neon-blue); box-shadow: 0 0 10px var(--neon-blue); }
-.bar-val.highlight { background: var(--neon-purple); box-shadow: 0 0 15px var(--neon-purple); }
-.bar-lbl { font-size: 0.7rem; margin-top: 8px; color: #888; }
-
-/* EQUIPMENT */
-.equip-list { width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 15px; }
-.equip-row { width: 100%; }
-.bike-info-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-weight: bold; }
-.bike-bar-container { height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; }
-.bike-bar { height: 100%; background: var(--neon-green); box-shadow: 0 0 10px var(--neon-green); border-radius: 4px; }
-
-/* FUN STATS & BIG ICONS */
-.icon-big { font-size: 6rem; margin-bottom: 20px; filter: drop-shadow(0 0 30px currentColor); animation: float 3s ease-in-out infinite; }
-.big-stat { font-size: 5rem; font-weight: 900; margin: 20px 0; text-shadow: 0 0 40px currentColor; }
-
-/* ANIMATIONS */
-@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-15px)} }
-.pulse { animation: pulse 2s infinite; }
-.animate-pop { animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
-@keyframes popIn { from { opacity: 0; transform: scale(0.9) translateY(30px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-
-/* COULEURS NEON */
-.neon-blue { color: #3b82f6; }
-.neon-purple { color: #d946ef; }
-.neon-green { color: #10b981; }
-.neon-orange { color: #f97316; }
-
-/* --- SLIDE 15 : SOCIAL CARD --- */
-.share-slide {
-    display: flex; flex-direction: column; align-items: center; width: 100%;
-}
-
-.social-card {
-    background: linear-gradient(135deg, #1e1e2e, #111);
-    border: 2px solid rgba(255,255,255,0.1);
-    border-radius: 20px;
-    padding: 30px;
-    width: 100%; max-width: 350px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-    margin-bottom: 30px;
-    position: relative;
+    z-index: -1; /* Derrière tout */
     overflow: hidden;
 }
 
-/* Effet brillant sur la carte */
-.social-card::before {
-    content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-    background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 60%);
-    pointer-events: none;
+/* Fond spécifique pour l'export */
+.export-bg-overlay {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: 
+        radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.2), transparent 50%),
+        radial-gradient(circle at 0% 100%, rgba(217, 70, 239, 0.2), transparent 50%);
+    z-index: 0;
+    /* Ajout d'un motif "scanline" subtil */
+    background-size: 100% 4px;
+    background-image: linear-gradient(to bottom, rgba(0,0,0,0.1) 50%, transparent 50%);
 }
 
-.social-header {
-    display: flex; justify-content: space-between; align-items: center;
-    border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; margin-bottom: 20px;
+.export-header {
+    z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 20px;
 }
-.social-year { font-size: 2rem; font-weight: 900; color: white; letter-spacing: -1px; }
-.social-brand { font-size: 0.9rem; color: var(--neon-blue); text-transform: uppercase; letter-spacing: 2px; }
+/* On force le style du logo pour l'export */
+.export-header .logo-container { transform: scale(2.5); } 
+.export-year { font-size: 2rem; letter-spacing: 5px; color: rgba(255,255,255,0.7); font-weight: 300; }
 
-.social-stats-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+.export-main-stats {
+    z-index: 1; width: 100%; padding: 60px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 40px;
+    /* Bordure néon complexe */
+    border: 3px solid transparent;
+    background-clip: padding-box;
+    position: relative;
 }
-.s-item { display: flex; flex-direction: column; }
-.s-lbl { font-size: 0.8rem; color: #888; text-transform: uppercase; margin-bottom: 5px; }
-.s-val { font-size: 1.8rem; font-weight: 800; color: white; }
-.s-val small { font-size: 1rem; font-weight: 400; color: #aaa; margin-left: 2px; }
-
-.s-val.blue { color: #3b82f6; text-shadow: 0 0 10px rgba(59,130,246,0.3); }
-.s-val.purple { color: #d946ef; text-shadow: 0 0 10px rgba(217,70,239,0.3); }
-.s-val.green { color: #10b981; text-shadow: 0 0 10px rgba(16,185,129,0.3); }
-.s-val.orange { color: #f97316; text-shadow: 0 0 10px rgba(249,115,22,0.3); }
-
-.social-footer {
-    margin-top: 25px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);
-    display: flex; justify-content: space-between; font-size: 0.85rem; color: #ccc;
+/* Double bordure néon */
+.export-main-stats::before {
+    content: ''; position: absolute; top: -3px; bottom: -3px; left: -3px; right: -3px;
+    background: linear-gradient(45deg, var(--neon-blue), var(--neon-purple), var(--neon-green));
+    z-index: -1; border-radius: 40px;
 }
 
-.share-actions { display: flex; gap: 15px; margin-bottom: 10px; }
+.e-stat-row { display: flex; justify-content: space-around; width: 100%; margin-bottom: 50px; }
+.e-stat-row.main { margin-bottom: 80px; }
+.e-stat-row.secondary { margin-bottom: 0; }
+
+.e-stat { display: flex; flex-direction: column; align-items: center; }
+.e-val { font-size: 7rem; font-weight: 900; line-height: 1; text-shadow: 0 0 30px currentColor; }
+.e-stat-row.secondary .e-val { font-size: 4.5rem; }
+.e-lbl { font-size: 1.5rem; letter-spacing: 3px; margin-top: 15px; opacity: 0.8; }
+
+.export-fun-stats {
+    z-index: 1; display: flex; flex-direction: column; gap: 30px; font-size: 2rem;
+}
+.e-fun-item { display: flex; align-items: center; gap: 20px; background: rgba(255,255,255,0.05); padding: 20px 40px; border-radius: 100px; }
+.e-fun-icon { font-size: 2.5rem; }
+.e-fun-item.streak { border: 2px solid var(--neon-orange); box-shadow: 0 0 20px rgba(249, 115, 22, 0.3); }
+
+.export-footer { z-index: 1; font-size: 1.2rem; color: rgba(255,255,255,0.5); letter-spacing: 2px; }
+
+
+/* ================================================================== */
+/* --- ANIMATIONS D'ENTRÉE SÉQUENTIELLES (STAGGERED) --- */
+/* ================================================================== */
+/* On cible les enfants directs des conteneurs .slide-content qui ont la classe .stagger-entry */
+.stagger-entry > * {
+    opacity: 0;
+    transform: translateY(30px);
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+/* Délais séquentiels pour les 6 premiers éléments */
+.stagger-entry > *:nth-child(1) { animation-delay: 0.1s; }
+.stagger-entry > *:nth-child(2) { animation-delay: 0.3s; }
+.stagger-entry > *:nth-child(3) { animation-delay: 0.5s; }
+.stagger-entry > *:nth-child(4) { animation-delay: 0.7s; }
+.stagger-entry > *:nth-child(5) { animation-delay: 0.9s; }
+.stagger-entry > *:nth-child(6) { animation-delay: 1.1s; }
+
+@keyframes fadeInUp {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- STYLE DE LA SLIDE 15 (VISUEL ÉCRAN) --- */
+.on-screen-card {
+    margin: 30px 0; padding: 30px; border-radius: 25px;
+    background: linear-gradient(135deg, rgba(30, 30, 46, 0.8), rgba(10, 10, 16, 0.9));
+    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+}
+.neon-border-pulse {
+    border: 2px solid var(--neon-blue);
+    animation: borderPulse 3s infinite;
+}
+@keyframes borderPulse {
+    0%, 100% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); border-color: var(--neon-blue); }
+    50% { box-shadow: 0 0 25px rgba(217, 70, 239, 0.5); border-color: var(--neon-purple); }
+}
+.mini-stats-row { font-size: 1.1rem; margin-top: 15px; color: #ccc; }
+.mini-stats-row span { color: white; font-weight: bold; }
+.wrapped-share-btn {
+    font-size: 1.1rem; padding: 15px 30px;
+    display: flex; align-items: center; gap: 10px;
+    background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple));
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+}

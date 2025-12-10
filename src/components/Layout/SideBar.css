@@ -84,3 +84,98 @@
     width: 100%; cursor: pointer; margin-top: 10px; color: #ef4444; justify-content: flex-start;
 }
 .logout-btn:hover { background: rgba(239, 68, 68, 0.1); color: #f87171; }
+
+/* --- WRAPPED BUTTON SPECIAL --- */
+.wrapped-sidebar-container {
+    padding: 15px 15px 5px 15px; /* Un peu d'espace autour */
+    animation: slideInDown 0.5s ease;
+}
+
+.wrapped-sidebar-btn {
+    width: 100%;
+    position: relative;
+    background: linear-gradient(135deg, #ffd700 0%, #f59e0b 100%); /* Or dégradé */
+    border: none;
+    border-radius: 12px;
+    padding: 12px;
+    cursor: pointer;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.wrapped-sidebar-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(245, 158, 11, 0.6);
+}
+
+.wrapped-sidebar-btn:disabled {
+    opacity: 0.7;
+    cursor: wait;
+}
+
+.wrapped-btn-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+    z-index: 2; /* Au-dessus de la brillance */
+    color: #1e1e2d; /* Texte sombre sur fond or */
+}
+
+.wrapped-icon { font-size: 1.2rem; }
+
+.wrapped-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    flex: 1;
+}
+
+.wrapped-title {
+    font-weight: 900;
+    font-size: 0.9rem;
+    line-height: 1;
+    letter-spacing: 0.5px;
+}
+
+.wrapped-sub {
+    font-size: 0.7rem;
+    opacity: 0.8;
+    text-transform: uppercase;
+}
+
+.wrapped-gift {
+    font-size: 1rem;
+    animation: wobble 2s infinite;
+}
+
+/* EFFET DE BRILLANCE QUI PASSE */
+.shine-effect {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(to right, transparent, rgba(255,255,255,0.6), transparent);
+    transform: skewX(-20deg);
+    animation: shineMove 3s infinite;
+    z-index: 1;
+}
+
+@keyframes shineMove {
+    0% { left: -100%; }
+    20% { left: 200%; } /* Passe rapidement */
+    100% { left: 200%; } /* Attend avant de recommencer */
+}
+
+@keyframes wobble {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-10deg); }
+    75% { transform: rotate(10deg); }
+}
+
+@keyframes slideInDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}

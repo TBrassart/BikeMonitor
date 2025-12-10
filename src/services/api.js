@@ -1102,6 +1102,11 @@ async getKits() {
         return data?.value === true; // Renvoie true ou false
     },
 
+    async getWrappedStatus() {
+        const { data } = await supabase.from('app_settings').select('value').eq('key', 'wrapped_active').single();
+        return data?.value === true;
+    },
+    
     async setMaintenanceMode(status) {
         await supabase.from('app_settings').update({ value: status }).eq('key', 'maintenance_mode');
     },

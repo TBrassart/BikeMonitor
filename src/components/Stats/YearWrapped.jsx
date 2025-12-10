@@ -19,48 +19,55 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
     // --- FONCTION DE PARTAGE IMAGE ---
     const handleShare = async () => {
         setIsSharing(true);
-        const element = document.getElementById('social-card-capture');
+        // ON CIBLE LE NOUVEAU CONTENEUR CACHÉ
+        const element = document.getElementById('export-container');
         
-        if (!element) return;
+        if (!element) {
+            console.error("Élément d'export introuvable");
+            setIsSharing(false);
+            return;
+        }
 
         try {
-            // 1. Génération de l'image
+            // On rend le conteneur temporairement visible pour la capture
+            element.style.display = 'flex';
+
             const canvas = await html2canvas(element, {
-                backgroundColor: '#1e1e2e', // Force le fond sombre (sinon transparent parfois)
-                scale: 2, // Meilleure résolution (Retina)
+                backgroundColor: '#0a0a10', // Fond noir profond
+                scale: 2, // Haute résolution
                 logging: false,
-                useCORS: true // Utile si tu as des images externes (avatar, etc.)
+                useCORS: true,
+                // On force une taille fixe pour éviter le "shrink"
+                width: 1080, 
+                height: 1350 // Format portrait (type post/story)
             });
 
-            // 2. Conversion en Blob pour le partage
+            // On recache le conteneur
+            element.style.display = 'none';
+
             canvas.toBlob(async (blob) => {
                 const file = new File([blob], `bilan-bikemonitor-${stats.year}.png`, { type: 'image/png' });
 
-                // 3. Tentative de partage natif (Mobile)
                 if (navigator.canShare && navigator.canShare({ files: [file] })) {
                     try {
                         await navigator.share({
-                            title: `Mon Bilan ${stats.year}`,
-                            text: `Une année de dingue sur BikeMonitor ! 🚴💨`,
+                             // ... textes de partage ...
                             files: [file]
                         });
-                    } catch (err) {
-                        console.log("Partage annulé ou échoué", err);
-                    }
+                    } catch (err) { console.log("Partage annulé", err); }
                 } else {
-                    // 4. Fallback PC : Téléchargement direct
                     const link = document.createElement('a');
                     link.download = `bilan-bikemonitor-${stats.year}.png`;
                     link.href = canvas.toDataURL();
                     link.click();
-                    alert("Image téléchargée ! Tu peux maintenant la poster sur tes réseaux.");
+                    // alert("Image téléchargée !"); // Optionnel, peut être gênant sur mobile
                 }
                 setIsSharing(false);
             }, 'image/png');
 
         } catch (e) {
             console.error("Erreur génération image", e);
-            alert("Erreur lors de la création de l'image.");
+            if (element) element.style.display = 'none'; // Sécurité
             setIsSharing(false);
         }
     };
@@ -208,11 +215,12 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
         const months = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
         const fullMonths = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
         const days = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
-
+        const animClass = "stagger-entry";
+        
         switch (slideIndex) {
             case 0: // INTRO
                 return (
-                    <div className="slide-content intro">
+                    <div className={`slide-content intro ${animClass}`}>
                         <div className="year-selector" onClick={e=>e.stopPropagation()}>
                             <select value={selectedYear} onChange={e=>setSelectedYear(parseInt(e.target.value))}>
                                 <option value={2023}>2023</option>
@@ -226,7 +234,7 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
                 );
             case 1: // OVERVIEW
                 return (
-                    <div className="slide-content overview">
+                    <div className={`slide-content overview ${animClass}`}>
                         <h2>Vue d'ensemble</h2>
                         <div className="stat-grid">
                             <div className="stat-box"><span>📏</span><strong>{stats.totals.dist.toLocaleString()} km</strong></div>
@@ -239,7 +247,7 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
             case 2: // COMPARAISON N-1
                 const diffDist = stats.totals.dist - stats.prevTotals.dist;
                 return (
-                    <div className="slide-content comparison">
+                    <div className={`slide-content comparison ${animClass}`}>
                         <h2>Vs {stats.year - 1}</h2>
                         <div className="vs-row">
                             <div className="vs-item">
@@ -259,7 +267,7 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
                 const pctTime = Math.min(100, (stats.totals.time / PRO_STATS.time) * 100);
                 
                 return (
-                    <div className="slide-content pro-vs">
+                    <div className={`slide-content pro-vs ${animClass}`}>
                         <h2>Toi vs {PRO_STATS.name}</h2>
                         <div className="pro-chart-container">
                             {/* Ligne Distance */}
@@ -302,7 +310,7 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
                 );
             case 4: // JOURS PAR MOIS
                 return (
-                    <div className="slide-content graph-slide">
+                    <div className={`slide-content graph-slide ${animClass}`}>
                         <h2>Jours actifs / mois</h2>
                         <div className="simple-bar-chart">
                             {stats.daysActivePerMonth.map((val, i) => (
@@ -318,7 +326,7 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
                 );
             case 5: // FUN TIME
                 return (
-                    <div className="slide-content fun-stat">
+                    <div className={`slide-content ${animClass}`}>
                         <div className="icon-big">{stats.fun.time.icon}</div>
                         <h2>{stats.totals.time} Heures</h2>
                         <p>C'est l'équivalent de</p>
@@ -328,7 +336,7 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
                 );
             case 6: // FUN DISTANCE
                 return (
-                    <div className="slide-content fun-stat">
+                    <div className={`slide-content fun-stat ${animClass}`}>
                         <div className="icon-big">{stats.fun.dist.icon}</div>
                         <h2>{stats.totals.dist.toLocaleString()} Km</h2>
                         <p>Tu as fait</p>
@@ -338,7 +346,7 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
                 );
             case 7: // FUN ELEV
                 return (
-                    <div className="slide-content fun-stat">
+                    <div className={`slide-content fun-stat ${animClass}`}>
                         <div className="icon-big">{stats.fun.elev.icon}</div>
                         <h2>{stats.totals.elev.toLocaleString()} m D+</h2>
                         <p>Tu as grimpé</p>
@@ -348,7 +356,7 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
                 );
             case 8: // MONUMENTS (CORRIGÉ 3 COLONNES)
                 return (
-                    <div className="slide-content top-list">
+                    <div className={`slide-content top-list ${animClass}`}>
                         <h2>🏆 Tes Monuments</h2>
                         
                         <div className="monuments-grid">
@@ -387,7 +395,7 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
             case 9: // REPARTITION HEBDO
                 const maxDay = Math.max(...stats.dayOfWeek) || 1; // Eviter division par 0
                 return (
-                    <div className="slide-content graph-slide">
+                    <div className={`slide-content graph-slide ${animClass}`}>
                         <h2>Rythme Hebdo</h2>
                         <div className="simple-bar-chart">
                             {stats.dayOfWeek.map((val, i) => (
@@ -403,7 +411,7 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
                 );
             case 10: // STREAK
                 return (
-                    <div className="slide-content streak-slide">
+                    <div className={`slide-content streak-slide" ${animClass}`}>
                         <FaFire className="slide-icon orange pulse" />
                         <h2>Record de Série</h2>
                         <div className="big-stat neon-orange">{stats.streak}</div>
@@ -413,7 +421,7 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
             case 11: // DISTANCE MOIS
                 const maxM = Math.max(...stats.monthlyDist) || 1;
                 return (
-                    <div className="slide-content graph-slide">
+                    <div className={`slide-content graph-slide ${animClass}`}>
                         <h2>Distance / mois</h2>
                         <div className="simple-bar-chart">
                             {stats.monthlyDist.map((val, i) => (
@@ -429,7 +437,7 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
                 );
             case 12: // MOIS +/- ACTIF
                 return (
-                    <div className="slide-content split-slide">
+                    <div className={`slide-content split-slide ${animClass}`}>
                         <div className="half top">
                             <h3>🔥 Top Mois</h3>
                             <div className="big-text">{fullMonths[stats.mostActiveMonth]}</div>
@@ -444,7 +452,7 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
                 );
             case 13: // EQUIPMENT
                 return (
-                    <div className="slide-content equipment">
+                    <div className={`slide-content equipment ${animClass}`}>
                         <h2>Ton Garage</h2>
                         <div className="equip-list">
                             {stats.equipment.map((bike, i) => (
@@ -463,7 +471,7 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
                 );
             case 14: // MAXS & OUTRO
                 return (
-                    <div className="slide-content maxs">
+                    <div className={`slide-content maxs ${animClass}`}>
                         <h2>Records {stats.year}</h2>
                         <div className="max-grid">
                             <div className="max-item"><small>Vitesse Max</small><strong>{stats.maxs.speed} km/h</strong></div>
@@ -474,56 +482,32 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
                         <button className="primary-btn mt-20" onClick={onClose}>Fermer</button>
                     </div>
                 );
-            case 15: // RECAP CARD & SHARE
+            case 15: // RECAP SCREEN (VISUEL ÉCRAN)
                 return (
-                    <div className="slide-content share-slide">
-                        <h2>Bilan {stats.year}</h2>
+                    <div className={`slide-content share-slide ${animClass}`}>
+                        <h2>Ton Bilan {stats.year}</h2>
+                        <p className="sub-text" style={{marginBottom:'20px'}}>C'est dans la boîte ! 🎁</p>
                         
-                        {/* LA CARTE À PARTAGER */}
-                        {/* On ajoute une classe 'capture-mode' si besoin de styles spécifiques pour l'image */}
-                        <div className="social-card" id="social-card-capture">
-                            <div className="social-header">
-                                <span className="social-year">{stats.year}</span>
-                                <span className="social-brand">BikeMonitor</span>
+                        {/* VISUEL À L'ÉCRAN (Plus petit, juste pour montrer) */}
+                        <div className="on-screen-card glass-panel neon-border-pulse">
+                            <div style={{transform: 'scale(0.8)', transformOrigin: 'top center'}}>
+                                <Logo />
                             </div>
-                            
-                            <div className="social-stats-grid">
-                                <div className="s-item">
-                                    <span className="s-lbl">Distance</span>
-                                    <span className="s-val blue">{stats.totals.dist.toLocaleString()} <small>km</small></span>
-                                </div>
-                                <div className="s-item">
-                                    <span className="s-lbl">Dénivelé</span>
-                                    <span className="s-val purple">{stats.totals.elev.toLocaleString()} <small>m</small></span>
-                                </div>
-                                <div className="s-item">
-                                    <span className="s-lbl">Heures</span>
-                                    <span className="s-val green">{stats.totals.time} <small>h</small></span>
-                                </div>
-                                <div className="s-item">
-                                    <span className="s-lbl">Sorties</span>
-                                    <span className="s-val orange">{stats.totals.count}</span>
-                                </div>
-                            </div>
-
-                            <div className="social-footer">
-                                <div className="s-fun">
-                                    {stats.fun.dist.val} x {stats.fun.dist.label}
-                                </div>
-                                <div className="s-streak">
-                                    🔥 {stats.streak} jours de suite
-                                </div>
+                            <h3>RECAP {stats.year}</h3>
+                            <div className="mini-stats-row">
+                                <span>{stats.totals.dist.toLocaleString()} km</span> • 
+                                <span>{stats.totals.elev.toLocaleString()} m D+</span>
                             </div>
                         </div>
 
-                        <div className="share-actions">
-                            <button className="primary-btn" onClick={handleShare} disabled={isSharing}>
-                                {isSharing ? 'Génération...' : <><FaShareAlt /> Partager la Card</>}
+                        <div className="share-actions" style={{marginTop:'30px'}}>
+                            <button className="primary-btn wrapped-share-btn" onClick={handleShare} disabled={isSharing}>
+                                {isSharing ? 'Création de l\'image...' : <><FaShareAlt /> Partager le visuel HD</>}
                             </button>
-                            <button className="secondary-btn" onClick={onClose}>Fermer</button>
+                            <button className="secondary-btn" onClick={onClose} style={{marginTop:'10px'}}>Fermer</button>
                         </div>
-                        <p className="sub-text" style={{fontSize:'0.8rem'}}>
-                            Si le partage échoue, l'image sera téléchargée.
+                         <p className="sub-text" style={{fontSize:'0.8rem', marginTop:'15px', opacity:0.6}}>
+                            Génère une image haute qualité au format portrait.
                         </p>
                     </div>
                 );
@@ -563,6 +547,60 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
                 <div className="tap-hint" onClick={nextSlide}>Tap pour continuer</div>
                 <button className="nav-btn" onClick={nextSlide}><FaChevronRight /></button>
             </div>
+
+            {/* ================================================================== */}
+            {/* --- CONTENEUR CACHÉ POUR L'EXPORT HD (OFF-SCREEN RENDER) --- */}
+            {/* ================================================================== */}
+            {stats && (
+                <div id="export-container" style={{display: 'none'}}> {/* Caché par défaut */}
+                    <div className="export-bg-overlay"></div> {/* Fond cyberpunk pour l'export */}
+                    
+                    <div className="export-header">
+                        <Logo /> {/* Le vrai composant Logo */}
+                        <span className="export-year">YEAR WRAPPED // {stats.year}</span>
+                    </div>
+
+                    <div className="export-main-stats neon-border-box">
+                        <div className="e-stat-row main">
+                            <div className="e-stat">
+                                <span className="e-val neon-blue">{stats.totals.dist.toLocaleString()}</span>
+                                <span className="e-lbl">KM PARCOURUS</span>
+                            </div>
+                        </div>
+                        <div className="e-stat-row secondary">
+                            <div className="e-stat">
+                                <span className="e-val neon-purple">{stats.totals.elev.toLocaleString()}</span>
+                                <span className="e-lbl">M DÉNIVELÉ+</span>
+                            </div>
+                            <div className="e-stat">
+                                <span className="e-val neon-green">{stats.totals.time}</span>
+                                <span className="e-lbl">HEURES</span>
+                            </div>
+                            <div className="e-stat">
+                                <span className="e-val neon-orange">{stats.totals.count}</span>
+                                <span className="e-lbl">SORTIES</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="export-fun-stats">
+                        <div className="e-fun-item">
+                            <span className="e-fun-icon">{stats.fun.dist.icon}</span>
+                            <span>{stats.fun.dist.val} x {stats.fun.dist.label}</span>
+                        </div>
+                        <div className="e-fun-item streak">
+                            <span className="e-fun-icon"><FaFire className="neon-orange" /></span>
+                            <span>Meilleure série : {stats.streak} jours !</span>
+                        </div>
+                    </div>
+
+                    <div className="export-footer">
+                        #BikeMonitor #CyclingLife #{stats.year}Goals
+                    </div>
+                </div>
+            )}
+            {/* ================================================================== */}
+
         </div>
     );
 };

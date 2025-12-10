@@ -10,7 +10,6 @@ import {
 import ChartsSection from './ChartsSection';
 import WeatherWidget from './WeatherWidget';
 import KpiDetailModal from './KpiDetailModal';
-import YearWrapped from '../Stats/YearWrapped';
 import './Dashboard.css';
 
 function Dashboard() {
@@ -240,15 +239,6 @@ function Dashboard() {
 
     return (
         <div className="dashboard-container">
-
-            {/* --- COMPOSANT WRAPPED --- */}
-            {showWrapped && (
-                <YearWrapped 
-                    activities={activities}
-                    bikes={bikes}
-                    onClose={() => setShowWrapped(false)} 
-                />
-            )}
 
             <header className="dashboard-header">
                 <div>

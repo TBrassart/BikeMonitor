@@ -386,17 +386,6 @@ function Dashboard() {
                     <div className="glass-panel actions-widget">
                         <h3>Raccourcis</h3>
                         <div className="actions-grid">
-                            <button 
-                                onClick={() => setShowWrapped(true)} 
-                                className="quick-btn"
-                                style={{
-                                    color: 'var(--neon-purple)', 
-                                    borderColor: 'rgba(217, 70, 239, 0.3)',
-                                    background: 'rgba(217, 70, 239, 0.05)'
-                                }}
-                            >
-                                <FaPlay /> Mon Récap {getDefaultYearLabel()}
-                            </button>
                             <button onClick={() => navigate('/app/add-bike')} className="quick-btn"><FaPlus /> Vélo</button>
                             <button onClick={() => navigate('/app/turlag')} className="quick-btn"><FaUsers /> Turlag</button>
                         </div>

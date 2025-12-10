@@ -30,14 +30,14 @@ function SideBar() {
     const loadData = async () => {
         try {
             // Chargement parallèle Profil + Inventaire
-            const [profData, invData] = await Promise.all([
+            const [profData, invData, wrappedStatusData] = await Promise.all([
                 authService.getMyProfile(),
                 shopService.getInventory(),
                 adminService.getWrappedStatus()
             ]);
             
             setProfile(profData);
-            setIsWrappedActive(wrappedStatus);
+            setIsWrappedActive(wrappedStatusData);
 
             if (invData) {
                 const badge = invData.find(i => i.shop_items.type === 'badge' && i.is_equipped);

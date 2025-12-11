@@ -804,30 +804,40 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
             case 15: // RECAP SCREEN (VISUEL ÉCRAN)
                 return (
                     <div className={`slide-content share-slide ${animClass}`}>
-                        <h2>Ton Bilan {stats.year}</h2>
-                        <p className="sub-text" style={{marginBottom:'20px'}}>C'est dans la boîte ! 🎁</p>
+                        <h2>TON BILAN {stats.year}</h2>
                         
-                        {/* VISUEL À L'ÉCRAN (Plus petit, juste pour montrer) */}
-                        <div className="on-screen-card glass-panel neon-border-pulse">
-                            <div style={{transform: 'scale(0.8)', transformOrigin: 'top center'}}>
-                                <Logo />
+                        {/* VISUEL PRÉVIEW À L'ÉCRAN */}
+                        <div className="on-screen-card neon-border-pulse">
+                            <div className="preview-header">
+                                <div style={{width:'50px'}}><Logo width={50} height={50} /></div>
+                                <span>WRAPPED // {stats.year}</span>
                             </div>
-                            <h3>RECAP {stats.year}</h3>
-                            <div className="mini-stats-row">
-                                <span>{stats.totals.dist.toLocaleString()} km</span> • 
-                                <span>{stats.totals.elev.toLocaleString()} m D+</span>
+                            
+                            <div className="preview-big-stat">
+                                <span className="p-val neon-blue">{stats.totals.dist.toLocaleString()}</span>
+                                <span className="p-unit">KM</span>
+                            </div>
+
+                            <div className="preview-grid">
+                                <div>
+                                    <strong className="neon-purple">{stats.totals.elev.toLocaleString()}</strong> m D+
+                                </div>
+                                <div>
+                                    <strong className="neon-green">{stats.totals.time}</strong> Heures
+                                </div>
+                            </div>
+
+                            <div className="preview-footer">
+                                BikeMonitor
                             </div>
                         </div>
 
-                        <div className="share-actions" style={{marginTop:'30px'}}>
+                        <div className="share-actions">
                             <button className="primary-btn wrapped-share-btn" onClick={handleShare} disabled={isSharing}>
-                                {isSharing ? 'Création de l\'image...' : <><FaShareAlt /> Partager le visuel HD</>}
+                                {isSharing ? 'Génération du visuel...' : <><FaShareAlt /> Partager ma Story</>}
                             </button>
                             <button className="secondary-btn" onClick={onClose} style={{marginTop:'10px'}}>Fermer</button>
                         </div>
-                         <p className="sub-text" style={{fontSize:'0.8rem', marginTop:'15px', opacity:0.6}}>
-                            Génère une image haute qualité au format portrait.
-                        </p>
                     </div>
                 );
             default: return null;
@@ -879,67 +889,75 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
             </div>
 
             {/* ================================================================== */}
-            {/* --- CONTENEUR CACHÉ POUR L'EXPORT HD (OFF-SCREEN RENDER) --- */}
+            {/* --- CONTENEUR D'EXPORT HD (1080x1920) - CACHÉ MAIS RENDU --- */}
             {/* ================================================================== */}
             {stats && (
-                <div id="export-container" style={{display: 'none'}}> 
-                    <div className="export-bg-overlay"></div>
+                <div id="export-container"> 
+                    {/* Fond Texturé */}
+                    <div className="export-bg">
+                        <div className="export-grid-lines"></div>
+                        <div className="export-glow-spots"></div>
+                    </div>
                     
+                    {/* HEADER : LOGO + ANNÉE */}
                     <div className="export-header">
-                        <div style={{transform:'scale(2)', transformOrigin:'left center'}}>
-                            <Logo />
+                        <div className="export-logo-wrapper">
+                            <Logo width={150} height={150} />
                         </div>
-                        <span className="export-year">{stats.year}</span>
+                        <h1 className="export-title">
+                            YEAR<br/>
+                            <span className="outline-text">WRAPPED</span><br/>
+                            <span className="neon-text">{stats.year}</span>
+                        </h1>
                     </div>
 
-                    <div className="export-main-stats">
-                        <div className="e-row">
-                            <div className="e-stat">
-                                <span className="e-lbl">DISTANCE</span>
-                                <div>
-                                    <span className="e-val neon-blue">{stats.totals.dist.toLocaleString()}</span>
-                                    <span className="e-unit neon-blue">km</span>
-                                </div>
+                    {/* MAIN STATS (BADASS MODE) */}
+                    <div className="export-body">
+                        
+                        {/* DISTANCE HERO */}
+                        <div className="export-hero-stat">
+                            <span className="hero-lbl">DISTANCE TOTALE</span>
+                            <div className="hero-val-group">
+                                <span className="hero-val neon-blue">{stats.totals.dist.toLocaleString()}</span>
+                                <span className="hero-unit">KM</span>
                             </div>
                         </div>
-                        <div className="e-row">
-                            <div className="e-stat">
-                                <span className="e-lbl">DÉNIVELÉ</span>
-                                <div>
-                                    <span className="e-val neon-purple">{stats.totals.elev.toLocaleString()}</span>
-                                    <span className="e-unit neon-purple">m</span>
-                                </div>
+
+                        {/* GRILLE SECONDAIRE */}
+                        <div className="export-secondary-grid">
+                            <div className="sec-stat-box">
+                                <span className="sec-lbl">DÉNIVELÉ</span>
+                                <span className="sec-val neon-purple">{stats.totals.elev.toLocaleString()} <small>m</small></span>
+                            </div>
+                            <div className="sec-stat-box">
+                                <span className="sec-lbl">CHRONO</span>
+                                <span className="sec-val neon-green">{stats.totals.time} <small>h</small></span>
+                            </div>
+                            <div className="sec-stat-box">
+                                <span className="sec-lbl">SORTIES</span>
+                                <span className="sec-val neon-orange">{stats.totals.count}</span>
                             </div>
                         </div>
-                        <div className="e-row">
-                            <div className="e-stat">
-                                <span className="e-lbl">HEURES</span>
-                                <div>
-                                    <span className="e-val neon-green">{stats.totals.time}</span>
-                                    <span className="e-unit neon-green">h</span>
-                                </div>
+
+                        {/* FUN STATS & STREAK */}
+                        <div className="export-fun-box">
+                            <div className="fun-line">
+                                <span className="fun-icon">{stats.fun.dist.icon}</span>
+                                <span>{stats.fun.dist.val} x {stats.fun.dist.label}</span>
                             </div>
-                            <div className="e-stat">
-                                <span className="e-lbl">SORTIES</span>
-                                <span className="e-val neon-orange">{stats.totals.count}</span>
+                            <div className="fun-line streak">
+                                <FaFire style={{color:'#f97316', fontSize:'3rem'}} />
+                                <span>Meilleure série : <strong>{stats.streak} jours</strong></span>
                             </div>
                         </div>
+
                     </div>
 
-                    <div className="export-fun-stats">
-                        <div className="e-fun-line">
-                            <span>{stats.fun.dist.val} x</span>
-                            <span>{stats.fun.dist.label}</span>
-                            <span style={{fontSize:'3rem'}}>{stats.fun.dist.icon}</span>
-                        </div>
-                        <div className="e-fun-line streak">
-                            <FaFire style={{color:'#f97316', fontSize:'3rem'}} />
-                            <span>{stats.streak} jours de suite !</span>
-                        </div>
-                    </div>
-
+                    {/* FOOTER */}
                     <div className="export-footer">
-                        BIKEMONITOR // WRAPPED
+                        <div className="footer-line"></div>
+                        <span>GÉNÉRÉ PAR BIKEMONITOR</span>
+                        <div className="footer-line"></div>
                     </div>
                 </div>
             )}

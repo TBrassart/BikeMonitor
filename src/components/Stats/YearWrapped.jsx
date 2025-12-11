@@ -169,12 +169,46 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
             ? activeMonthsValues.sort((a,b) => a.v - b.v)[0].i 
             : 0;
 
-        // --- 5. MAXS ---
+        // --- 5. MAXS (LOGIQUE AMÉLIORÉE POUR RÉCUPÉRER L'ACTIVITÉ) ---
+        // Helper pour trouver l'activité record
+        const findMaxAct = (criteriaFn) => {
+            return yearActs.reduce((max, curr) => {
+                const maxVal = criteriaFn(max) || 0;
+                const currVal = criteriaFn(curr) || 0;
+                return currVal > maxVal ? curr : max;
+            }, yearActs[0]);
+        };
+
+        const maxSpeedAct = findMaxAct(a => a.external_data?.max_speed);
+        const maxHrAct = findMaxAct(a => a.external_data?.max_heartrate);
+        const maxWattsAct = findMaxAct(a => a.external_data?.max_watts);
+        const maxAltAct = findMaxAct(a => a.external_data?.elev_high);
+
         const maxs = {
-            speed: Math.max(...yearActs.map(a => (a.external_data?.max_speed || 0) * 3.6)).toFixed(1),
-            hr: Math.max(...yearActs.map(a => a.external_data?.max_heartrate || 0)),
-            watts: Math.max(...yearActs.map(a => a.external_data?.max_watts || 0)),
-            altitude: Math.max(...yearActs.map(a => a.external_data?.elev_high || 0)).toFixed(0)
+            speed: {
+                val: ((maxSpeedAct?.external_data?.max_speed || 0) * 3.6).toFixed(1),
+                unit: 'km/h',
+                name: maxSpeedAct?.name || '',
+                date: new Date(maxSpeedAct?.start_date).toLocaleDateString()
+            },
+            hr: {
+                val: maxHrAct?.external_data?.max_heartrate || 0,
+                unit: 'bpm',
+                name: maxHrAct?.name || '',
+                date: new Date(maxHrAct?.start_date).toLocaleDateString()
+            },
+            watts: {
+                val: maxWattsAct?.external_data?.max_watts || 0,
+                unit: 'W',
+                name: maxWattsAct?.name || '',
+                date: new Date(maxWattsAct?.start_date).toLocaleDateString()
+            },
+            altitude: {
+                val: (maxAltAct?.external_data?.elev_high || 0).toFixed(0),
+                unit: 'm',
+                name: maxAltAct?.name || '',
+                date: new Date(maxAltAct?.start_date).toLocaleDateString()
+            }
         };
 
         // --- 6. EQUIPEMENT ---
@@ -452,7 +486,7 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
             case 8: // MONUMENTS (CORRIGÉ 3 COLONNES)
                 return (
                     <div className={`slide-content top-list ${animClass}`}>
-                        <h2>🏆 Tes Monuments</h2>
+                        <h2>Tes Monuments</h2>
                         
                         <div className="monuments-grid">
                             <div className="monument-col">
@@ -533,15 +567,26 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
             case 12: // MOIS +/- ACTIF
                 return (
                     <div className={`slide-content split-slide ${animClass}`}>
-                        <div className="half top">
-                            <h3>🔥 Top Mois</h3>
-                            <div className="big-text">{fullMonths[stats.mostActiveMonth]}</div>
-                            <span>{Math.round(stats.monthlyDist[stats.mostActiveMonth])} km</span>
+                        {/* PARTIE FEU (HAUT) */}
+                        <div className="half-block fire">
+                            <div className="half-icon"><FaFire /></div>
+                            <div className="half-content">
+                                <span className="half-label">EN FEU</span>
+                                <div className="half-val">{fullMonths[stats.mostActiveMonth]}</div>
+                                <span className="half-sub">{Math.round(stats.monthlyDist[stats.mostActiveMonth])} km parcourus</span>
+                            </div>
+                            <div className="half-bg"></div>
                         </div>
-                        <div className="half bottom">
-                            <h3>💤 Mode Chill</h3>
-                            <div className="big-text">{fullMonths[stats.leastActiveMonth]}</div>
-                            <span>{Math.round(stats.monthlyDist[stats.leastActiveMonth])} km</span>
+
+                        {/* PARTIE GLACE (BAS) */}
+                        <div className="half-block ice">
+                            <div className="half-icon"><span style={{fontSize:'3rem'}}>❄️</span></div>
+                            <div className="half-content">
+                                <span className="half-label">HIBERNATION</span>
+                                <div className="half-val">{fullMonths[stats.leastActiveMonth]}</div>
+                                <span className="half-sub">{Math.round(stats.monthlyDist[stats.leastActiveMonth])} km seulement</span>
+                            </div>
+                            <div className="half-bg"></div>
                         </div>
                     </div>
                 );
@@ -564,16 +609,58 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
                         </div>
                     </div>
                 );
-            case 14: // MAXS & OUTRO
+            case 14: // MAXS (CONTEXTE AJOUTÉ)
                 return (
                     <div className={`slide-content maxs ${animClass}`}>
                         <h2>Records {stats.year}</h2>
                         <div className="max-grid">
-                            <div className="max-item"><small>Vitesse Max</small><strong>{stats.maxs.speed} km/h</strong></div>
-                            <div className="max-item"><small>Cardio Max</small><strong>{stats.maxs.hr} bpm</strong></div>
-                            <div className="max-item"><small>Puissance Max</small><strong>{stats.maxs.watts} W</strong></div>
-                            <div className="max-item"><small>Altitude Max</small><strong>{stats.maxs.altitude} m</strong></div>
+                            
+                            <div className="max-item">
+                                <span className="max-lbl">Vitesse Max</span>
+                                <div className="max-val-group">
+                                    <strong className="neon-blue">{stats.maxs.speed.val}</strong> <small>{stats.maxs.speed.unit}</small>
+                                </div>
+                                <div className="max-ctx">
+                                    <span>{stats.maxs.speed.name}</span>
+                                    <span className="max-date">{stats.maxs.speed.date}</span>
+                                </div>
+                            </div>
+
+                            <div className="max-item">
+                                <span className="max-lbl">Cardio Max</span>
+                                <div className="max-val-group">
+                                    <strong className="neon-purple">{stats.maxs.hr.val}</strong> <small>{stats.maxs.hr.unit}</small>
+                                </div>
+                                <div className="max-ctx">
+                                    <span>{stats.maxs.hr.name}</span>
+                                    <span className="max-date">{stats.maxs.hr.date}</span>
+                                </div>
+                            </div>
+
+                            <div className="max-item">
+                                <span className="max-lbl">Puissance Max</span>
+                                <div className="max-val-group">
+                                    <strong className="neon-orange">{stats.maxs.watts.val}</strong> <small>{stats.maxs.watts.unit}</small>
+                                </div>
+                                <div className="max-ctx">
+                                    <span>{stats.maxs.watts.name}</span>
+                                    <span className="max-date">{stats.maxs.watts.date}</span>
+                                </div>
+                            </div>
+
+                            <div className="max-item">
+                                <span className="max-lbl">Altitude Max</span>
+                                <div className="max-val-group">
+                                    <strong className="neon-green">{stats.maxs.altitude.val}</strong> <small>{stats.maxs.altitude.unit}</small>
+                                </div>
+                                <div className="max-ctx">
+                                    <span>{stats.maxs.altitude.name}</span>
+                                    <span className="max-date">{stats.maxs.altitude.date}</span>
+                                </div>
+                            </div>
+
                         </div>
+                        <button className="primary-btn mt-20" onClick={onClose}>Fermer</button>
                     </div>
                 );
             case 15: // RECAP SCREEN (VISUEL ÉCRAN)

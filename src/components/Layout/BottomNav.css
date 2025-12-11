@@ -46,6 +46,43 @@
   margin-bottom: 4px;
 }
 
+/* --- BOUTON WRAPPED MOBILE --- */
+.wrapped-mobile-btn {
+    color: #ffd700 !important; /* Texte Or */
+    position: relative;
+    overflow: visible;
+}
+
+.wrapped-mobile-btn .icon-wrapper {
+    background: linear-gradient(135deg, #ffd700, #f59e0b);
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: #1e1e2d; /* Icone sombre */
+    margin-bottom: 2px;
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+    animation: pulseGold 2s infinite;
+    transform: translateY(-5px); /* Le fait dépasser un peu vers le haut */
+}
+
+.wrapped-mobile-btn .label {
+    font-weight: 800;
+    letter-spacing: 0.5px;
+}
+
+@keyframes pulseGold {
+    0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+}
+
+/* Petit loader simple pour le chargement */
+.loader-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    border: 2px solid #1e1e2d; border-top-color: transparent;
+    animation: spin 1s linear infinite;
+}
+
 /* ---------------------------------------------------- */
 /* --- Adaptation PC : ON CACHE LA BOTTOM NAV --- */
 /* ---------------------------------------------------- */

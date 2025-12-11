@@ -628,7 +628,7 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
             <div className="transition-overlay">
                 {/* On applique la classe riding-right ou riding-left selon la direction */}
                 <img 
-                    src={CYCLIST_IMG_URL} 
+                    src={cyclistImg} 
                     className={`cyclist-sprite ${isTransitioning ? (transitionDir === 'right' ? 'riding-right' : 'riding-left') : ''}`} 
                     alt="cyclist"
                     style={{filter: 'brightness(0)'}} 

@@ -202,14 +202,69 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
     const nextSlide = (e) => { e?.stopPropagation(); if (slideIndex < TOTAL_SLIDES - 1) setSlideIndex(slideIndex + 1); else onClose(); };
     const prevSlide = (e) => { e?.stopPropagation(); if (slideIndex > 0) setSlideIndex(slideIndex - 1); };
 
-    // --- VISUELS DE FOND ---
-    const renderBackground = () => (
-        <div className="wrapped-bg">
-            <div className="bg-grid-plane"></div>
-            <div className="bg-particles"></div>
-            <div className="bg-gradient-overlay"></div>
-        </div>
-    );
+    // --- VISUELS DE FOND DYNAMIQUES ---
+    const renderBackground = () => {
+        // Définition du type d'animation selon la slide
+        let animType = 'default';
+
+        // 0=Intro, 1=Overview, 15=Share -> Default (Particules)
+        // 2=Comparaison, 3=Pro, 6=Dist Fun, 11=Dist Mois, 14=Maxs -> Vitesse (Road)
+        if ([2, 3, 6, 11, 14].includes(slideIndex)) animType = 'speed';
+        
+        // 7=Elev Fun, 8=Monuments -> Ascension (Climb)
+        if ([7, 8].includes(slideIndex)) animType = 'climb';
+
+        // 4=Jours, 5=Time Fun, 9=Hebdo, 12=Actif/Chill, 13=Equip -> Tech (Radar)
+        if ([4, 5, 9, 12, 13].includes(slideIndex)) animType = 'tech';
+
+        // 10=Streak -> Feu
+        if (slideIndex === 10) animType = 'fire';
+
+        return (
+            <div className={`wrapped-bg ${animType}`}>
+                <div className="bg-gradient-overlay"></div>
+                
+                {/* ANIMATION : VITESSE / ROUTE */}
+                {animType === 'speed' && (
+                    <>
+                        <div className="speed-lines"></div>
+                        <div className="speed-grid-floor"></div>
+                    </>
+                )}
+
+                {/* ANIMATION : ASCENSION */}
+                {animType === 'climb' && (
+                    <div className="climb-particles">
+                        {[...Array(20)].map((_, i) => <div key={i} className="tri-particle"></div>)}
+                    </div>
+                )}
+
+                {/* ANIMATION : TECH / RADAR */}
+                {animType === 'tech' && (
+                    <div className="tech-circles">
+                        <div className="circle c1"></div>
+                        <div className="circle c2"></div>
+                        <div className="circle c3"></div>
+                    </div>
+                )}
+
+                {/* ANIMATION : FEU / STREAK */}
+                {animType === 'fire' && (
+                    <div className="fire-embers">
+                        {[...Array(30)].map((_, i) => <div key={i} className="ember"></div>)}
+                    </div>
+                )}
+
+                {/* ANIMATION : DEFAUT (PARTICULES ÉTOILES) */}
+                {animType === 'default' && (
+                    <>
+                        <div className="bg-grid-plane"></div>
+                        <div className="bg-particles"></div>
+                    </>
+                )}
+            </div>
+        );
+    };
 
     const renderSlide = () => {
         if (!stats) return null;
@@ -529,7 +584,8 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
 
     return (
         <div className="wrapped-overlay" onClick={nextSlide}>
-            {renderBackground()}
+            {/* On appelle le rendu dynamique ici */}
+            {renderBackground()} 
             
             <div className="progress-container">
                 {[...Array(TOTAL_SLIDES)].map((_, i) => (

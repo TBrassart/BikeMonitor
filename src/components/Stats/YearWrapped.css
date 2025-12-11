@@ -347,38 +347,58 @@ h2 {
     z-index: 0; overflow: hidden; pointer-events: none;
     transition: opacity 0.5s ease;
 }
-
-/* 1. TYPE: SPEED (Vitesse, Distance) */
-.speed-lines {
-    position: absolute; top: 50%; left: 50%; width: 200%; height: 200%;
+/* INTRO : CYBER TUNNEL (Hypnotique) */
+.intro-tunnel {
+    position: absolute; top: 50%; left: 50%;
+    width: 100vw; height: 100vh;
     transform: translate(-50%, -50%);
-    background: repeating-radial-gradient(
-        circle at center,
-        transparent 0,
-        transparent 10px,
-        rgba(59, 130, 246, 0.1) 11px,
-        transparent 12px
-    );
-    animation: warpSpeed 2s linear infinite;
-    opacity: 0.5;
+    background: 
+        repeating-radial-gradient(
+            circle at center,
+            transparent 0,
+            transparent 40px,
+            rgba(217, 70, 239, 0.1) 41px, /* Violet subtil */
+            transparent 100px
+        );
+    animation: tunnelZoom 20s linear infinite;
+    mask-image: radial-gradient(circle, transparent 20%, black 80%); /* Trou au centre */
 }
 
-.speed-grid-floor {
-    position: absolute; bottom: 0; left: -50%; width: 200%; height: 50%;
-    background-image: 
-        linear-gradient(0deg, transparent 24%, rgba(59, 130, 246, .3) 25%, rgba(59, 130, 246, .3) 26%, transparent 27%, transparent 74%, rgba(59, 130, 246, .3) 75%, rgba(59, 130, 246, .3) 76%, transparent 77%, transparent), 
-        linear-gradient(90deg, transparent 24%, rgba(59, 130, 246, .3) 25%, rgba(59, 130, 246, .3) 26%, transparent 27%, transparent 74%, rgba(59, 130, 246, .3) 75%, rgba(59, 130, 246, .3) 76%, transparent 77%, transparent);
-    background-size: 50px 50px;
-    transform: perspective(300px) rotateX(60deg);
-    animation: floorRun 1s linear infinite;
-    mask-image: linear-gradient(to top, black, transparent); /* Fondu au loin */
+@keyframes tunnelZoom {
+    0% { transform: translate(-50%, -50%) scale(1); }
+    100% { transform: translate(-50%, -50%) scale(3); }
 }
 
-@keyframes warpSpeed { from { transform: translate(-50%, -50%) scale(0.1); opacity: 0; } to { transform: translate(-50%, -50%) scale(1.5); opacity: 1; } }
-@keyframes floorRun { from { background-position: 0 0; } to { background-position: 0 50px; } }
+/* VITESSE : HYPERSPACE (Stars Warp) */
+.hyperspace {
+    position: absolute; width: 100%; height: 100%;
+    overflow: hidden;
+}
+.star-line {
+    position: absolute; top: 50%; left: 50%;
+    width: 2px; height: 100px;
+    background: linear-gradient(to bottom, transparent, #fff, transparent);
+    opacity: 0;
+    transform-origin: 50% 0%;
+    animation: warpStar 2s linear infinite;
+}
+/* Génération aléatoire via nth-child dans le CSS pour simplifier le JS */
+.star-line:nth-child(1) { transform: rotate(0deg) translateY(-200px); animation-delay: 0s; }
+.star-line:nth-child(2) { transform: rotate(45deg) translateY(-200px); animation-delay: 0.2s; }
+.star-line:nth-child(3) { transform: rotate(90deg) translateY(-200px); animation-delay: 0.4s; }
+.star-line:nth-child(4) { transform: rotate(135deg) translateY(-200px); animation-delay: 0.6s; }
+.star-line:nth-child(5) { transform: rotate(180deg) translateY(-200px); animation-delay: 0.8s; }
+.star-line:nth-child(6) { transform: rotate(225deg) translateY(-200px); animation-delay: 1s; }
+.star-line:nth-child(7) { transform: rotate(270deg) translateY(-200px); animation-delay: 1.2s; }
+.star-line:nth-child(8) { transform: rotate(315deg) translateY(-200px); animation-delay: 1.4s; }
 
+@keyframes warpStar {
+    0% { opacity: 0; height: 0; transform: rotate(var(--r)) translateY(0); }
+    50% { opacity: 1; height: 200px; }
+    100% { opacity: 0; height: 400px; transform: rotate(var(--r)) translateY(600px); }
+}
 
-/* 2. TYPE: CLIMB (Dénivelé, Hauteur) */
+/* TYPE: CLIMB (Dénivelé, Hauteur) */
 .climb-particles {
     position: absolute; width: 100%; height: 100%;
 }
@@ -404,26 +424,24 @@ h2 {
 }
 
 
-/* 3. TYPE: TECH (Temps, Stats précises) */
-.tech-circles {
-    position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 100vw; height: 100vw; /* Grand carré */
-    display: flex; justify-content: center; align-items: center;
+/* TECH : DIGITAL RAIN (Subtil) */
+.digital-rain {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background-image: linear-gradient(to bottom, rgba(59, 130, 246, 0.1) 1px, transparent 1px);
+    background-size: 100% 50px;
+    animation: rainFall 3s linear infinite;
     opacity: 0.3;
 }
-.circle {
-    position: absolute; border-radius: 50%;
-    border: 1px dashed rgba(255,255,255,0.2);
+.digital-glitch {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: repeating-linear-gradient(90deg, transparent, transparent 50px, rgba(59, 130, 246, 0.05) 50px, rgba(59, 130, 246, 0.05) 100px);
+    animation: sideScan 5s ease-in-out infinite alternate;
 }
-.c1 { width: 400px; height: 400px; animation: spin 20s linear infinite; border-color: var(--neon-blue); }
-.c2 { width: 600px; height: 600px; animation: spin 30s linear infinite reverse; border-color: var(--neon-purple); border-width: 2px; }
-.c3 { width: 900px; height: 900px; animation: spin 60s linear infinite; border-style: dotted; }
 
-@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes rainFall { from { background-position: 0 0; } to { background-position: 0 50px; } }
+@keyframes sideScan { from { transform: translateX(-20px); } to { transform: translateX(20px); } }
 
-
-/* 4. TYPE: FIRE (Streak) */
+/* TYPE: FIRE (Streak) */
 .fire-embers {
     position: absolute; width: 100%; height: 100%;
 }
@@ -442,4 +460,37 @@ h2 {
 @keyframes flyEmber {
     0% { transform: translateY(0) scale(1); opacity: 1; }
     100% { transform: translateY(-80vh) scale(0); opacity: 0; }
+}
+
+/* ================================================================== */
+/* --- TRANSITION CYCLISTE --- */
+/* ================================================================== */
+.transition-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 2000; /* Au-dessus de tout */
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.cyclist-sprite {
+    position: absolute;
+    bottom: 10%; /* Position verticale */
+    left: -300px; /* Départ hors écran gauche */
+    width: 250px; /* Taille du cycliste */
+    height: auto;
+    opacity: 0;
+    filter: drop-shadow(0 0 10px rgba(0,0,0,0.8));
+}
+
+/* L'animation qui se déclenche */
+.cyclist-sprite.riding {
+    animation: rideAcross 0.8s linear forwards;
+}
+
+@keyframes rideAcross {
+    0% { left: -300px; opacity: 1; transform: scale(0.8); }
+    50% { transform: scale(1); } /* Léger effet de profondeur */
+    90% { opacity: 1; }
+    100% { left: 120%; opacity: 0; transform: scale(0.8); } /* Fin hors écran droite */
 }

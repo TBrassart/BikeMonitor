@@ -7,6 +7,8 @@ import {
 import './YearWrapped.css';
 import Logo from '../Layout/Logo';
 import html2canvas from 'html2canvas';
+import cyclistImg from '../../assets/cyclist.svg';
+
 
 const YearWrapped = ({ activities, bikes, onClose }) => {
     
@@ -14,6 +16,7 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
     const [slideIndex, setSlideIndex] = useState(0);
     const [selectedYear, setSelectedYear] = useState(new Date().getMonth() === 0 ? new Date().getFullYear() - 1 : new Date().getFullYear());
     const [isSharing, setIsSharing] = useState(false);
+    const [isTransitioning, setIsTransitioning] = useState(false);
 
     const TOTAL_SLIDES = 16;
     
@@ -199,63 +202,95 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
         });
     };
 
-    const nextSlide = (e) => { e?.stopPropagation(); if (slideIndex < TOTAL_SLIDES - 1) setSlideIndex(slideIndex + 1); else onClose(); };
-    const prevSlide = (e) => { e?.stopPropagation(); if (slideIndex > 0) setSlideIndex(slideIndex - 1); };
+    // --- NAVIGATION AVEC TRANSITION ---
+    const changeSlideWithTransition = (newIndex) => {
+        if (isTransitioning) return; // Anti-spam clic
 
-    // --- VISUELS DE FOND DYNAMIQUES ---
+        // 1. On lance l'animation
+        setIsTransitioning(true);
+
+        // 2. On change la data au milieu de l'animation (quand le cycliste cache l'écran ou passe au milieu)
+        setTimeout(() => {
+            setSlideIndex(newIndex);
+        }, 400); // 400ms = moitié de l'animation de 800ms
+
+        // 3. On reset l'état à la fin
+        setTimeout(() => {
+            setIsTransitioning(false);
+        }, 800);
+    };
+
+    const nextSlide = (e) => {
+        e?.stopPropagation();
+        if (slideIndex < TOTAL_SLIDES - 1) changeSlideWithTransition(slideIndex + 1);
+        else onClose(); 
+    };
+
+    const prevSlide = (e) => {
+        e.stopPropagation();
+        if (slideIndex > 0) changeSlideWithTransition(slideIndex - 1);
+    };
+
+    // --- VISUELS DE FOND DYNAMIQUES (MIS A JOUR) ---
     const renderBackground = () => {
-        // Définition du type d'animation selon la slide
         let animType = 'default';
 
-        // 0=Intro, 1=Overview, 15=Share -> Default (Particules)
-        // 2=Comparaison, 3=Pro, 6=Dist Fun, 11=Dist Mois, 14=Maxs -> Vitesse (Road)
+        // 0=Intro -> Intro Tunnel
+        if (slideIndex === 0) animType = 'intro';
+
+        // 2=Comparaison, 3=Pro, 6=Dist Fun, 11=Dist Mois, 14=Maxs -> Vitesse (Hyperspace)
         if ([2, 3, 6, 11, 14].includes(slideIndex)) animType = 'speed';
         
-        // 7=Elev Fun, 8=Monuments -> Ascension (Climb)
+        // 7=Elev Fun, 8=Monuments -> Ascension (Climb - On garde celui que tu aimes)
         if ([7, 8].includes(slideIndex)) animType = 'climb';
 
-        // 4=Jours, 5=Time Fun, 9=Hebdo, 12=Actif/Chill, 13=Equip -> Tech (Radar)
+        // 4=Jours, 5=Time Fun, 9=Hebdo, 12=Actif/Chill, 13=Equip -> Tech (Digital Rain)
         if ([4, 5, 9, 12, 13].includes(slideIndex)) animType = 'tech';
 
-        // 10=Streak -> Feu
+        // 10=Streak -> Feu (On garde celui que tu aimes)
         if (slideIndex === 10) animType = 'fire';
+
+        // 1=Overview, 15=Share -> Default (Calme)
+        if ([1, 15].includes(slideIndex)) animType = 'default';
 
         return (
             <div className={`wrapped-bg ${animType}`}>
                 <div className="bg-gradient-overlay"></div>
                 
-                {/* ANIMATION : VITESSE / ROUTE */}
+                {/* 1. INTRO : TUNNEL */}
+                {animType === 'intro' && <div className="intro-tunnel"></div>}
+
+                {/* 2. VITESSE : HYPERSPACE */}
                 {animType === 'speed' && (
-                    <>
-                        <div className="speed-lines"></div>
-                        <div className="speed-grid-floor"></div>
-                    </>
+                    <div className="hyperspace">
+                        {/* On génère 8 lignes d'étoiles avec des rotations différentes via CSS */}
+                        {[...Array(8)].map((_, i) => <div key={i} className="star-line" style={{'--r': `${i * 45}deg`}}></div>)}
+                    </div>
                 )}
 
-                {/* ANIMATION : ASCENSION */}
+                {/* 3. CLIMB (Gardé) */}
                 {animType === 'climb' && (
                     <div className="climb-particles">
                         {[...Array(20)].map((_, i) => <div key={i} className="tri-particle"></div>)}
                     </div>
                 )}
 
-                {/* ANIMATION : TECH / RADAR */}
+                {/* 4. TECH : DIGITAL RAIN */}
                 {animType === 'tech' && (
-                    <div className="tech-circles">
-                        <div className="circle c1"></div>
-                        <div className="circle c2"></div>
-                        <div className="circle c3"></div>
-                    </div>
+                    <>
+                        <div className="digital-rain"></div>
+                        <div className="digital-glitch"></div>
+                    </>
                 )}
 
-                {/* ANIMATION : FEU / STREAK */}
+                {/* 5. FIRE (Gardé) */}
                 {animType === 'fire' && (
                     <div className="fire-embers">
                         {[...Array(30)].map((_, i) => <div key={i} className="ember"></div>)}
                     </div>
                 )}
 
-                {/* ANIMATION : DEFAUT (PARTICULES ÉTOILES) */}
+                {/* DEFAUT */}
                 {animType === 'default' && (
                     <>
                         <div className="bg-grid-plane"></div>
@@ -265,6 +300,8 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
             </div>
         );
     };
+
+    if (stats?.empty) return
 
     const renderSlide = () => {
         if (!stats) return null;
@@ -535,7 +572,6 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
                             <div className="max-item"><small>Puissance Max</small><strong>{stats.maxs.watts} W</strong></div>
                             <div className="max-item"><small>Altitude Max</small><strong>{stats.maxs.altitude} m</strong></div>
                         </div>
-                        <button className="primary-btn mt-20" onClick={onClose}>Fermer</button>
                     </div>
                 );
             case 15: // RECAP SCREEN (VISUEL ÉCRAN)
@@ -584,9 +620,20 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
 
     return (
         <div className="wrapped-overlay" onClick={nextSlide}>
-            {/* On appelle le rendu dynamique ici */}
-            {renderBackground()} 
+            {renderBackground()}
             
+            {/* --- TRANSITION CYCLISTE --- */}
+            <div className="transition-overlay">
+                {/* L'image ne s'affiche que si isTransitioning est true */}
+                {/* Remplace src par ton image locale plus tard */}
+                <img 
+                    src={cyclistImg} 
+                    className={`cyclist-sprite ${isTransitioning ? 'riding' : ''}`} 
+                    alt="cyclist"
+                    style={{filter: 'brightness(0)'}} // Force le noir si l'image n'est pas déjà noire
+                />
+            </div>
+
             <div className="progress-container">
                 {[...Array(TOTAL_SLIDES)].map((_, i) => (
                     <div key={i} className={`progress-bar ${i <= slideIndex ? 'active' : ''}`} />

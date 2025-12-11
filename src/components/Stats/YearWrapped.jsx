@@ -19,6 +19,14 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
     const [isTransitioning, setIsTransitioning] = useState(false);
     const [transitionDir, setTransitionDir] = useState('right');
 
+    // --- HELPER POURCENTAGE ---
+    const getPct = (curr, prev) => {
+        if (!prev || prev === 0) return "+100%";
+        const pct = ((curr - prev) / prev) * 100;
+        const sign = pct > 0 ? "+" : "";
+        return `${sign}${Math.round(pct)}%`;
+    };
+
     const TOTAL_SLIDES = 16;
     
     // --- FONCTION DE PARTAGE IMAGE ---
@@ -84,6 +92,36 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
         time: 1100, 
         elev: 450000 
     }; 
+
+    // --- PETIT COMPOSANT POUR L'EFFET COMPTEUR ---
+    const CountUp = ({ end, duration = 2000, suffix = '' }) => {
+        const [count, setCount] = useState(0);
+
+        useEffect(() => {
+            let startTime = null;
+            const startValue = 0;
+            
+            // Nettoyage de la valeur pour l'animation (enlève les espaces/virgules si string)
+            const endValue = typeof end === 'string' ? parseInt(end.replace(/\s/g, '')) : end;
+
+            const step = (timestamp) => {
+                if (!startTime) startTime = timestamp;
+                const progress = Math.min((timestamp - startTime) / duration, 1);
+                // Easing (Out Quart) pour un effet de ralentissement à la fin
+                const easeProgress = 1 - Math.pow(1 - progress, 4); 
+                
+                setCount(Math.floor(easeProgress * (endValue - startValue) + startValue));
+
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            
+            window.requestAnimationFrame(step);
+        }, [end, duration]);
+
+        return <span>{count.toLocaleString()}{suffix}</span>;
+    };
 
     useEffect(() => {
         if (activities && bikes) processData();
@@ -364,30 +402,135 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
             case 1: // OVERVIEW
                 return (
                     <div className={`slide-content overview ${animClass}`}>
-                        <h2>Vue d'ensemble</h2>
-                        <div className="stat-grid">
-                            <div className="stat-box"><span>📏</span><strong>{stats.totals.dist.toLocaleString()} km</strong></div>
-                            <div className="stat-box"><span>⏱️</span><strong>{stats.totals.time} h</strong></div>
-                            <div className="stat-box"><span>🏔️</span><strong>{stats.totals.elev.toLocaleString()} m</strong></div>
-                            <div className="stat-box"><span>🔥</span><strong>{stats.totals.count} sorties</strong></div>
+                        <h2>VUE D'ENSEMBLE</h2>
+                        
+                        <div className="overview-grid">
+                            
+                            {/* DISTANCE */}
+                            <div className="holo-card blue">
+                                <div className="holo-icon"><FaRoad /></div>
+                                <div className="holo-data">
+                                    <span className="holo-label">DISTANCE</span>
+                                    <span className="holo-val">
+                                        <CountUp end={stats.totals.dist} /> <small>km</small>
+                                    </span>
+                                </div>
+                                <div className="holo-glare"></div>
+                            </div>
+
+                            {/* TEMPS */}
+                            <div className="holo-card green">
+                                <div className="holo-icon"><FaStopwatch /></div>
+                                <div className="holo-data">
+                                    <span className="holo-label">TEMPS</span>
+                                    <span className="holo-val">
+                                        <CountUp end={stats.totals.time} /> <small>h</small>
+                                    </span>
+                                </div>
+                                <div className="holo-glare"></div>
+                            </div>
+
+                            {/* DÉNIVELÉ */}
+                            <div className="holo-card purple">
+                                <div className="holo-icon"><FaMountain /></div>
+                                <div className="holo-data">
+                                    <span className="holo-label">DÉNIVELÉ</span>
+                                    <span className="holo-val">
+                                        <CountUp end={stats.totals.elev} /> <small>m</small>
+                                    </span>
+                                </div>
+                                <div className="holo-glare"></div>
+                            </div>
+
+                            {/* SORTIES */}
+                            <div className="holo-card orange">
+                                <div className="holo-icon"><FaFire /></div>
+                                <div className="holo-data">
+                                    <span className="holo-label">SORTIES</span>
+                                    <span className="holo-val">
+                                        <CountUp end={stats.totals.count} />
+                                    </span>
+                                </div>
+                                <div className="holo-glare"></div>
+                            </div>
+
                         </div>
                     </div>
                 );
-            case 2: // COMPARAISON N-1
-                const diffDist = stats.totals.dist - stats.prevTotals.dist;
+            case 2: // BATTLE MODE
+                const isWinDist = stats.totals.dist >= stats.prevTotals.dist;
+                const isWinElev = stats.totals.elev >= stats.prevTotals.elev;
+                const isWinTime = stats.totals.time >= stats.prevTotals.time;
+
                 return (
-                    <div className={`slide-content comparison ${animClass}`}>
-                        <h2>Vs {stats.year - 1}</h2>
-                        <div className="vs-row">
-                            <div className="vs-item">
-                                <span className="label">Distance</span>
-                                <div className="val">{stats.totals.dist} km</div>
-                                <div className={`diff ${diffDist >= 0 ? 'pos' : 'neg'}`}>
-                                    {diffDist > 0 ? '+' : ''}{diffDist} km
+                    <div className={`slide-content battle-slide ${animClass}`}>
+                        <h2>DUEL DES ANNÉES</h2>
+                        
+                        <div className="battle-arena">
+                            {/* CHALLENGER (ANNÉE N-1) */}
+                            <div className="fighter left">
+                                <h3 className="fighter-year">{stats.year - 1}</h3>
+                                
+                                <div className="f-stat-row">
+                                    <span className="f-lbl">Dist.</span>
+                                    <span className="f-val">{stats.prevTotals.dist.toLocaleString()} km</span>
+                                </div>
+                                <div className="f-stat-row">
+                                    <span className="f-lbl">D+</span>
+                                    <span className="f-val">{stats.prevTotals.elev.toLocaleString()} m</span>
+                                </div>
+                                <div className="f-stat-row">
+                                    <span className="f-lbl">Temps</span>
+                                    <span className="f-val">{stats.prevTotals.time} h</span>
+                                </div>
+                            </div>
+
+                            {/* THE CLASH (ANIMATION CENTRALE) */}
+                            <div className="clash-zone">
+                                <div className="sword-container">
+                                    <div className="cyber-sword left"></div>
+                                    <div className="cyber-sword right"></div>
+                                    <div className="clash-spark">💥</div>
+                                </div>
+                                <div className="vs-text">VS</div>
+                            </div>
+
+                            {/* CHAMPION (ANNÉE N) */}
+                            <div className="fighter right">
+                                <h3 className="fighter-year neon-blue">{stats.year}</h3>
+                                
+                                <div className="f-stat-row">
+                                    <span className={`f-val ${isWinDist ? 'neon-green' : 'neon-orange'}`}>
+                                        {stats.totals.dist.toLocaleString()} km
+                                    </span>
+                                    <span className={`f-pct ${isWinDist ? 'win' : 'lose'}`}>
+                                        {getPct(stats.totals.dist, stats.prevTotals.dist)}
+                                    </span>
+                                </div>
+                                <div className="f-stat-row">
+                                    <span className={`f-val ${isWinElev ? 'neon-green' : 'neon-orange'}`}>
+                                        {stats.totals.elev.toLocaleString()} m
+                                    </span>
+                                    <span className={`f-pct ${isWinElev ? 'win' : 'lose'}`}>
+                                        {getPct(stats.totals.elev, stats.prevTotals.elev)}
+                                    </span>
+                                </div>
+                                <div className="f-stat-row">
+                                    <span className={`f-val ${isWinTime ? 'neon-green' : 'neon-orange'}`}>
+                                        {stats.totals.time} h
+                                    </span>
+                                    <span className={`f-pct ${isWinTime ? 'win' : 'lose'}`}>
+                                        {getPct(stats.totals.time, stats.prevTotals.time)}
+                                    </span>
                                 </div>
                             </div>
                         </div>
-                        <p className="sub-text">{diffDist > 0 ? "Progression confirmée ! 🚀" : "Moins de bornes, plus de qualité ? 😉"}</p>
+
+                        <p className="sub-text" style={{marginTop:'40px'}}>
+                            {stats.totals.dist > stats.prevTotals.dist 
+                                ? "Victoire écrasante ! 🏆" 
+                                : "L'année n'est pas finie... Allez jusqu'au bout ? 🚴‍♂"}
+                        </p>
                     </div>
                 );
             case 3: // VS PRO (CORRIGÉ)
@@ -660,7 +803,6 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
                             </div>
 
                         </div>
-                        <button className="primary-btn mt-20" onClick={onClose}>Fermer</button>
                     </div>
                 );
             case 15: // RECAP SCREEN (VISUEL ÉCRAN)

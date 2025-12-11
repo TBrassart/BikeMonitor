@@ -675,3 +675,179 @@ h2 {
     .max-val-group strong { font-size: 4rem !important; }
     .max-ctx span { font-size: 1.1rem !important; }
 }
+
+/* ================================================================== */
+/* --- SLIDE 2 : BATTLE MODE (ÉPÉES) --- */
+/* ================================================================== */
+.battle-slide {
+    width: 100%;
+}
+
+.battle-arena {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-top: 20px;
+    position: relative;
+}
+
+/* FIGHTERS (Colonnes) */
+.fighter {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    z-index: 2; /* Devant les épées */
+}
+
+.fighter.left {
+    text-align: right;
+    padding-right: 10px;
+    opacity: 0.6; /* Le passé est un peu effacé */
+    filter: grayscale(1); /* Monochrome pour l'ancien */
+}
+
+.fighter.right {
+    text-align: left;
+    padding-left: 10px;
+}
+
+.fighter-year {
+    font-size: 2.5rem;
+    font-weight: 900;
+    margin: 0 0 10px 0;
+    letter-spacing: 2px;
+}
+
+/* Lignes de stats */
+.f-stat-row {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 60px; /* Hauteur fixe pour alignement */
+}
+
+.fighter.left .f-stat-row { align-items: flex-end; }
+.fighter.right .f-stat-row { align-items: flex-start; }
+
+.f-lbl {
+    font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px;
+    color: #888;
+}
+
+.f-val {
+    font-size: 1.4rem; font-weight: 800; color: white; line-height: 1;
+}
+
+.f-pct {
+    font-size: 0.9rem; font-weight: bold;
+    padding: 2px 8px; border-radius: 4px;
+    margin-top: 4px;
+}
+.f-pct.win { color: #10b981; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); }
+.f-pct.lose { color: #ef4444; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); }
+
+
+/* --- CLASH ZONE (ANIMATION CENTRALE) --- */
+.clash-zone {
+    width: 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    height: 300px;
+}
+
+.vs-text {
+    font-size: 1.5rem; font-weight: 900; color: white;
+    background: #000; padding: 5px 10px; border-radius: 50%;
+    z-index: 10; border: 2px solid rgba(255,255,255,0.2);
+    margin-top: 20px;
+}
+
+.sword-container {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -60%); /* Remonte un peu */
+    width: 200px; height: 200px;
+    pointer-events: none;
+}
+
+/* LES ÉPÉES NÉONS */
+.cyber-sword {
+    position: absolute;
+    width: 140px; height: 6px;
+    border-radius: 3px;
+    box-shadow: 0 0 15px currentColor;
+    top: 50%; left: 50%;
+}
+
+.cyber-sword.left {
+    background-color: #ef4444; /* Rouge (Ennemi/Passé) */
+    color: #ef4444;
+    transform-origin: 0% 50%; /* Pivot à gauche */
+    /* Animation : Arrive de gauche, frappe, recule */
+    animation: slashLeft 1.5s ease-in-out infinite;
+}
+
+.cyber-sword.right {
+    background-color: #3b82f6; /* Bleu (Toi/Présent) */
+    color: #3b82f6;
+    transform-origin: 100% 50%; /* Pivot à droite */
+    /* Animation : Arrive de droite, frappe, recule */
+    animation: slashRight 1.5s ease-in-out infinite;
+}
+
+/* Garde (Poignée) */
+.cyber-sword::after {
+    content: ''; position: absolute;
+    width: 15px; height: 20px; background: #fff;
+    top: -7px;
+}
+.cyber-sword.left::after { left: -5px; }
+.cyber-sword.right::after { right: -5px; }
+
+/* ÉTINCELLES */
+.clash-spark {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 4rem;
+    opacity: 0;
+    animation: sparkFlash 1.5s linear infinite;
+    z-index: 5;
+}
+
+/* --- KEYFRAMES DU COMBAT --- */
+@keyframes slashLeft {
+    0% { transform: translate(-100px, -50px) rotate(-45deg); opacity: 0; }
+    40% { opacity: 1; }
+    50% { transform: translate(-50%, -50%) rotate(30deg); } /* IMPACT */
+    100% { transform: translate(-100px, -50px) rotate(-45deg); opacity: 0; }
+}
+
+@keyframes slashRight {
+    0% { transform: translate(0px, -50px) rotate(-135deg); opacity: 0; }
+    40% { opacity: 1; }
+    50% { transform: translate(-50%, -50%) rotate(-210deg); } /* IMPACT */
+    100% { transform: translate(0px, -50px) rotate(-135deg); opacity: 0; }
+}
+
+@keyframes sparkFlash {
+    0%, 45% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+    50% { opacity: 1; transform: translate(-50%, -50%) scale(1.5) rotate(20deg); }
+    55%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(2); }
+}
+
+/* --- RESPONSIVE PC --- */
+@media (min-width: 1024px) {
+    .battle-arena { max-width: 900px; margin: 0 auto; gap: 50px; }
+    .fighter-year { font-size: 4rem; margin-bottom: 30px; }
+    .f-val { font-size: 2.5rem; }
+    .f-lbl { font-size: 1rem; }
+    .f-pct { font-size: 1.2rem; }
+    .clash-zone { width: 150px; }
+    .cyber-sword { width: 200px; height: 10px; } /* Épées plus grosses */
+}

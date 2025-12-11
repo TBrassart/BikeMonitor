@@ -399,7 +399,7 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
                         <p className="sub-text">Prêt pour le bilan ? 🎬</p>
                     </div>
                 );
-            case 1: // OVERVIEW
+            case 1: // OVERVIEW 
                 return (
                     <div className={`slide-content overview ${animClass}`}>
                         <h2>VUE D'ENSEMBLE</h2>
@@ -415,7 +415,6 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
                                         <CountUp end={stats.totals.dist} /> <small>km</small>
                                     </span>
                                 </div>
-                                <div className="holo-glare"></div>
                             </div>
 
                             {/* TEMPS */}
@@ -427,7 +426,6 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
                                         <CountUp end={stats.totals.time} /> <small>h</small>
                                     </span>
                                 </div>
-                                <div className="holo-glare"></div>
                             </div>
 
                             {/* DÉNIVELÉ */}
@@ -439,7 +437,6 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
                                         <CountUp end={stats.totals.elev} /> <small>m</small>
                                     </span>
                                 </div>
-                                <div className="holo-glare"></div>
                             </div>
 
                             {/* SORTIES */}
@@ -451,7 +448,6 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
                                         <CountUp end={stats.totals.count} />
                                     </span>
                                 </div>
-                                <div className="holo-glare"></div>
                             </div>
 
                         </div>

@@ -851,3 +851,118 @@ h2 {
     .clash-zone { width: 150px; }
     .cyber-sword { width: 200px; height: 10px; } /* Épées plus grosses */
 }
+
+/* ================================================================== */
+/* --- SLIDE 1 : VUE D'ENSEMBLE (STYLE BLOCS SOLIDES) --- */
+/* ================================================================== */
+
+.overview-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Grille 2x2 sur mobile */
+    gap: 15px;
+    width: 100%;
+    margin-top: 30px;
+}
+
+.holo-card {
+    position: relative;
+    /* Fond sombre mais coloré selon le type */
+    background: #151520; 
+    border-radius: 20px;
+    padding: 20px 10px;
+    height: 140px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    transition: transform 0.3s;
+    
+    /* Bordure subtile par défaut */
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+}
+
+.holo-card:hover {
+    transform: translateY(-5px);
+    z-index: 5;
+}
+
+/* COULEURS SPÉCIFIQUES (Fond dégradé + Bordure lumineuse) */
+
+/* DISTANCE (Bleu) */
+.holo-card.blue {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(30, 30, 40, 0.8));
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.1);
+}
+.holo-card.blue .holo-val { color: #60a5fa; text-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
+.holo-card.blue .holo-icon { color: #3b82f6; }
+
+/* TEMPS (Vert) */
+.holo-card.green {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(30, 30, 40, 0.8));
+    border-color: rgba(16, 185, 129, 0.5);
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.1);
+}
+.holo-card.green .holo-val { color: #86efac; text-shadow: 0 0 10px rgba(16, 185, 129, 0.5); }
+.holo-card.green .holo-icon { color: #10b981; }
+
+/* DÉNIVELÉ (Violet) */
+.holo-card.purple {
+    background: linear-gradient(135deg, rgba(217, 70, 239, 0.1), rgba(30, 30, 40, 0.8));
+    border-color: rgba(217, 70, 239, 0.5);
+    box-shadow: 0 0 15px rgba(217, 70, 239, 0.1);
+}
+.holo-card.purple .holo-val { color: #e879f9; text-shadow: 0 0 10px rgba(217, 70, 239, 0.5); }
+.holo-card.purple .holo-icon { color: #d946ef; }
+
+/* SORTIES (Orange) */
+.holo-card.orange {
+    background: linear-gradient(135deg, rgba(249, 115, 22, 0.1), rgba(30, 30, 40, 0.8));
+    border-color: rgba(249, 115, 22, 0.5);
+    box-shadow: 0 0 15px rgba(249, 115, 22, 0.1);
+}
+.holo-card.orange .holo-val { color: #fdba74; text-shadow: 0 0 10px rgba(249, 115, 22, 0.5); }
+.holo-card.orange .holo-icon { color: #f97316; }
+
+
+/* CONTENU DE LA CARTE */
+.holo-icon {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    opacity: 0.9;
+    filter: drop-shadow(0 0 5px currentColor);
+}
+
+.holo-data {
+    display: flex; flex-direction: column; align-items: center; z-index: 2;
+}
+
+.holo-label {
+    font-size: 0.75rem; font-weight: 700; letter-spacing: 2px;
+    color: rgba(255,255,255,0.7); margin-bottom: 5px; text-transform: uppercase;
+}
+
+.holo-val {
+    font-size: 1.8rem; font-weight: 800; line-height: 1.1;
+}
+.holo-val small { font-size: 0.9rem; font-weight: 500; margin-left: 2px; opacity: 0.8; }
+
+/* --- PC: 4 COLONNES --- */
+@media (min-width: 1024px) {
+    .overview-grid {
+        grid-template-columns: repeat(4, 1fr) !important; /* Tout sur une ligne */
+        gap: 30px !important;
+        margin-top: 50px !important;
+    }
+    
+    .holo-card {
+        height: 250px !important; /* Plus grandes cartes */
+        padding: 40px 20px !important;
+    }
+
+    .holo-icon { font-size: 4rem !important; margin-bottom: 20px !important; }
+    .holo-label { font-size: 1rem !important; margin-bottom: 15px !important; }
+    .holo-val { font-size: 3rem !important; }
+}

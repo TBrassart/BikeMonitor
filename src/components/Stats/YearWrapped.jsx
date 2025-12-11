@@ -94,7 +94,7 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
     }; 
 
     // --- PETIT COMPOSANT POUR L'EFFET COMPTEUR ---
-    const CountUp = ({ end, duration = 2000, suffix = '' }) => {
+    const CountUp = ({ end, duration = 4000, suffix = '' }) => {
         const [count, setCount] = useState(0);
 
         useEffect(() => {

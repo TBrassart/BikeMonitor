@@ -945,7 +945,17 @@ h2 {
 }
 
 .holo-val {
-    font-size: 1.8rem; font-weight: 800; line-height: 1.1;
+    display: block;
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: white;
+    line-height: 1;
+    text-shadow: 0 0 15px rgba(255,255,255,0.5);
+    
+    /* --- CORRECTION STABILITÉ --- */
+    font-variant-numeric: tabular-nums; /* Force la même largeur pour tous les chiffres */
+    font-feature-settings: "tnum"; /* Fallback pour certains navigateurs */
+    white-space: nowrap; /* Empêche le retour à la ligne imprévu */
 }
 .holo-val small { font-size: 0.9rem; font-weight: 500; margin-left: 2px; opacity: 0.8; }
 

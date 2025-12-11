@@ -90,6 +90,17 @@ h2 {
 /* --- CUSTOMISATION DES SLIDES SUR PC (LARGE SCREENS) --- */
 /* ================================================================== */
 @media (min-width: 1024px) {
+
+    /* ICONES GEANTES */
+    .icon-big { 
+        font-size: 8rem !important; /* Beaucoup plus gros */
+        margin-bottom: 40px !important; 
+    }
+    
+    .slide-icon {
+        font-size: 6rem !important;
+    }
+
     /* Le conteneur s'élargit */
     .slide-container { max-width: 1400px; }
 
@@ -109,10 +120,27 @@ h2 {
     .stat-box strong { font-size: 2.5rem !important; }
 
     /* GRAPHIQUES : Beaucoup plus hauts */
-    .simple-bar-chart { height: 500px !important; max-width: 1200px !important; gap: 15px !important; }
+    .simple-bar-chart {
+        flex-direction: row !important; /* Force la ligne */
+        align-items: flex-end !important; /* Aligne en bas */
+        height: 600px !important; /* Plus haut */
+        gap: 20px !important;
+    }    
     .bar-val { max-width: 40px !important; } /* Barres plus larges */
-    .bar-data-val { font-size: 1.2rem !important; margin-bottom: 10px !important; }
-    .bar-lbl { font-size: 1rem !important; margin-top: 15px !important; }
+    .bar-col {
+        height: 100%; /* Prend toute la hauteur du graph */
+        justify-content: flex-end; /* Pousse vers le bas */
+    }
+    
+    /* VALEURS AU DESSUS DES BARRES */
+    .bar-data-val {
+        font-size: 1.5rem !important;
+        margin-bottom: 15px !important;
+    }
+    .bar-lbl {
+        font-size: 1.2rem !important;
+        margin-top: 20px !important;
+    }
 
     /* VS PRO : Plus large */
     .pro-chart-container { max-width: 1000px !important; gap: 50px !important; }
@@ -137,6 +165,9 @@ h2 {
     .max-grid { gap: 40px !important; margin-top: 50px !important; }
     .max-item { padding: 40px !important; }
     .max-item strong { font-size: 3rem !important; }
+
+    /* FUN STATS */
+    .fun-stat h2 { font-size: 4rem !important; }
 }
 
 /* ================================================================== */
@@ -463,34 +494,48 @@ h2 {
 }
 
 /* ================================================================== */
-/* --- TRANSITION CYCLISTE --- */
+/* --- TRANSITION CYCLISTE GÉANTE (WIPE EFFECT) --- */
 /* ================================================================== */
 .transition-overlay {
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    z-index: 2000; /* Au-dessus de tout */
+    position: fixed; /* Fixed pour couvrir tout l'écran */
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    z-index: 2000;
     pointer-events: none;
     overflow: hidden;
 }
 
 .cyclist-sprite {
     position: absolute;
-    bottom: 10%; /* Position verticale */
-    left: -300px; /* Départ hors écran gauche */
-    width: 250px; /* Taille du cycliste */
-    height: auto;
-    opacity: 0;
-    filter: drop-shadow(0 0 10px rgba(0,0,0,0.8));
+    bottom: 0; /* Collé en bas */
+    left: -100vw; /* Départ hors écran */
+    height: 80vh; /* Prend 80% de la hauteur de l'écran ! */
+    width: auto; /* Largeur proportionnelle */
+    max-width: none; /* Pas de limite */
+    filter: drop-shadow(10px 10px 20px rgba(0,0,0,0.8));
+    /* Pas de transition ici, géré par keyframes */
 }
 
-/* L'animation qui se déclenche */
-.cyclist-sprite.riding {
-    animation: rideAcross 0.8s linear forwards;
+/* VERS LA DROITE (NEXT) */
+.cyclist-sprite.riding-right {
+    transform: scaleX(1); /* Normal */
+    animation: rideRight 1s cubic-bezier(0.6, 0, 0.4, 1) forwards; /* Plus fluide */
 }
 
-@keyframes rideAcross {
-    0% { left: -300px; opacity: 1; transform: scale(0.8); }
-    50% { transform: scale(1); } /* Léger effet de profondeur */
-    90% { opacity: 1; }
-    100% { left: 120%; opacity: 0; transform: scale(0.8); } /* Fin hors écran droite */
+/* VERS LA GAUCHE (PREV) */
+.cyclist-sprite.riding-left {
+    transform: scaleX(-1); /* Miroir horizontal */
+    left: auto; right: -100vw; /* Départ de droite */
+    animation: rideLeft 1s cubic-bezier(0.6, 0, 0.4, 1) forwards;
+}
+
+@keyframes rideRight {
+    0% { left: -80vw; }
+    50% { left: 50%; transform: translateX(-50%) scaleX(1); } /* Milieu */
+    100% { left: 120vw; }
+}
+
+@keyframes rideLeft {
+    0% { right: -80vw; }
+    50% { right: 50%; transform: translateX(50%) scaleX(-1); } /* Milieu */
+    100% { right: 120vw; }
 }

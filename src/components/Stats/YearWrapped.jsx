@@ -17,6 +17,7 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
     const [selectedYear, setSelectedYear] = useState(new Date().getMonth() === 0 ? new Date().getFullYear() - 1 : new Date().getFullYear());
     const [isSharing, setIsSharing] = useState(false);
     const [isTransitioning, setIsTransitioning] = useState(false);
+    const [transitionDir, setTransitionDir] = useState('right');
 
     const TOTAL_SLIDES = 16;
     
@@ -203,32 +204,33 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
     };
 
     // --- NAVIGATION AVEC TRANSITION ---
-    const changeSlideWithTransition = (newIndex) => {
+    const changeSlideWithTransition = (newIndex, direction) => {
         if (isTransitioning) return; // Anti-spam clic
-
+        
+        setTransitionDir(direction); // On définit la direction AVANT de lancer l'anim
         // 1. On lance l'animation
         setIsTransitioning(true);
 
         // 2. On change la data au milieu de l'animation (quand le cycliste cache l'écran ou passe au milieu)
         setTimeout(() => {
             setSlideIndex(newIndex);
-        }, 400); // 400ms = moitié de l'animation de 800ms
+        }, 500); // 400ms = moitié de l'animation de 800ms
 
         // 3. On reset l'état à la fin
         setTimeout(() => {
             setIsTransitioning(false);
-        }, 800);
+        }, 1000);
     };
 
     const nextSlide = (e) => {
         e?.stopPropagation();
-        if (slideIndex < TOTAL_SLIDES - 1) changeSlideWithTransition(slideIndex + 1);
+        if (slideIndex < TOTAL_SLIDES - 1) changeSlideWithTransition(slideIndex + 1, 'right');
         else onClose(); 
     };
 
     const prevSlide = (e) => {
         e.stopPropagation();
-        if (slideIndex > 0) changeSlideWithTransition(slideIndex - 1);
+        if (slideIndex > 0) changeSlideWithTransition(slideIndex - 1, 'left');
     };
 
     // --- VISUELS DE FOND DYNAMIQUES (MIS A JOUR) ---
@@ -624,13 +626,12 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
             
             {/* --- TRANSITION CYCLISTE --- */}
             <div className="transition-overlay">
-                {/* L'image ne s'affiche que si isTransitioning est true */}
-                {/* Remplace src par ton image locale plus tard */}
+                {/* On applique la classe riding-right ou riding-left selon la direction */}
                 <img 
-                    src={cyclistImg} 
-                    className={`cyclist-sprite ${isTransitioning ? 'riding' : ''}`} 
+                    src={CYCLIST_IMG_URL} 
+                    className={`cyclist-sprite ${isTransitioning ? (transitionDir === 'right' ? 'riding-right' : 'riding-left') : ''}`} 
                     alt="cyclist"
-                    style={{filter: 'brightness(0)'}} // Force le noir si l'image n'est pas déjà noire
+                    style={{filter: 'brightness(0)'}} 
                 />
             </div>
 

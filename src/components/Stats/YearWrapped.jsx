@@ -893,59 +893,61 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
             {/* ================================================================== */}
             {stats && (
                 <div id="export-container"> 
-                    {/* Fond Texturé */}
-                    <div className="export-bg">
-                        <div className="export-grid-lines"></div>
-                        <div className="export-glow-spots"></div>
-                    </div>
+                    <div className="export-bg-overlay"></div>
                     
-                    {/* HEADER : LOGO + ANNÉE */}
                     <div className="export-header">
-                        <div className="export-logo-wrapper">
-                            <Logo width={150} height={150} />
+                        <div style={{transform:'scale(2.5)', marginBottom:'30px'}}>
+                            <Logo width={60} height={60} />
                         </div>
                         <h1 className="export-title">
                             YEAR<br/>
-                            <span className="outline-text">WRAPPED</span><br/>
-                            <span className="neon-text">{stats.year}</span>
+                            <span style={{color:'transparent', WebkitTextStroke:'3px white', opacity:0.6}}>WRAPPED</span><br/>
+                            <span style={{color:'white', textShadow:'0 0 40px #d946ef'}}>{stats.year}</span>
                         </h1>
                     </div>
 
-                    {/* MAIN STATS (BADASS MODE) */}
                     <div className="export-body">
                         
                         {/* DISTANCE HERO */}
                         <div className="export-hero-stat">
                             <span className="hero-lbl">DISTANCE TOTALE</span>
                             <div className="hero-val-group">
-                                <span className="hero-val neon-blue">{stats.totals.dist.toLocaleString()}</span>
+                                <span className="hero-val" style={{color:'#3b82f6', textShadow:'0 0 40px rgba(59,130,246,0.6)'}}>
+                                    {stats.totals.dist.toLocaleString()}
+                                </span>
                                 <span className="hero-unit">KM</span>
                             </div>
                         </div>
 
-                        {/* GRILLE SECONDAIRE */}
+                        {/* GRILLE SECONDAIRE (Couleurs en dur) */}
                         <div className="export-secondary-grid">
                             <div className="sec-stat-box">
                                 <span className="sec-lbl">DÉNIVELÉ</span>
-                                <span className="sec-val neon-purple">{stats.totals.elev.toLocaleString()} <small>m</small></span>
+                                <span className="sec-val" style={{color:'#d946ef'}}>
+                                    {stats.totals.elev.toLocaleString()} <small style={{color:'#aaa', fontSize:'1.5rem'}}>m</small>
+                                </span>
                             </div>
                             <div className="sec-stat-box">
                                 <span className="sec-lbl">CHRONO</span>
-                                <span className="sec-val neon-green">{stats.totals.time} <small>h</small></span>
+                                <span className="sec-val" style={{color:'#10b981'}}>
+                                    {stats.totals.time} <small style={{color:'#aaa', fontSize:'1.5rem'}}>h</small>
+                                </span>
                             </div>
                             <div className="sec-stat-box">
                                 <span className="sec-lbl">SORTIES</span>
-                                <span className="sec-val neon-orange">{stats.totals.count}</span>
+                                <span className="sec-val" style={{color:'#f97316'}}>
+                                    {stats.totals.count}
+                                </span>
                             </div>
                         </div>
 
-                        {/* FUN STATS & STREAK */}
+                        {/* FUN STATS */}
                         <div className="export-fun-box">
                             <div className="fun-line">
                                 <span className="fun-icon">{stats.fun.dist.icon}</span>
                                 <span>{stats.fun.dist.val} x {stats.fun.dist.label}</span>
                             </div>
-                            <div className="fun-line streak">
+                            <div className="fun-line streak" style={{borderColor:'#f97316', boxShadow:'0 0 30px rgba(249,115,22,0.2)'}}>
                                 <FaFire style={{color:'#f97316', fontSize:'3rem'}} />
                                 <span>Meilleure série : <strong>{stats.streak} jours</strong></span>
                             </div>
@@ -953,11 +955,8 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
 
                     </div>
 
-                    {/* FOOTER */}
                     <div className="export-footer">
-                        <div className="footer-line"></div>
-                        <span>GÉNÉRÉ PAR BIKEMONITOR</span>
-                        <div className="footer-line"></div>
+                        GÉNÉRÉ PAR BIKEMONITOR
                     </div>
                 </div>
             )}

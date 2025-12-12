@@ -97,6 +97,7 @@ function SideBar() {
                     <YearWrapped 
                         activities={wrappedData.activities}
                         bikes={wrappedData.bikes}
+                        profile={profile}
                         onClose={() => setShowWrappedModal(false)} 
                     />
                 )}

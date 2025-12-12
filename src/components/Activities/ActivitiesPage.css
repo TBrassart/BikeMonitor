@@ -234,6 +234,13 @@
 }
 .strava-link-btn:hover { transform: translateY(-2px); background: #e34402; }
 
+.pulsar-link-btn {
+    width: 100%; padding: 12px; background: var(--gradient-primary); color: white; border: none;
+    border-radius: 10px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+    transition: transform 0.2s; margin-top: 2%;
+}
+.pulsar-link-btn:hover { transform: translateY(-2px); background: var(--gradient-primary); }
+
 /* Conteneur de la carte */
 .act-modal-map-container {
     height: 250px;

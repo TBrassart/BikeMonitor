@@ -322,6 +322,9 @@ function ActivitiesPage() {
                             <button className="strava-link-btn" onClick={() => window.open(`https://www.strava.com/activities/${selectedActivity.id}`, '_blank')}>
                                 <FaExternalLinkAlt /> Voir l'analyse sur Strava
                             </button>
+                            <button className="pulsar-link-btn" onClick={() => window.open(`https://pulsarapp.vercel.app/activities`, '_blank')}>
+                                <FaExternalLinkAlt /> Voir l'analyse sur Pulsar
+                            </button>
                         </div>
                     </div>
                 </div>

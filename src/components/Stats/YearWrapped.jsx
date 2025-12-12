@@ -2,15 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { 
     FaTimes, FaRoad, FaMountain, FaStopwatch, FaTrophy, FaChevronRight, FaChevronLeft, 
     FaBicycle, FaRunning, FaHeartbeat, FaBolt, FaPlane, FaFilm, FaUserAstronaut, FaFire,
-    FaShareAlt, FaCopy, FaDownload
+    FaShareAlt, FaCopy, FaDownload, FaCrown
 } from 'react-icons/fa';
 import './YearWrapped.css';
 import Logo from '../Layout/Logo';
 import html2canvas from 'html2canvas';
+import { shopService } from '../../services/api';
 import cyclistImg from '../../assets/cyclist.svg';
 
 
-const YearWrapped = ({ activities, bikes, onClose }) => {
+const YearWrapped = ({ activities, bikes, profile, onClose }) => {
     
     const [stats, setStats] = useState(null);
     const [slideIndex, setSlideIndex] = useState(0);
@@ -18,6 +19,7 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
     const [isSharing, setIsSharing] = useState(false);
     const [isTransitioning, setIsTransitioning] = useState(false);
     const [transitionDir, setTransitionDir] = useState('right');
+    const [rankingData, setRankingData] = useState(null);
 
     // --- HELPER POURCENTAGE ---
     const getPct = (curr, prev) => {
@@ -25,6 +27,44 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
         const pct = ((curr - prev) / prev) * 100;
         const sign = pct > 0 ? "+" : "";
         return `${sign}${Math.round(pct)}%`;
+    };
+
+    // --- CALCUL DU CLASSEMENT ET DU TIER ---
+    useEffect(() => {
+        if (profile) calculateRanking();
+    }, [profile]);
+
+    const calculateRanking = async () => {
+        try {
+            const leaderboard = await shopService.getGlobalLeaderboard();
+            
+            if (leaderboard && leaderboard.length > 0) {
+                // Tri sécurité (du plus grand XP au plus petit)
+                leaderboard.sort((a, b) => b.season_xp - a.season_xp);
+
+                const myRankIndex = leaderboard.findIndex(u => u.name === profile.name);
+                
+                if (myRankIndex !== -1) {
+                    const rank = myRankIndex + 1;
+                    const totalUsers = leaderboard.length;
+                    
+                    // Calcul du pourcentage (ex: 1er sur 100 = 1%)
+                    let pct = Math.ceil((rank / totalUsers) * 100);
+                    if (pct < 1) pct = 1; // Minimum 1%
+
+                    // DÉFINITION DES TIERS (Couleurs & Icônes)
+                    let tier = { color: '#3b82f6', shadow: 'rgba(59, 130, 246, 0.5)', icon: '🚴', label: 'PELOTON' }; // > 50%
+                    
+                    if (pct <= 1) tier = { color: '#00e5ff', shadow: 'rgba(255, 255, 255, 0.8)', icon: '💎', label: 'MYTHIQUE' };
+                    else if (pct <= 5) tier = { color: '#ffd700', shadow: 'rgba(255, 215, 0, 0.6)', icon: '👑', label: 'LÉGENDE' };
+                    else if (pct <= 10) tier = { color: '#e2e8f0', shadow: 'rgba(226, 232, 240, 0.5)', icon: '🥈', label: 'CHAMPION' };
+                    else if (pct <= 25) tier = { color: '#f97316', shadow: 'rgba(249, 115, 22, 0.5)', icon: '🥉', label: 'CHALLENGER' };
+                    else if (pct <= 50) tier = { color: '#a855f7', shadow: 'rgba(168, 85, 247, 0.5)', icon: '🚀', label: 'OUTSIDER' };
+
+                    setRankingData({ pct, tier });
+                }
+            }
+        } catch (e) { console.error(e); }
     };
 
     const TOTAL_SLIDES = 16;
@@ -85,14 +125,21 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
         }
     };
 
-    // STATS PRO (Moyenne World Tour / Tadej P.)
-    const PRO_STATS = { 
-        name: "Un Pro World Tour",
-        dist: 32000, 
-        time: 1100, 
-        elev: 450000 
-    }; 
-
+    // BASE DE DONNÉES DES PROS
+    const PRO_DB = {
+        male: {
+            climber: { name: "Tadej Pogačar", type: "Le Phénomène", quote: "Ça grimpe fort !", color: "yellow" },
+            sprinter: { name: "Jasper Philipsen", type: "La Fusée", quote: "Ça frotte dans le final !", color: "green" },
+            rouleur: { name: "Mathieu van der Poel", type: "Le Monstre", quote: "Toujours à fond !", color: "blue" },
+            ultra: { name: "Lachlan Morton", type: "L'Aventurier", quote: "La route est infinie.", color: "purple" }
+        },
+        female: {
+            climber: { name: "Demi Vollering", type: "La Grimpeuse", quote: "Les sommets t'appartiennent.", color: "yellow" },
+            sprinter: { name: "Lorena Wiebes", type: "L'Explosive", quote: "Intouchable au sprint.", color: "green" },
+            rouleur: { name: "Lotte Kopecky", type: "La Patronne", quote: "Tu sais tout faire.", color: "blue" },
+            ultra: { name: "Lael Wilcox", type: "L'Endurante", quote: "Dormir c'est tricher.", color: "purple" }
+        }
+    };
     // --- PETIT COMPOSANT POUR L'EFFET COMPTEUR ---
     const CountUp = ({ end, duration = 4000, suffix = '' }) => {
         const [count, setCount] = useState(0);
@@ -136,7 +183,7 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
             return;
         }
 
-        // --- 1. TOTAUX (Correction Distance: On somme les mètres puis on convertit) ---
+        // --- TOTAUX (Correction Distance: On somme les mètres puis on convertit) ---
         const totalDistMeters = yearActs.reduce((acc, a) => acc + (a.distance || 0), 0);
         const prevDistMeters = prevYearActs.reduce((acc, a) => acc + (a.distance || 0), 0);
 
@@ -154,7 +201,21 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
             count: prevYearActs.length
         };
 
-        // --- 2. LOGIQUE MONUMENTS (TOPS) ---
+        // --- LOGIQUE : QUEL PRO ES-TU ? ---
+        let riderType = 'rouleur';
+        const ratio = totals.dist > 0 ? (totals.elev / totals.dist) : 0; // m par km
+        const avgDist = totals.count > 0 ? totals.dist / totals.count : 0;
+
+        if (ratio > 10) riderType = 'climber'; // Plus de 10m D+ par km (ex: 1000m pour 100km)
+        else if (avgDist > 80) riderType = 'ultra'; // Longues sorties
+        else if (avgDist < 40 && totals.count > 50) riderType = 'sprinter'; // Sorties courtes et nerveuses
+        else riderType = 'rouleur'; // Polyvalent
+
+        // Détection genre (par défaut male si non défini)
+        const gender = profile?.gender === 'female' ? 'female' : 'male';
+        const proMatch = PRO_DB[gender][riderType];
+
+        // --- LOGIQUE MONUMENTS (TOPS) ---
         const formatKm = (meters) => (meters / 1000).toFixed(1) + ' km';
         
         const topDist = [...yearActs]
@@ -172,7 +233,7 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
             .slice(0, 3)
             .map(a => ({ name: a.name, val: Math.round(a.total_elevation_gain) + ' m', date: new Date(a.start_date).toLocaleDateString() }));
 
-        // --- 3. STREAKS ---
+        // --- STREAKS ---
         const dates = [...new Set(yearActs.map(a => a.start_date.split('T')[0]))].sort();
         let maxStreak = 0, currentStreak = 0, lastDate = null;
         dates.forEach(date => {
@@ -186,7 +247,7 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
             lastDate = d;
         });
 
-        // --- 4. DATA GRAPHIQUES ---
+        // --- DATA GRAPHIQUES ---
         const monthsDist = new Array(12).fill(0);
         const uniqueDaysPerMonth = Array.from({ length: 12 }, () => new Set());
         const dayOfWeekCount = new Array(7).fill(0);
@@ -207,7 +268,7 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
             ? activeMonthsValues.sort((a,b) => a.v - b.v)[0].i 
             : 0;
 
-        // --- 5. MAXS (LOGIQUE AMÉLIORÉE POUR RÉCUPÉRER L'ACTIVITÉ) ---
+        // --- MAXS (LOGIQUE AMÉLIORÉE POUR RÉCUPÉRER L'ACTIVITÉ) ---
         // Helper pour trouver l'activité record
         const findMaxAct = (criteriaFn) => {
             return yearActs.reduce((max, curr) => {
@@ -249,7 +310,7 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
             }
         };
 
-        // --- 6. EQUIPEMENT ---
+        // --- EQUIPEMENT ---
         const bikeStats = {};
         yearActs.forEach(a => { 
             if(a.bike_id) bikeStats[a.bike_id] = (bikeStats[a.bike_id] || 0) + ((a.distance || 0) / 1000); 
@@ -271,7 +332,7 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
             year: selectedYear, totals, prevTotals, streak: maxStreak, daysActivePerMonth,
             fun: { time: funComparisons.time[randIdx], dist: funComparisons.dist[randIdx], elev: funComparisons.elev[randIdx], percentYear: ((totals.time / (24*365)) * 100).toFixed(2) },
             tops: { dist: topDist, time: topTime, elev: topElev },
-            dayOfWeek: dayOfWeekCount, monthlyDist: monthsDist, mostActiveMonth: mostActiveMonthIdx, leastActiveMonth: leastActiveMonthIdx, equipment: bikeUsage, maxs
+            dayOfWeek: dayOfWeekCount, monthlyDist: monthsDist, mostActiveMonth: mostActiveMonthIdx, leastActiveMonth: leastActiveMonthIdx, equipment: bikeUsage, maxs, proMatch
         });
     };
 
@@ -529,50 +590,27 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
                         </p>
                     </div>
                 );
-            case 3: // VS PRO (CORRIGÉ)
-                const pctDist = Math.min(100, (stats.totals.dist / PRO_STATS.dist) * 100);
-                const pctElev = Math.min(100, (stats.totals.elev / PRO_STATS.elev) * 100);
-                const pctTime = Math.min(100, (stats.totals.time / PRO_STATS.time) * 100);
-                
+            case 3: // VS PRO
                 return (
-                    <div className={`slide-content pro-vs ${animClass}`}>
-                        <h2>Toi vs {PRO_STATS.name}</h2>
-                        <div className="pro-chart-container">
-                            {/* Ligne Distance */}
-                            <div className="pro-row">
-                                <div className="pro-labels">
-                                    <span>Toi ({stats.totals.dist}km)</span>
-                                    <span>Pro ({PRO_STATS.dist}km)</span>
-                                </div>
-                                <div className="pro-bar-track">
-                                    <div className="pro-bar-fill blue" style={{width: `${pctDist}%`}}></div>
-                                </div>
+                    <div className={`slide-content pro-slide ${animClass}`}>
+                        <h2>TON PROFIL</h2>
+                        
+                        <div className={`pro-card ${stats.proMatch.color}`}>
+                            <div className="pro-avatar-placeholder">
+                                {stats.proMatch.name.charAt(0)}
                             </div>
-                            
-                            {/* Ligne Elevation */}
-                            <div className="pro-row">
-                                <div className="pro-labels">
-                                    <span>Toi ({stats.totals.elev}m)</span>
-                                    <span>Pro ({PRO_STATS.elev}m)</span>
-                                </div>
-                                <div className="pro-bar-track">
-                                    <div className="pro-bar-fill purple" style={{width: `${pctElev}%`}}></div>
-                                </div>
+                            <div className="pro-identity">
+                                <span className="pro-subtitle">TU ROULES COMME</span>
+                                <h3 className="pro-name">{stats.proMatch.name}</h3>
+                                <div className="pro-tag">{stats.proMatch.type}</div>
                             </div>
-
-                            {/* Ligne Temps */}
-                            <div className="pro-row">
-                                <div className="pro-labels">
-                                    <span>Toi ({stats.totals.time}h)</span>
-                                    <span>Pro ({PRO_STATS.time}h)</span>
-                                </div>
-                                <div className="pro-bar-track">
-                                    <div className="pro-bar-fill green" style={{width: `${pctTime}%`}}></div>
-                                </div>
+                            <div className="pro-quote">
+                                "{stats.proMatch.quote}"
                             </div>
                         </div>
-                        <p className="sub-text" style={{marginTop:'30px'}}>
-                            {pctDist > 20 ? "Pas mal du tout ! Tu te défends." : "Ils sont surhumains..."}
+
+                        <p className="sub-text">
+                            Basé sur ton ratio D+ ({Math.round((stats.totals.elev / stats.totals.dist))}m/km) et ton volume.
                         </p>
                     </div>
                 );
@@ -804,7 +842,8 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
             case 15: // RECAP SCREEN (VISUEL ÉCRAN)
                 return (
                     <div className={`slide-content share-slide ${animClass}`}>
-                        <h2>TON BILAN {stats.year}</h2>
+                        <h2 style={{marginBottom:'10px'}}>TON BILAN {stats.year}</h2>
+                        <p className="sub-text" style={{marginTop:'0', marginBottom:'20px'}}>C'est dans la boîte ! 🎁</p>
                         
                         {/* VISUEL PRÉVIEW À L'ÉCRAN */}
                         <div className="on-screen-card neon-border-pulse">
@@ -812,6 +851,18 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
                                 <div style={{width:'50px'}}><Logo width={50} height={50} /></div>
                                 <span>WRAPPED // {stats.year}</span>
                             </div>
+
+                            {/* --- BADGE TOP % DYNAMIQUE --- */}
+                            {rankingData && (
+                                <div className="rank-badge-screen" style={{
+                                    borderColor: rankingData.tier.color, 
+                                    color: rankingData.tier.color,
+                                    boxShadow: `0 0 15px ${rankingData.tier.shadow}`
+                                }}>
+                                    <span style={{fontSize:'1.2rem'}}>{rankingData.tier.icon}</span> 
+                                    TOP {rankingData.pct}% • {rankingData.tier.label}
+                                </div>
+                            )}
                             
                             <div className="preview-big-stat">
                                 <span className="p-val neon-blue">{stats.totals.dist.toLocaleString()}</span>
@@ -904,6 +955,31 @@ const YearWrapped = ({ activities, bikes, onClose }) => {
                             <span style={{color:'transparent', WebkitTextStroke:'3px white', opacity:0.6}}>WRAPPED</span><br/>
                             <span style={{color:'white', textShadow:'0 0 40px #d946ef'}}>{stats.year}</span>
                         </h1>
+
+                        {/* --- BADGE DYNAMIQUE DANS L'EXPORT --- */}
+                        {rankingData && (
+                            <div className="export-rank-badge" style={{
+                                borderLeftColor: rankingData.tier.color,
+                                background: `linear-gradient(90deg, ${rankingData.tier.color}11, transparent)`
+                            }}>
+                                <span style={{fontSize:'4rem', marginRight:'30px'}}>
+                                    {rankingData.tier.icon}
+                                </span>
+                                <div>
+                                    <span style={{display:'block', fontSize:'1.5rem', color:'#aaa', letterSpacing:'5px'}}>
+                                        {rankingData.tier.label}
+                                    </span>
+                                    <span style={{
+                                        fontSize:'4rem', fontWeight:'900', 
+                                        color: rankingData.tier.color, 
+                                        textShadow: `0 0 40px ${rankingData.tier.color}`
+                                    }}>
+                                        TOP {rankingData.pct}%
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+                        {/* ------------------------------------ */}
                     </div>
 
                     <div className="export-body">

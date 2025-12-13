@@ -1388,7 +1388,31 @@ export const nutritionService = {
     }
 };
 
-export const libraryService = { getAll: () => api.getComponentLibrary() };
+export const libraryService = {
+    async search(query, categories = []) {
+        let request = supabase
+            .from('component_library')
+            .select('*');
+
+        // Filtre texte (si présent)
+        if (query && query.length >= 2) {
+            request = request.or(`name.ilike.%${query}%,brand.ilike.%${query}%,model.ilike.%${query}%`);
+        }
+
+        // Filtre catégorie (si une catégorie est sélectionnée)
+        if (categories && categories.length > 0) {
+            request = request.in('category', categories);
+        }
+        
+        const { data, error } = await request.limit(50);
+            
+        if (error) {
+            console.error("Erreur recherche bibliothèque:", error);
+            return [];
+        }
+        return data || [];
+    }
+};
 
 export const kitService = {
     getAll: () => api.getKits(),

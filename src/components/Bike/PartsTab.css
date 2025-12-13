@@ -145,3 +145,44 @@
     color: white;
     box-shadow: 0 0 10px var(--neon-blue);
 }
+
+/* --- Chips de catégories (Filtres) --- */
+.category-chips-scroll {
+    display: flex;
+    flex-wrap: wrap; 
+    gap: 8px;
+    padding: 10px 15px;
+    max-height: 120px; /* Limite la hauteur si trop de filtres */
+    overflow-y: auto; /* Scroll vertical si vraiment nécessaire */
+}
+.category-chips-scroll::-webkit-scrollbar {
+    display: none; /* Cache la scrollbar sur Chrome/Safari */
+}
+
+.cat-chip {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ccc;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.cat-chip:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.cat-chip.active {
+    background: var(--neon-blue); /* Ou votre couleur primaire */
+    border-color: var(--neon-blue);
+    color: #000; /* Texte noir sur fond néon pour contraste max */
+    font-weight: bold;
+    box-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
+}

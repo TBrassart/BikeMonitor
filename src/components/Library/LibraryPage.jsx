@@ -1,46 +1,98 @@
 import React, { useState, useEffect } from 'react';
-import { authService, libraryService } from '../../services/api';
-import { FaPlus, FaCogs, FaFilter } from 'react-icons/fa';
+import { libraryService, authService } from '../../services/api';
+import { FaSearch, FaPlus, FaCogs, FaCompactDisc, FaCircle, FaWrench, FaEdit, FaTrash, FaDatabase } from 'react-icons/fa';
 import LibraryForm from './LibraryForm';
 import './LibraryPage.css';
 
+// Mapping Catégories (Pour Icones et Labels)
+const CATEGORIES_UI = [
+        { id: 'all', label: 'Tout', icon: null },
+        { id: 'transmission', label: 'Transmission', icon: <FaCogs /> },
+        { id: 'freinage', label: 'Freinage', icon: <FaCompactDisc /> },
+        { id: 'pneus', label: 'Pneus', icon: <FaCircle /> },
+        { id: 'roues', label: 'Roues', icon: <FaCircle style={{opacity:0.7}} /> }, // Icône visuelle
+        { id: 'pedales', label: 'Pédales', icon: <FaWrench /> },
+        { id: 'chambres', label: 'Chambres à air', icon: <FaCogs />},
+        { id: 'autre', label: 'Autre', icon: null },
+    ];
+
+const DISPLAY_MAP = {
+        'battery': 'Batterie',
+        'chainrings': 'Pédalier',
+        'stem': 'Potence',
+        'brake-pads': 'Plaquettes de frein',
+        'pedals': 'Pédales',
+        'chainguide': 'Guide Chaîne',
+        'wheel': 'Roue',
+        'chain': 'Chaîne',
+        'brake-rotor': 'Disque de frein',
+        'inner-tube': 'Chambre à air',
+        'cranks': 'Manivelle',
+        'seat-post': 'Tige de selle',
+        'tyre': 'Pneu',
+        'bottom-bracket': 'Boitier de pédalier',
+        'shock': 'Amortisseur',
+        'sprocket': 'Pignons',
+        'hub': 'Moyeu',
+        'handlebar': 'Guidon',
+        'brake': 'Freins',
+        'fork': 'Fourche',
+        'other': 'Autres',
+        'sealant': 'Sealant',
+        'cassette': 'Cassette'
+    };
+
+const FILTER_MAP = {
+        'all': [],
+        'transmission': ['chain', 'cassette', 'chainrings', 'derailleur', 'bottom_bracket', 'sprocket', 'bottom', 'cranks', 'chainguide'],
+        'freinage': ['brake-pads', 'brake-rotor', 'brake'],
+        'pneus': ['tyre'],
+        'roues': ['wheel', 'hub'],
+        'chambre à air': ['inner-tube'],
+        'pedales': ['pedals'],
+        'autre': ['sealant', 'other', 'fork', 'handlebar', 'shock', 'seat-post', 'stem' ]
+    };
+
 function LibraryPage() {
-    const [components, setComponents] = useState([]);
-    const [filteredComponents, setFilteredComponents] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [showForm, setShowForm] = useState(false);
+    const [query, setQuery] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState('all');
+    const [results, setResults] = useState([]);
+    const [loading, setLoading] = useState(false);
     
-    // On initialise juste avec 'Tous', le reste sera dynamique
-    const [categories, setCategories] = useState(['Tous']);
-    const [selectedCat, setSelectedCat] = useState('Tous');
-    const [canEdit, setCanEdit] = useState(false); // Nouvel état
+    // Gestion Edition
+    const [showForm, setShowForm] = useState(false);
+    const [editingItem, setEditingItem] = useState(null);
+    const [canEdit, setCanEdit] = useState(false);
 
     useEffect(() => {
-        loadLibrary();
+        checkPermissions();
+        // Chargement initial (optionnel, ou on attend une recherche)
+        // Ici on lance une recherche vide pour avoir les derniers ajouts ou tout
+        performSearch();
     }, []);
+
+    // Relancer la recherche quand les filtres changent
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            performSearch();
+        }, 400); // Debounce 400ms
+        return () => clearTimeout(timer);
+    }, [query, selectedCategory]);
 
     const checkPermissions = async () => {
         const profile = await authService.getMyProfile();
-        // Seuls Admin et Moderator peuvent éditer
-        if (profile && (profile.app_role === 'admin' || profile.app_role === 'moderator')) {
-            setCanEdit(true);
-        }
+        // Admin ou simple user (si on veut laisser tout le monde contribuer)
+        if (profile) setCanEdit(true); 
     };
 
-    const loadLibrary = async () => {
+    const performSearch = async () => {
+        setLoading(true);
         try {
-            setLoading(true);
-            const data = await libraryService.getAll();
-            setComponents(data || []);
-            setFilteredComponents(data || []);
-
-            // --- GÉNÉRATION DYNAMIQUE DES CATÉGORIES ---
-            // On regarde ce qu'il y a vraiment dans la base
-            const uniqueCats = [...new Set(data.map(item => item.category).filter(Boolean))];
-            // On trie alphabétiquement
-            uniqueCats.sort();
-            setCategories(['Tous', ...uniqueCats]);
-
+            // Si pas de query et catégorie 'all', on charge un échantillon (ex: les 50 premiers)
+            // Sinon on utilise la recherche filtrée
+            const catsToSearch = FILTER_MAP[selectedCategory];
+            const data = await libraryService.search(query, catsToSearch);
+            setResults(data || []);
         } catch (e) {
             console.error(e);
         } finally {
@@ -48,77 +100,118 @@ function LibraryPage() {
         }
     };
 
-    const handleFilter = (category) => {
-        setSelectedCat(category);
-        if (category === 'Tous') {
-            setFilteredComponents(components);
-        } else {
-            // Comparaison stricte maintenant possible car la catégorie vient de la base
-            setFilteredComponents(components.filter(c => c.category === category));
-        }
+    const handleDelete = async (id) => {
+        if (!window.confirm("Supprimer cette référence de la bibliothèque globale ?")) return;
+        // Supposons que libraryService a une méthode delete (à ajouter si besoin)
+        // await libraryService.delete(id);
+        alert("Fonctionnalité admin (à implémenter dans l'API)");
+    };
+
+    const handleEdit = (item) => {
+        setEditingItem(item);
+        setShowForm(true);
+    };
+
+    const handleAddNew = () => {
+        setEditingItem(null);
+        setShowForm(true);
     };
 
     return (
         <div className="library-page">
-            <header className="page-header">
-                <div>
-                    <h2>Bibliothèque</h2>
-                    <p className="subtitle">Catalogue de pièces de référence</p>
-                </div>
-
+            
+            {/* EN-TÊTE */}
+            <div className="library-header">
+                <h2 className="gradient-text"><FaDatabase /> Bibliothèque</h2>
                 {canEdit && (
-                    <button className="add-btn" onClick={() => setShowForm(!showForm)}>
-                        <FaPlus /> <span className="desktop-only">Ajouter</span>
+                    <button className="primary-btn" onClick={handleAddNew}>
+                        <FaPlus /> Ajouter une référence
                     </button>
                 )}
-            </header>
+            </div>
 
-            {/* BARRE DE FILTRES */}
-            <div className="filters-bar">
-                <span className="filter-icon"><FaFilter /></span>
-                <div className="chips-scroll">
-                    {categories.map(cat => (
+            {/* BARRE DE RECHERCHE & FILTRES */}
+            <div className="search-filter-container">
+                <div className="search-bar-wrapper">
+                    <FaSearch style={{position:'absolute', left:'15px', top:'50%', transform:'translateY(-50%)', color:'#888'}} />
+                    <input 
+                        type="text" 
+                        className="search-input-lg"
+                        placeholder="Rechercher un composant (ex: Ultegra R8000...)"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                    />
+                </div>
+
+                <div className="filters-scroll">
+                    {CATEGORIES_UI.map(cat => (
                         <button 
-                            key={cat} 
-                            className={`chip ${selectedCat === cat ? 'active' : ''}`}
-                            onClick={() => handleFilter(cat)}
+                            key={cat.id}
+                            onClick={() => setSelectedCategory(cat.id)}
+                            className={`filter-chip ${selectedCategory === cat.id ? 'active' : ''}`}
                         >
-                            {cat}
+                            {cat.icon} {cat.label}
                         </button>
                     ))}
                 </div>
             </div>
 
-            {showForm && (
-                <div className="glass-panel form-panel">
-                    <LibraryForm onSuccess={() => { setShowForm(false); loadLibrary(); }} onCancel={() => setShowForm(false)} />
-                </div>
-            )}
-
+            {/* GRILLE RÉSULTATS */}
             {loading ? (
-                <div className="loading-state">Chargement du catalogue...</div>
+                <div className="loading-text">Recherche dans le catalogue...</div>
             ) : (
                 <div className="library-grid">
-                    {filteredComponents.length === 0 ? (
-                        <div className="empty-state glass-panel">
-                            <p>Aucune pièce dans cette catégorie.</p>
+                    {results.length === 0 ? (
+                        <div className="empty-state" style={{gridColumn:'1/-1', textAlign:'center', padding:'40px', color:'#666'}}>
+                            Aucun composant trouvé. <br/>
+                            <button className="text-btn" onClick={handleAddNew} style={{color:'var(--neon-blue)', marginTop:'10px'}}>
+                                Créer cette pièce ?
+                            </button>
                         </div>
                     ) : (
-                        filteredComponents.map(comp => (
-                            <div key={comp.id} className="library-card glass-panel">
-                                <div className="card-icon">
-                                    <FaCogs />
-                                </div>
-                                <div className="card-content">
-                                    <h4>{comp.brand} {comp.model}</h4>
-                                    <span className="category-tag">{comp.category}</span>
-                                    <div className="card-meta">
-                                        <span>❤️ {comp.lifespan_km} km</span>
+                        results.map(item => (
+                            <div key={item.id} className="library-card">
+                                <div className="card-header">
+                                    <div className="card-icon">
+                                        {/* Icône dynamique selon catégorie */}
+                                        {CATEGORIES_UI.find(c => c.id === item.category)?.icon || <FaCogs />}
                                     </div>
+                                    {canEdit && (
+                                        <div className="card-actions">
+                                            <button onClick={() => handleEdit(item)} className="mini-action-btn edit"><FaEdit /></button>
+                                            <button onClick={() => handleDelete(item.id)} className="mini-action-btn delete"><FaTrash /></button>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <span className="card-brand">{item.brand}</span>
+                                <h4 className="card-model">{item.name}</h4>
+                                <span className="card-cat">
+                                    {DISPLAY_MAP[item.category] || item.category}
+                                </span>
+                                
+                                <div className="card-stats">
+                                    Durée cible : {item.lifespan_km ? `${item.lifespan_km} km` : 'N/A'}
                                 </div>
                             </div>
                         ))
                     )}
+                </div>
+            )}
+
+            {/* MODALE FORMULAIRE */}
+            {showForm && (
+                <div className="modal-overlay" style={{position:'fixed', inset:0, background:'rgba(0,0,0,0.8)', zIndex:5000, display:'flex', justifyContent:'center', alignItems:'center'}}>
+                    <div className="glass-panel" style={{maxWidth:'500px', width:'100%', padding:'0'}}>
+                        <LibraryForm 
+                            initialData={editingItem}
+                            onClose={() => setShowForm(false)}
+                            onSave={() => {
+                                setShowForm(false);
+                                performSearch(); // Rafraîchir
+                            }}
+                        />
+                    </div>
                 </div>
             )}
         </div>

@@ -1,26 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../../services/api.js'; // Ou votre service API
 import { FaSave, FaTimes } from 'react-icons/fa';
-import '../Bike/BikeForm.css'; 
 
-// AJOUT : On accepte 'initialData' dans les props
 const LibraryForm = ({ onClose, onSave, initialData }) => {
-    
-    // MODIFICATION : On initialise le state avec les données existantes si elles sont là
     const [formData, setFormData] = useState({
-        category: initialData?.category || 'chain',
-        brand: initialData?.brand || '',
-        model: initialData?.model || '',
-        lifespan_km: initialData?.lifespan_km || 2000
+        name: '',
+        brand: '',
+        model: '', // Optionnel si name contient tout
+        category: 'chain',
+        lifespan_km: 5000
     });
-    const [isSaving, setIsSaving] = useState(false);
+    const [loading, setLoading] = useState(false);
 
-    const categories = [
-        { id: 'chain', label: 'Chaîne' },
-        { id: 'cassette', label: 'Cassette' },
-        { id: 'tire', label: 'Pneu' },
-        { id: 'brake_pads', label: 'Plaquettes' },
-        { id: 'other', label: 'Autre' }
-    ];
+    useEffect(() => {
+        if (initialData) {
+            setFormData({
+                name: initialData.name || '',
+                brand: initialData.brand || '',
+                model: initialData.model || '',
+                category: initialData.category || 'chain',
+                lifespan_km: initialData.lifespan_km || 5000
+            });
+        }
+    }, [initialData]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -29,104 +31,111 @@ const LibraryForm = ({ onClose, onSave, initialData }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!formData.brand || !formData.model) return;
+        setLoading(true);
 
-        setIsSaving(true);
         try {
-            await onSave(formData);
-            onClose();
-        } catch (error) {
-            console.error("Erreur ajout bibliothèque", error);
-            alert("Erreur lors de l'ajout.");
+            // Logique Supabase directe ou via api.js
+            const payload = {
+                name: formData.name,
+                brand: formData.brand,
+                model: formData.model,
+                category: formData.category,
+                lifespan_km: parseInt(formData.lifespan_km)
+            };
+
+            let error;
+            if (initialData?.id) {
+                // UPDATE
+                const res = await supabase.from('component_library').update(payload).eq('id', initialData.id);
+                error = res.error;
+            } else {
+                // INSERT
+                const res = await supabase.from('component_library').insert([payload]);
+                error = res.error;
+            }
+
+            if (error) throw error;
+            onSave();
+            
+        } catch (e) {
+            console.error(e);
+            alert("Erreur lors de l'enregistrement.");
         } finally {
-            setIsSaving(false);
+            setLoading(false);
         }
     };
 
     return (
-        <div className="bike-form-container">
-            <header className="form-header">
-                {/* TITRE DYNAMIQUE */}
-                <h2>{initialData ? 'Modifier le modèle' : 'Nouveau Modèle'}</h2>
-                <button onClick={onClose} className="close-btn">
+        <form onSubmit={handleSubmit} style={{padding:'20px'}}>
+            <div style={{display:'flex', justifyContent:'space-between', marginBottom:'20px'}}>
+                <h3 style={{margin:0}}>{initialData ? 'Modifier' : 'Nouvelle référence'}</h3>
+                <button type="button" onClick={onClose} style={{background:'none', border:'none', color:'white', fontSize:'1.2rem', cursor:'pointer'}}>
                     <FaTimes />
                 </button>
-            </header>
+            </div>
 
-            <form onSubmit={handleSubmit} className="bike-form">
-                
-                <section className="form-section">
-                    <h3>Identification du composant</h3>
-                    
-                    <div className="input-group">
-                        <label>Marque *</label>
-                        <input 
-                            name="brand" 
-                            type="text" 
-                            value={formData.brand} 
-                            onChange={handleChange} 
-                            placeholder="Ex: Shimano, Continental..." 
-                            required 
-                        />
-                    </div>
+            <div className="form-group">
+                <label>Nom complet (pour la recherche)</label>
+                <input 
+                    type="text" name="name" 
+                    value={formData.name} onChange={handleChange} 
+                    required placeholder="Ex: Chaîne Shimano Ultegra 11v"
+                    style={{width:'100%', padding:'10px', background:'rgba(255,255,255,0.1)', border:'1px solid #444', borderRadius:'6px', color:'white'}}
+                />
+            </div>
 
-                    <div className="input-group">
-                        <label>Modèle *</label>
-                        <input 
-                            name="model" 
-                            type="text" 
-                            value={formData.model} 
-                            onChange={handleChange} 
-                            placeholder="Ex: Ultegra R8000 11-30" 
-                            required 
-                        />
-                    </div>
-                </section>
-
-                <section className="form-section advanced-section">
-                    <h3>Caractéristiques techniques</h3>
-                    
-                    <div className="input-group full-width">
-                        <label>Catégorie</label>
-                        <div className="type-chips">
-                            {categories.map(cat => (
-                                <button
-                                    key={cat.id}
-                                    type="button"
-                                    className={`chip ${formData.category === cat.id ? 'active' : ''}`}
-                                    onClick={() => setFormData({...formData, category: cat.id})}
-                                >
-                                    {cat.label}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="input-group">
-                        <label>Durée de vie estimée (km)</label>
-                        <input 
-                            name="lifespan_km" 
-                            type="number" 
-                            value={formData.lifespan_km} 
-                            onChange={handleChange} 
-                            placeholder="Ex: 5000" 
-                        />
-                        <p style={{fontSize: '0.8rem', color: '#888', marginTop: '5px'}}>
-                            Cette valeur servira de base pour calculer l'usure par défaut.
-                        </p>
-                    </div>
-                </section>
-
-                <div className="form-actions">
-                    <button type="button" className="cancel-btn" onClick={onClose}>
-                        Annuler
-                    </button>
-                    <button type="submit" className="save-btn" disabled={isSaving}>
-                        {isSaving ? 'Sauvegarder' : <><FaSave /> {initialData ? 'Mettre à jour' : 'Ajouter'}</>}
-                    </button>
+            <div style={{display:'flex', gap:'15px', marginTop:'15px'}}>
+                <div className="form-group" style={{flex:1}}>
+                    <label>Marque</label>
+                    <input 
+                        type="text" name="brand" 
+                        value={formData.brand} onChange={handleChange}
+                        style={{width:'100%', padding:'10px', background:'rgba(255,255,255,0.1)', border:'1px solid #444', borderRadius:'6px', color:'white'}}
+                    />
                 </div>
-            </form>
-        </div>
+                <div className="form-group" style={{flex:1}}>
+                    <label>Modèle (Code)</label>
+                    <input 
+                        type="text" name="model" 
+                        value={formData.model} onChange={handleChange}
+                        style={{width:'100%', padding:'10px', background:'rgba(255,255,255,0.1)', border:'1px solid #444', borderRadius:'6px', color:'white'}}
+                    />
+                </div>
+            </div>
+
+            <div style={{display:'flex', gap:'15px', marginTop:'15px'}}>
+                <div className="form-group" style={{flex:1}}>
+                    <label>Catégorie (Tech)</label>
+                    <select 
+                        name="category" value={formData.category} onChange={handleChange}
+                        style={{width:'100%', padding:'10px', background:'rgba(255,255,255,0.1)', border:'1px solid #444', borderRadius:'6px', color:'white'}}
+                    >
+                        <option value="chain">Chaîne</option>
+                        <option value="cassette">Cassette</option>
+                        <option value="tyre">Pneu</option>
+                        <option value="brake_pads">Plaquettes</option>
+                        <option value="pedals">Pédales</option>
+                        <option value="wheel">Roue</option>
+                        <option value="other">Autre</option>
+                    </select>
+                </div>
+                <div className="form-group" style={{flex:1}}>
+                    <label>Durée vie (km)</label>
+                    <input 
+                        type="number" name="lifespan_km" 
+                        value={formData.lifespan_km} onChange={handleChange}
+                        style={{width:'100%', padding:'10px', background:'rgba(255,255,255,0.1)', border:'1px solid #444', borderRadius:'6px', color:'white'}}
+                    />
+                </div>
+            </div>
+
+            <div style={{marginTop:'25px', display:'flex', justifyContent:'flex-end', gap:'10px'}}>
+                <button type="button" onClick={onClose} className="secondary-btn">Annuler</button>
+                <button type="submit" className="primary-btn" disabled={loading}>
+                    <FaSave /> {loading ? '...' : 'Enregistrer'}
+                </button>
+            </div>
+        </form>
     );
 };
 

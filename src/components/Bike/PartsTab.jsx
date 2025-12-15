@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { partsService, historyService, bikeService } from '../../services/api';
 import { FaPlus, FaCogs, FaCompactDisc, FaCircle, FaWrench, FaTrash, FaSyncAlt, FaSearch } from 'react-icons/fa';
 import AddPartModal from './AddPartModal';
+import ActionModal from './ActionModal';
 import './PartsTab.css';
 
 function PartsTab({ bikeId }) {
@@ -9,6 +10,7 @@ function PartsTab({ bikeId }) {
     const [showAddModal, setShowAddModal] = useState(false);
     const [loading, setLoading] = useState(true);
     const [currentBikeKm, setCurrentBikeKm] = useState(0);
+    const [partToReplace, setPartToReplace] = useState(null);
 
     useEffect(() => {
         loadData();
@@ -29,50 +31,71 @@ function PartsTab({ bikeId }) {
         finally { setLoading(false); }
     };
 
-    // --- REMPLACEMENT INTELLIGENT ---
-    const handleReplace = async (part) => {
-        const replaceSame = window.confirm(
-            `Remplacer "${part.name}" ?\n\n` +
-            `[OK] = Remplacer par la MÊME pièce (Neuf)\n` +
-            `[ANNULER] = Choisir une autre pièce (Ouvrir bibliothèque)`
-        );
+    const initiateReplace = (part) => {
+        setPartToReplace(part);
+    };
 
+    // LOGIQUE D'ARCHIVAGE (Commune aux deux choix)
+    const archiveOldPart = async (part) => {
         const today = new Date().toISOString().split('T')[0];
+        const usage = Math.max(0, currentBikeKm - (part.km_current || 0));
 
+        // Archive pièce
+        await partsService.update(part.id, { 
+            status: 'archived', 
+            removal_date: today 
+        });
+
+        // Ajout historique
+        await historyService.add({
+            bike_id: bikeId,
+            date: today,
+            type: 'part_change',
+            title: `Remplacement : ${part.name}`,
+            description: `Pièce archivée après ${usage} km.`,
+            km: currentBikeKm
+        });
+
+        return today;
+    };
+
+    // ACTION A : REMPLACER À L'IDENTIQUE
+    const handleReplaceSame = async () => {
+        if (!partToReplace) return;
         try {
-            // 1. Archiver la pièce actuelle
-            await partsService.update(part.id, {
-                status: 'archived',
-                removal_date: today
+            const today = await archiveOldPart(partToReplace);
+            
+            // Création de la nouvelle pièce identique
+            await partsService.add({
+                bike_id: bikeId,
+                name: partToReplace.name,
+                category: partToReplace.category,
+                life_target_km: partToReplace.life_target_km,
+                installation_date: today,
+                km_current: currentBikeKm,
+                status: 'ok'
             });
 
-            if (replaceSame) {
-                // 2. Créer copie identique
-                const bike = await bikeService.getById(bikeId);
-                await partsService.add({
-                    bike_id: bikeId,
-                    name: part.name,
-                    category: part.category,
-                    life_target_km: part.life_target_km,
-                    installation_date: today,
-                    km_current: bike.total_km || 0,
-                    status: 'ok'
-                });
-                loadData();
-            } else {
-                // 3. Ouvrir la bibliothèque pour choisir la nouvelle
-                loadData(); // Pour faire disparaître l'ancienne
-                setShowLibrary(true);
-            }
+            setPartToReplace(null); // Ferme modale
+            loadData();
+        } catch (e) { console.error(e); alert("Erreur lors du remplacement"); }
+    };
 
-        } catch (e) {
-            console.error(e);
-            alert("Erreur technique.");
-        }
+    // ACTION B : CHOISIR NOUVEAU (Ouvre bibliothèque)
+    const handleReplaceNew = async () => {
+        if (!partToReplace) return;
+        try {
+            await archiveOldPart(partToReplace);
+            setPartToReplace(null); // Ferme modale remplacement
+            loadData(); // Rafraîchit (l'ancienne disparaît)
+            setShowAddModal(true); // Ouvre modale ajout
+        } catch (e) { console.error(e); }
     };
 
     const handleDelete = async (id) => {
-        if (window.confirm("Supprimer définitivement ce composant ?")) {
+        // Pour la suppression simple, on peut aussi utiliser un ActionModal, 
+        // mais pour l'instant un confirm natif est acceptable ou on peut créer un state partToDelete.
+        if (window.confirm("Supprimer définitivement ce composant ? (Sans historique)")) {
             await partsService.delete(id);
             loadData();
         }
@@ -81,11 +104,8 @@ function PartsTab({ bikeId }) {
     // --- CALCUL DE L'USURE CORRIGÉ ---
     const getWearStatus = (installBikeKm, targetKm) => {
         if (!targetKm) return { pct: 0, color: '#4ade80', usage: 0 };
-        
-        // Formule : (Total Vélo Actuel) - (Km du vélo au moment de l'installation)
-        // Math.max(0, ...) pour éviter les négatifs si incohérence de dates
+
         const usage = Math.max(0, currentBikeKm - installBikeKm);
-        
         const pct = Math.min(100, Math.round((usage / targetKm) * 100));
         
         let color = '#4ade80'; // Vert
@@ -131,6 +151,48 @@ function PartsTab({ bikeId }) {
                 />
             )}
 
+            {/* MODALE DE REMPLACEMENT */}
+            <ActionModal
+                isOpen={!!partToReplace}
+                onClose={() => setPartToReplace(null)}
+                title="Remplacer le composant"
+                actions={[
+                    { 
+                        label: 'Annuler', 
+                        onClick: () => setPartToReplace(null),
+                        className: 'secondary-btn',
+                        style: { border: 'none', background: 'transparent' }
+                    },
+                    { 
+                        label: 'Nouveau modèle', 
+                        onClick: handleReplaceNew,
+                        className: 'secondary-btn',
+                        icon: <FaSearch />
+                    },
+                    { 
+                        label: 'Même pièce (Neuve)', 
+                        onClick: handleReplaceSame,
+                        className: 'primary-btn',
+                        icon: <FaSyncAlt />
+                    }
+                ]}
+            >
+                <div style={{display:'flex', gap:'15px', alignItems:'center'}}>
+                    <div className="part-icon-box" style={{fontSize:'1.5rem', width:'50px', height:'50px', background:'rgba(255,255,255,0.1)'}}>
+                        {getIcon(partToReplace?.category)}
+                    </div>
+                    <div>
+                        <p style={{margin:0, fontSize:'1.1rem', fontWeight:'bold', color:'white'}}>
+                            {partToReplace?.name}
+                        </p>
+                        <p style={{margin:'5px 0 0 0', fontSize:'0.9rem', color:'#aaa'}}>
+                            Cette action archivera la pièce actuelle dans l'historique.
+                            Par quoi voulez-vous la remplacer ?
+                        </p>
+                    </div>
+                </div>
+            </ActionModal>
+
             {/* LISTE */}
             <div className="parts-list">
                 {loading ? <div className="loading-text">Chargement...</div> : (
@@ -160,7 +222,7 @@ function PartsTab({ bikeId }) {
                                         </div>
                                     </div>
                                     <div className="part-actions">
-                                        <button onClick={() => handleReplace(part)} className="action-icon-btn replace"><FaSyncAlt /></button>
+                                        <button onClick={() => initiateReplace(part)} className="action-icon-btn replace"><FaSyncAlt /></button>
                                         <button onClick={() => handleDelete(part.id)} className="action-icon-btn delete"><FaTrash /></button>
                                     </div>
                                 </div>

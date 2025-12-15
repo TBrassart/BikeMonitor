@@ -152,11 +152,11 @@
     flex-wrap: wrap; 
     gap: 8px;
     padding: 10px 15px;
-    max-height: 120px; /* Limite la hauteur si trop de filtres */
-    overflow-y: auto; /* Scroll vertical si vraiment nécessaire */
+    max-height: 120px; 
+    overflow-y: auto; 
 }
 .category-chips-scroll::-webkit-scrollbar {
-    display: none; /* Cache la scrollbar sur Chrome/Safari */
+    display: none; 
 }
 
 .cat-chip {
@@ -180,9 +180,37 @@
 }
 
 .cat-chip.active {
-    background: var(--neon-blue); /* Ou votre couleur primaire */
+    background: var(--neon-blue); 
     border-color: var(--neon-blue);
-    color: #000; /* Texte noir sur fond néon pour contraste max */
+    color: #000; 
     font-weight: bold;
     box-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.15); 
+    border-radius: 8px;
+    font-size: 1rem;
+    box-sizing: border-box;
+    
+    background-color: rgba(0, 0, 0, 0.3);
+    color: white; 
+    transition: all 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    border-color: var(--neon-blue, #06b6d4);
+    background-color: rgba(0, 0, 0, 0.5);
+    outline: none;
+}
+
+
+.form-group select option {
+    background-color: #1e1e2d; 
+    color: white;
+    padding: 10px;
 }
